@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - The Last Call Film</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,500;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #faf9f6;
+            --text-color: #2c2a29;
+            --accent-color: #8c7355;
+            --card-bg: #ffffff;
+            --border-color: #e6e2d8;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid var(--border-color);
+        }
+
+        h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-family: inherit;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--text-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+        }
+
+        .session-list {
+            margin-top: 30px;
+            border-top: 1px solid var(--border-color);
+            padding-top: 20px;
+        }
+
+        .session-card {
+            background: #fcfbfa;
+            border: 1px solid var(--border-color);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge-active {
+            background: var(--accent-color);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Dashboard Admin</h1>
+        
+        <div class="form-group">
+            <label>Nama Mempelai (Klien):</label>
+            <input type="text" id="mempelaiName" placeholder="Contoh: Romeo & Juliet">
+        </div>
+        <div class="form-group">
+            <label>Batas Maksimal Foto (Jepretan):</label>
+            <input type="number" id="maxPhotos" placeholder="Contoh: 36">
+        </div>
+        
+        <button onclick="simpanSesi()">Buat Sesi & Aktifkan Kamera</button>
+
+        <div class="session-list">
+            <h3>Daftar Sesi Aktif</h3>
+            <div id="activeSessionContainer">
+                <p style="font-size: 0.9rem; color: #666;">Belum ada sesi yang aktif.</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function tampilkanSesi() {
+            const container = document.getElementById('activeSessionContainer');
+            const activeMempelai = localStorage.getItem('mempelaiName');
+            const activeLimit = localStorage.getItem('maxPhotos');
+
+            if (activeMempelai && activeLimit) {
+                container.innerHTML = `
+                    <div class="session-card">
+                        <div>
+                            <strong>${activeMempelai}</strong><br>
+                            <span style="font-size: 0.8rem; color: #666;">Batas: ${activeLimit} Foto</span>
+                        </div>
+                        <span class="badge-active">SEDANG AKTIF</span>
+                    </div>
+                    <button style="background: #d9534f; margin-top: 5px; padding: 10px;" onclick="hapusSesi()">Tutup Sesi Ini</button>
+                `;
+            } else {
+                container.innerHTML = '<p style="font-size: 0.9rem; color: #666;">Belum ada sesi yang aktif.</p>';
+            }
+        }
+
+        function simpanSesi() {
+            const nama = document.getElementById('mempelaiName').value;
+            const batas = document.getElementById('maxPhotos').value;
+
+            if (!nama || !batas) {
+                alert("Harap isi nama mempelai dan batas foto!");
+                return;
+            }
+
+            // Simpan pengaturan ke memori browser
+            localStorage.setItem('mempelaiName', nama);
+            localStorage.setItem('maxPhotos', batas);
+            localStorage.setItem('currentPhotoCount', 0); // Reset hitungan foto
+
+            alert(`Sesi untuk ${nama} berhasil diaktifkan dengan batas ${batas} foto!`);
+            document.getElementById('mempelaiName').value = '';
+            document.getElementById('maxPhotos').value = '';
+            tampilkanSesi();
+        }
+
+        function hapusSesi() {
+            localStorage.removeItem('mempelaiName');
+            localStorage.removeItem('maxPhotos');
+            localStorage.removeItem('currentPhotoCount');
+            tampilkanSesi();
+        }
+
+        // Jalankan saat halaman dimuat
+        tampilkanSesi();
+    </script>
+</body>
+</html>
