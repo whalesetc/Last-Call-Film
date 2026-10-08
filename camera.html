@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamera Photobooth - The Last Call Film</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-app: #f7f5f0; 
+            --text-app: #2c2a29;
+            --accent: #a38c6d;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-app); color: var(--text-app); line-height: 1.6; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+        
+        .app-container { width: 100%; max-width: 480px; margin: 0 auto; position: relative; }
+        .app-header { text-align: center; margin-bottom: 30px; position: relative;}
+        
+        .btn-kembali { position: absolute; left: 0; top: 10px; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-app);}
+        
+        .app-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; }
+        .app-subtitle { font-size: 0.85rem; color: #8b8882; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .camera-wrapper { background: #fff; padding: 12px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.04); margin-bottom: 30px; }
+        .camera-box { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #111; border-radius: 8px; overflow: hidden; }
+        video, canvas { width: 100%; height: 100%; object-fit: cover; }
+        canvas { display: none; }
+        
+        .controls { display: flex; flex-direction: column; gap: 15px; }
+        .btn-capture { width: 100%; padding: 16px; border: none; border-radius: 30px; background-color: var(--text-app); color: #fff; font-weight: 500; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; transition: transform 0.2s;}
+        .btn-capture:active { transform: scale(0.98); }
+        .status-msg { text-align: center; font-size: 0.85rem; color: var(--text-app); font-weight: 600;}
+        
+        .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-top: 40px; }
+        .gallery-item { background: #fff; padding: 8px 8px 12px 8px; border-radius: 4px; box-shadow: 0 6px 16px rgba(0,0,0,0.06); text-align: center; display: flex; flex-direction: column; transition: transform 0.3s ease; }
+        .gallery-item:nth-child(even) { transform: rotate(2deg); }
+        .gallery-item:nth-child(odd) { transform: rotate(-1deg); }
+        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 2px; background: #eee; }
+        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.9rem; margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <div class="app-header">
+            <!-- Tombol Kembali ke Dashboard -->
+            <button class="btn-kembali" onclick="window.location.href='index.html'">&larr;</button>
+            <h1 class="app-title" id="camTitleName">Kamera</h1>
+            <p class="app-subtitle">Disposable Cam</p>
+        </div>
+
+        <div class="camera-wrapper">
+            <div class="camera-box">
+                <video id="video" autoplay playsinline></video>
+                <canvas id="canvas"></canvas>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-capture" id="captureBtn">Jepret Foto</button>
+            <div id="status" class="status-msg">Sisa Kuota: <span id="sisaKuotaCam">0</span> / 5</div>
+        </div>
+
+        <div class="gallery-grid" id="galleryGrid">
+            <!-- Hasil foto akan otomatis muncul di sini -->
+        </div>
+    </div>
+
+    <script>
+        // Membaca pengaturan dan limit dari penyimpanan browser
+        const MAX_FREE_SHOTS = 5;
+        const user = localStorage.getItem('tlc_user');
+        
+        // Cek apakah pengguna sudah mendaftar/login di index.html
+        if (!user) {
+            alert("Silakan daftar/login terlebih dahulu melalui halaman utama!");
+            window.location.href = 'index.html';
+        } else {
+            document.getElementById('camTitleName').innerText = user;
+        }
+
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const captureBtn = document.getElementById('captureBtn');
+        const statusDiv = document.getElementById('status');
+        const sisaKuotaCam = document.getElementById('sisaKuotaCam');
+        const galleryGrid = document.getElementById('galleryGrid');
+
+        // Fungsi memperbarui angka sisa kuota foto
+        function updateKuota() {
+            let usedShots = parseInt(localStorage.getItem('tlc_used_shots')) || 0;
+            let sisa = MAX_FREE_SHOTS - usedShots;
+            sisaKuotaCam.innerText = sisa < 0 ? 0 : sisa;
+            return usedShots;
+        }
+
+        updateKuota();
+
+        // Menyalakan Kamera Depan
+        async function initCamera() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                video.srcObject = stream;
+            } catch (err) {
+                statusDiv.innerText = "Gagal mengakses kamera. Pastikan izin kamera diberikan di browser.";
+            }
+        }
+        initCamera();
+
+        // Ambil Foto & Unggah ke ImgBB
+        captureBtn.addEventListener('click', async () => {
+            let usedShots = updateKuota();
+            
+            // Mengunci kamera jika kuota habis
+            if (usedShots >= MAX_FREE_SHOTS) {
+                alert('Batas kuota gratis Anda (5 jepretan) telah habis!');
+                return;
+            }
+
+            captureBtn.disabled = true;
+            captureBtn.innerText = "Memproses...";
+
+            // Efek Flash saat memotret
+            video.style.opacity = '0';
+            setTimeout(() => { video.style.opacity = '1'; }, 150);
+
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            const base64Image = canvas.toDataURL('image/jpeg', 0.8).split(',')[1];
+            
+            // API Key ImgBB Anda
+            const IMGBB_API_KEY = '16a4714fa54ed030ef5416ae07a05f68'; 
+            
+            const formData = new FormData();
+            formData.append('key', IMGBB_API_KEY);
+            formData.append('image', base64Image);
+
+            try {
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.success) {
+                    const uploadedImageUrl = result.data.url;
+                    
+                    // Menambahkan foto ke galeri pratinjau (seperti cetakan polaroid)
+                    const item = document.createElement('div');
+                    item.className = 'gallery-item';
+                    item.innerHTML = `<img src="${uploadedImageUrl}"><div class="guest-tag">${user}</div>`;
+                    galleryGrid.prepend(item);
+                    
+                    // Memotong Kuota
+                    usedShots++;
+                    localStorage.setItem('tlc_used_shots', usedShots);
+                    updateKuota();
+                } else {
+                    alert("Gagal mengunggah foto ke server.");
+                }
+            } catch (error) {
+                alert("Koneksi internet terputus. Pastikan internet Anda stabil.");
+            } finally {
+                captureBtn.disabled = false;
+                captureBtn.innerText = "Jepret Foto";
+            }
+        });
+    </script>
+</body>
+</html>
