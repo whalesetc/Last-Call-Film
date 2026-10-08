@@ -199,6 +199,7 @@
             margin-top: 10px;
             font-size: 0.85rem;
             color: var(--accent-color);
+            font-weight: 500;
         }
     </style>
 </head>
@@ -239,6 +240,17 @@
         const statusDiv = document.getElementById('status');
         const galleryGrid = document.getElementById('galleryGrid');
 
+        // Cek Pengaturan dari Admin (disimpan di browser)
+        const namaMempelai = localStorage.getItem('mempelaiName');
+        const batasFoto = parseInt(localStorage.getItem('maxPhotos')) || 0;
+        let jumlahFotoSekarang = parseInt(localStorage.getItem('currentPhotoCount')) || 0;
+
+        // Ubah judul jika ada sesi aktif yang diatur dari admin.html
+        if (namaMempelai) {
+            document.querySelector('.subtitle').innerText = `Wedding of ${namaMempelai}`;
+            statusDiv.innerText = `Sisa kuota: ${batasFoto - jumlahFotoSekarang} foto`;
+        }
+
         // Nyalakan Kamera Depan iPad/HP
         async function initCamera() {
             try {
@@ -251,11 +263,16 @@
                 statusDiv.innerText = "Gagal mengakses kamera. Pastikan izin kamera diaktifkan.";
             }
         }
-
         initCamera();
 
         // Ambil Foto & Unggah ke ImgBB
         captureBtn.addEventListener('click', async () => {
+            // Cek apakah kuota foto sudah habis (hanya berlaku jika ada sesi admin)
+            if (namaMempelai && jumlahFotoSekarang >= batasFoto) {
+                alert('Mohon maaf, kuota roll film untuk sesi ini sudah habis!');
+                return;
+            }
+
             const name = guestNameInput.value.trim();
             if (!name) {
                 alert('Mohon isi nama Anda terlebih dahulu!');
@@ -290,7 +307,16 @@
                 if (result.success) {
                     const uploadedImageUrl = result.data.url;
                     addPhotoToGallery(uploadedImageUrl, name);
-                    statusDiv.innerText = "Berhasil! Terima kasih kenangannya.";
+                    
+                    // Tambah hitungan foto jika sesi admin sedang aktif
+                    if (namaMempelai) {
+                        jumlahFotoSekarang++;
+                        localStorage.setItem('currentPhotoCount', jumlahFotoSekarang);
+                        statusDiv.innerText = `Berhasil! Sisa kuota: ${batasFoto - jumlahFotoSekarang} foto`;
+                    } else {
+                        statusDiv.innerText = "Berhasil! Terima kasih kenangannya.";
+                    }
+                    
                     guestNameInput.value = "";
                 } else {
                     statusDiv.innerText = "Gagal mengunggah ke server.";
@@ -299,7 +325,11 @@
                 statusDiv.innerText = "Terjadi kesalahan koneksi.";
             } finally {
                 captureBtn.disabled = false;
-                setTimeout(() => { statusDiv.innerText = ""; }, 4000);
+                
+                // Jika tidak ada sesi admin aktif, bersihkan pesan setelah 4 detik
+                if (!namaMempelai) {
+                    setTimeout(() => { statusDiv.innerText = ""; }, 4000);
+                }
             }
         });
 
