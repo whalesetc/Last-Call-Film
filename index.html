@@ -107,15 +107,16 @@
 
     <script>
         // ==========================================
-        // MASUKKAN KONFIGURASI FIREBASE ANDA DI SINI
+        // KONFIGURASI FIREBASE THE LAST CALL FILM
         // ==========================================
         const firebaseConfig = {
-            apiKey: "MASUKKAN_API_KEY_ANDA_DISINI",
-            authDomain: "MASUKKAN_AUTH_DOMAIN_ANDA_DISINI",
-            projectId: "MASUKKAN_PROJECT_ID_ANDA_DISINI",
-            storageBucket: "MASUKKAN_STORAGE_BUCKET_ANDA_DISINI",
-            messagingSenderId: "MASUKKAN_SENDER_ID_ANDA_DISINI",
-            appId: "MASUKKAN_APP_ID_ANDA_DISINI"
+            apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
+            authDomain: "the-last-call-film.firebaseapp.com",
+            projectId: "the-last-call-film",
+            storageBucket: "the-last-call-film.firebasestorage.app",
+            messagingSenderId: "665352445108",
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1",
+            measurementId: "G-31E0XP89W5"
         };
         
         // Inisialisasi Firebase
@@ -186,7 +187,7 @@
                 });
             } catch (error) {
                 console.error("Gagal muat foto:", error);
-                gallery.innerHTML = '<div class="empty-state">Terjadi kesalahan saat memuat database. Hubungi admin.</div>';
+                gallery.innerHTML = '<div class="empty-state">Terjadi kesalahan saat memuat database. Pastikan pengaturan Firestore Anda sudah benar.</div>';
             }
         }
     </script>
