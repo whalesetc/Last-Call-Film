@@ -11,60 +11,81 @@
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --bg-app: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.5); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.1); }
+        :root { --bg-app: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.7); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-app); color: var(--text-light); line-height: 1.6; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
         
-        .app-container { width: 100%; max-width: 420px; margin: 0 auto; position: relative; padding-bottom: 50px; }
-        
-        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .btn-back { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        /* Latar Belakang dinamis (Akan diisi wallpaper dari database) */
+        body { 
+            background-color: var(--bg-app); 
+            color: var(--text-light); 
+            line-height: 1.6; 
+            padding: 20px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            min-height: 100vh;
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            position: relative;
+        }
 
-        .app-header { text-align: center; }
-        .app-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 600; margin-bottom: 4px; }
-        .film-counter { display: inline-block; background: rgba(110, 231, 183, 0.15); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(110, 231, 183, 0.3); }
+        /* Overlay gelap agar teks tetap terbaca di atas wallpaper */
+        #bgOverlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: -1;
+            backdrop-filter: blur(5px);
+        }
+        
+        .app-container { width: 100%; max-width: 420px; margin: 0 auto; position: relative; padding-bottom: 50px; z-index: 1; }
+        
+        /* Header Kamera */
+        .app-header { text-align: center; margin-bottom: 25px; margin-top: 20px; }
+        .app-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; margin-bottom: 8px; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        .film-counter { display: inline-block; background: rgba(0,0,0,0.6); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; border: 1px solid var(--border-color); backdrop-filter: blur(10px); }
 
         .guest-input-box { margin-bottom: 16px; }
-        .guest-input-box input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border-color); font-size: 0.95rem; text-align: center; outline: none; background: rgba(255, 255, 255, 0.05); color: #fff; }
+        .guest-input-box input { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); font-size: 1rem; text-align: center; outline: none; background: rgba(0, 0, 0, 0.6); color: #fff; backdrop-filter: blur(10px); }
+        .guest-input-box input:focus { border-color: var(--text-light); }
 
-        .camera-wrapper { background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; }
+        /* Jendela Viewfinder Kamera */
+        .camera-wrapper { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; backdrop-filter: blur(10px); }
         .camera-box { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #000; border-radius: 12px; overflow: hidden; }
         video, canvas { width: 100%; height: 100%; object-fit: cover; }
         canvas { display: none; }
         
-        .btn-capture { width: 100%; padding: 16px; border: none; border-radius: 16px; background-color: #fff; color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; font-size: 0.9rem; }
-        .btn-capture:disabled { background: #555; color: #888; cursor: not-allowed; }
+        /* Tombol Jepret */
+        .btn-capture { width: 100%; padding: 18px; border: none; border-radius: 16px; background-color: #fff; color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: transform 0.1s; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(255,255,255,0.2); }
+        .btn-capture:active { transform: scale(0.97); }
+        .btn-capture:disabled { background: #555; color: #888; cursor: not-allowed; box-shadow: none; }
         
-        .status-msg { text-align: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 12px; }
+        .status-msg { text-align: center; font-size: 0.85rem; color: var(--text-light); font-weight: 500; margin-top: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
         
-        .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        /* Galeri */
+        .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-        .gallery-item { background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; }
+        .gallery-item { background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
         .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
-        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 8px; color: rgba(255,255,255,0.9); }
-        
-        .btn-action { display: block; width: 100%; padding: 8px; background-color: rgba(255, 255, 255, 0.1); color: #fff; border: none; text-decoration: none; font-size: 0.75rem; font-weight: 600; border-radius: 8px; margin-top: auto; cursor: pointer; text-align: center; }
-        .btn-action:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 8px; color: #fff; }
+        .btn-action { display: block; width: 100%; padding: 8px; background-color: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.75rem; font-weight: 600; border-radius: 8px; margin-top: auto; cursor: pointer; }
 
-        /* Lightbox Modal */
-        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; }
         #lightboxClose { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2.5rem; background: none; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <div class="top-nav">
-            <a href="index.html" class="btn-back">&larr; Kembali</a>
-            <div class="film-counter" id="filmCounter">Sisa Rol: 15 / 15 Foto</div>
-        </div>
+    <div id="bgOverlay"></div>
 
+    <div class="app-container" id="appContainer" style="display: none;">
         <div class="app-header">
-            <h1 class="app-title font-serif">The Last Call</h1>
+            <h1 class="app-title font-serif" id="eventTitleDisplay">Memuat Acara...</h1>
+            <div class="film-counter" id="filmCounter">Sisa Rol: -</div>
         </div>
 
-        <div class="guest-input-box" style="margin-top: 15px;">
+        <div class="guest-input-box">
             <input type="text" id="namaTamuInput" placeholder="Ketik nama Anda di sini..." autocomplete="off">
         </div>
 
@@ -80,8 +101,14 @@
             <div id="status" class="status-msg">Siap merekam kenangan acaramu</div>
         </div>
 
-        <h3 class="gallery-section-title font-serif">Hasil Jepretan Sesi Ini</h3>
+        <h3 class="gallery-section-title font-serif">Hasil Jepretan</h3>
         <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <!-- Error Screen -->
+    <div id="errorScreen" style="display: flex; flex-direction: column; justify-content: center; align-items: center; height: 80vh; text-align: center; padding: 20px;">
+        <h2 class="font-serif" id="errorTitle">Menyiapkan Kamera...</h2>
+        <p id="errorDesc" style="color: var(--text-muted); margin-top: 10px;"></p>
     </div>
 
     <div id="lightbox" onclick="tutupLightbox()">
@@ -96,32 +123,99 @@
             projectId: "the-last-call-film",
             storageBucket: "the-last-call-film.firebasestorage.app",
             messagingSenderId: "665352445108",
-            appId: "1:665352445108:web:3ae79656e3dfcb22254be1",
-            measurementId: "G-31E0XP89W5"
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // 1. MENGAMBIL ID ACARA DARI URL BARCODE (contoh: ?event=12345)
+        const urlParams = new URLSearchParams(window.location.search);
+        const eventId = urlParams.get('event');
+
+        let eventData = null;
+        let sisaFilm = 0;
+        let shotsTaken = 0; // Berapa kali tamu ini sudah memotret
 
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const captureBtn = document.getElementById('captureBtn');
         const statusDiv = document.getElementById('status');
         const galleryGrid = document.getElementById('galleryGrid');
-        const namaTamuInput = document.getElementById('namaTamuInput');
         const filmCounter = document.getElementById('filmCounter');
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
+        
+        async function loadEventData() {
+            if (!eventId) {
+                tampilkanError("Tautan Tidak Valid", "Pastikan Anda memindai QR Code dari meja undangan dengan benar.");
+                return;
+            }
 
-        let sisaFilm = parseInt(localStorage.getItem('tlc_sisa_film')) ?? 15;
-        updateCounterUI();
+            try {
+                const doc = await db.collection("events").doc(eventId).get();
+                if (!doc.exists) {
+                    tampilkanError("Acara Tidak Ditemukan", "Acara ini mungkin telah dihapus.");
+                    return;
+                }
+
+                eventData = doc.data();
+
+                // Cek Status Aktif (Pembayaran)
+                if (eventData.status !== "Aktif") {
+                    tampilkanError("Kamera Belum Aktif", "Pemilik acara belum menyelesaikan aktivasi/pembayaran acara ini.");
+                    return;
+                }
+
+                // Cek Kuota Keseluruhan Acara
+                if (eventData.remainingQuota <= 0 && eventData.quota !== 9999) {
+                    tampilkanError("Kuota Acara Habis", "Maaf, batas kuota tamu untuk acara ini telah tercapai.");
+                    return;
+                }
+
+                // Terapkan Wallpaper jika ada
+                if (eventData.wallpaperUrl) {
+                    document.body.style.backgroundImage = `url(${eventData.wallpaperUrl})`;
+                }
+
+                // Format Teks Judul
+                let judul = "";
+                if(eventData.eventType === "Wedding") judul = `Wedding of<br>${eventData.eventName}`;
+                else if(eventData.eventType === "Birthday") judul = `Birthday of<br>${eventData.eventName}`;
+                else judul = `${eventData.eventName}`;
+                document.getElementById('eventTitleDisplay').innerHTML = judul;
+
+                // Hitung sisa film untuk tamu ini menggunakan LocalStorage
+                const limit = eventData.guestPhotoLimit || 15;
+                shotsTaken = parseInt(localStorage.getItem(`tlc_shots_${eventId}`)) || 0;
+                sisaFilm = limit - shotsTaken;
+
+                document.getElementById('errorScreen').style.display = 'none';
+                document.getElementById('appContainer').style.display = 'block';
+
+                updateCounterUI();
+                initCamera();
+
+            } catch (error) {
+                console.error(error);
+                tampilkanError("Koneksi Gagal", "Gagal terhubung ke server. Periksa koneksi internet Anda.");
+            }
+        }
+
+        function tampilkanError(judul, deskripsi) {
+            document.getElementById('appContainer').style.display = 'none';
+            document.getElementById('errorScreen').style.display = 'flex';
+            document.getElementById('errorTitle').innerText = judul;
+            document.getElementById('errorDesc').innerText = deskripsi;
+        }
 
         function updateCounterUI() {
-            filmCounter.innerText = `Sisa Rol: ${sisaFilm} / 15 Foto`;
+            const limit = eventData.guestPhotoLimit || 15;
+            filmCounter.innerText = `Sisa Jepretan: ${sisaFilm} / ${limit}`;
             if(sisaFilm <= 0) {
                 captureBtn.disabled = true;
-                captureBtn.innerText = "Rol Film Habis";
-                statusDiv.innerText = "Terima kasih! Rol film telah habis.";
+                captureBtn.innerText = "Jatah Habis";
+                statusDiv.innerText = "Terima kasih! Anda telah mencapai batas jepretan acara ini.";
+            } else {
+                captureBtn.disabled = false;
+                captureBtn.innerText = "Jepret Momen";
             }
         }
 
@@ -130,97 +224,106 @@
                 const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
                 video.srcObject = stream;
             } catch (err) {
-                statusDiv.innerText = "Gagal mengakses kamera perangkat.";
+                statusDiv.innerText = "Gagal mengakses kamera. Pastikan Anda memberi izin kamera di browser.";
             }
         }
-        initCamera();
 
-        function bukaLightbox(url) {
-            lightboxImg.src = url;
-            lightbox.style.display = 'flex';
-        }
-
-        function tutupLightbox() {
-            lightbox.style.display = 'none';
-        }
-
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        function bukaLightbox(url) { lightboxImg.src = url; lightbox.style.display = 'flex'; }
+        function tutupLightbox() { lightbox.style.display = 'none'; }
         function unduhFoto(url, namaFile) {
             const a = document.createElement('a');
-            a.href = url;
-            a.download = namaFile;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            a.href = url; a.download = namaFile;
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
         }
 
+        // FUNGSI JEPRET BERKALI-KALI TANPA REFRESH
         captureBtn.addEventListener('click', async () => {
             if (sisaFilm <= 0) return;
 
-            const namaTamu = namaTamuInput.value.trim() || "Tamu Anonim";
+            const namaTamu = document.getElementById('namaTamuInput').value.trim() || "Tamu Anonim";
 
+            // Matikan tombol SEMENTARA saat proses upload
             captureBtn.disabled = true;
-            statusDiv.innerText = "Menyimpan foto...";
+            statusDiv.innerText = "Memproses foto... Jangan tutup browser!";
             
+            // Efek Flash
             video.style.opacity = '0';
             setTimeout(() => { video.style.opacity = '1'; }, 150);
 
+            // Kompresi
             const MAX_WIDTH = 600;
             const scale = MAX_WIDTH / video.videoWidth;
             canvas.width = MAX_WIDTH;
             canvas.height = video.videoHeight * scale;
-            
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
             const imageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
+            const base64Image = imageDataUrl.split(',')[1];
 
+            // Update Sisa Film Lokal Segera
+            shotsTaken++;
             sisaFilm--;
-            localStorage.setItem('tlc_sisa_film', sisaFilm);
+            localStorage.setItem(`tlc_shots_${eventId}`, shotsTaken);
             updateCounterUI();
 
-            const namaFile = `TheLastCall_${namaTamu.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
+            const namaFile = `TLC_${namaTamu.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
             
-            // Buat elemen galeri tamu dengan penanganan event JS murni
             const item = document.createElement('div');
             item.className = 'gallery-item';
-            
-            const imgEl = document.createElement('img');
-            imgEl.src = imageDataUrl;
-            imgEl.onclick = () => bukaLightbox(imageDataUrl);
-
-            const tagEl = document.createElement('div');
-            tagEl.className = 'guest-tag';
-            tagEl.innerText = namaTamu;
-
-            const btnEl = document.createElement('button');
-            btnEl.className = 'btn-action';
-            btnEl.innerText = 'Unduh Foto';
-            btnEl.onclick = () => unduhFoto(imageDataUrl, namaFile);
-
-            item.appendChild(imgEl);
-            item.appendChild(tagEl);
-            item.appendChild(btnEl);
+            item.innerHTML = `
+                <img src="${imageDataUrl}" onclick="bukaLightbox('${imageDataUrl}')">
+                <div class="guest-tag">${namaTamu}</div>
+                <button class="btn-action" onclick="unduhFoto('${imageDataUrl}', '${namaFile}')">Unduh</button>
+            `;
             galleryGrid.prepend(item);
 
+            // Upload ke Server Background
             try {
-                await db.collection("photos").add({
-                    url: imageDataUrl,
-                    guestName: namaTamu,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                
-                statusDiv.innerText = "Berhasil disimpan ke album acara!";
+                const formData = new FormData();
+                formData.append('key', '16a4714fa54ed030ef5416ae07a05f68'); // API ImgBB
+                formData.append('image', base64Image);
+
+                const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+
+                if (result.success) {
+                    await db.collection("photos").add({
+                        eventId: eventId, // ID Acara Spesifik
+                        url: result.data.url,
+                        guestName: namaTamu,
+                        privacy: eventData.privacy, // Private / Visible
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    // Mengurangi Kuota Total Acara di Database
+                    if(eventData.quota !== 9999) {
+                        await db.collection('events').doc(eventId).update({
+                            remainingQuota: firebase.firestore.FieldValue.increment(-1)
+                        });
+                    }
+                    statusDiv.innerText = "Foto berhasil masuk album acara!";
+                } else {
+                    statusDiv.innerText = "Gagal upload ke server.";
+                }
             } catch (error) {
                 console.error(error);
-                statusDiv.innerText = "Gagal menyinkronkan ke server.";
+                statusDiv.innerText = "Koneksi terputus saat menyimpan.";
             } finally {
-                if(sisaFilm > 0) {
-                    captureBtn.disabled = false;
-                }
+                // NYALAKAN KEMBALI TOMBOL JEPRET JIKA SISA MASIH ADA
                 setTimeout(() => { 
-                    if(sisaFilm > 0) statusDiv.innerText = "Siap merekam kenangan acaramu"; 
-                }, 2500);
+                    if(sisaFilm > 0) {
+                        captureBtn.disabled = false;
+                        statusDiv.innerText = "Siap merekam kenangan selanjutnya!"; 
+                    }
+                }, 1500);
             }
         });
+
+        // Jalankan saat pertama kali dibuka
+        loadEventData();
     </script>
 </body>
 </html>
