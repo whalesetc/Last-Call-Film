@@ -109,21 +109,28 @@
             const namaTamu = namaTamuInput.value.trim() || "Tamu Anonim";
 
             captureBtn.disabled = true;
-            statusDiv.innerText = "Memproses foto...";
+            statusDiv.innerText = "Memproses foto... (Upload Kilat)";
             
             // Efek Flash
             video.style.opacity = '0';
             setTimeout(() => { video.style.opacity = '1'; }, 150);
 
-            // Bekukan gambar dari video ke canvas
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // ==========================================
+            // KOMPRESI GAMBAR (AGAR PROSES JAUH LEBIH CEPAT)
+            // ==========================================
+            const MAX_WIDTH = 800; // Lebar gambar diperkecil maksimal 800px
+            const scale = MAX_WIDTH / video.videoWidth;
+            canvas.width = MAX_WIDTH;
+            canvas.height = video.videoHeight * scale;
+            
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            // Kualitas JPEG diturunkan menjadi 60% (0.6) agar file sangat ringan
+            const imageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
             const base64Image = imageDataUrl.split(',')[1];
-            
+            // ==========================================
+
             // Tampilkan foto di layar tamu agar mereka bisa melihat & mengunduhnya
             const namaFile = `TLC_${namaTamu.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
             const item = document.createElement('div');
@@ -135,7 +142,7 @@
             `;
             galleryGrid.prepend(item);
 
-            // API Key ImgBB (Biarkan saja jika Anda menggunakan ini)
+            // API Key ImgBB
             const IMGBB_API_KEY = '16a4714fa54ed030ef5416ae07a05f68'; 
             const formData = new FormData();
             formData.append('key', IMGBB_API_KEY);
