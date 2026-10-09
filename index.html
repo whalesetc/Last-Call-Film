@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>The Last Call Film • Kamera Sekali Pakai Pernikahan & Acara</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
+    
     <style>
         :root {
             --bg-dark: #12110f; 
@@ -78,7 +83,6 @@
         .auth-toggle button { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; cursor: pointer; border-radius: 8px; transition: all 0.3s; }
         .auth-toggle button.active { background: #fff; color: #000; }
 
-        /* Tombol Google SVG yang tidak akan rusak */
         .btn-google { width: 100%; padding: 14px; background: transparent; border: 1px solid var(--border-color); border-radius: 12px; color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; transition: background 0.2s;}
         .btn-google:hover { background: rgba(255,255,255,0.05); }
 
@@ -126,7 +130,7 @@
             <button class="btn-primary" onclick="bukaLogin('register')">Buat album gratis</button>
         </div>
         <div class="nav-actions" id="navUserButtons" style="display: none;">
-            <button class="btn-primary" onclick="logout()" style="background: transparent; color: #fff; border: 1px solid #333;">Keluar Akun</button>
+            <button class="btn-primary" onclick="prosesLogout()" style="background: transparent; color: #fff; border: 1px solid #333;">Keluar Akun</button>
         </div>
     </nav>
 
@@ -134,7 +138,7 @@
     <div id="landingPage" class="container">
         <div class="hero">
             <h1 class="font-serif">Lihat acaramu<br><span style="font-style: italic; font-weight: 400;">dari mata semua tamu.</span></h1>
-            <p>The Last Call Film adalah album foto privat untuk acaramu. Tamu gabung lewat QR (tanpa install apa-apa), motret dari HP sendiri, dan albumnya terbuka setelah acara selesai.</p>
+            <p>The Last Call Film adalah album foto privat untuk acaramu. Tamu gabung lewat QR, motret dari HP sendiri, dan albumnya terbuka setelah acara selesai.</p>
             <button class="btn-hero" onclick="bukaLogin('register')">Buat album gratis &rarr;</button>
         </div>
     </div>
@@ -143,7 +147,6 @@
     <!-- HALAMAN LOGIN / REGISTER (SPLIT LAYOUT) -->
     <div id="loginPage">
         <div class="login-grid">
-            <!-- Kolom Kiri -->
             <div class="login-left">
                 <div class="login-left-logo">✦ The Last Call</div>
                 <h1 class="font-serif">Lihat acaramu<br>dari mata semua tamu..</h1>
@@ -171,7 +174,6 @@
                 </div>
             </div>
 
-            <!-- Kolom Kanan -->
             <div class="login-right">
                 <button class="btn-close-login" onclick="tutupLogin()">×</button>
                 
@@ -185,8 +187,7 @@
                     <button id="tabRegister" onclick="switchMode('register')">Buat akun</button>
                 </div>
 
-                <!-- Tombol Google dengan Logo Vector SVG yang tidak akan rusak -->
-                <button class="btn-google" onclick="prosesMasukCepat()">
+                <button class="btn-google" onclick="loginDenganGoogle()">
                     <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18px" height="18px" style="display: block;">
                         <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
                         <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
@@ -204,12 +205,12 @@
                 </div>
                 <div class="form-group">
                     <span class="form-icon">🔒</span>
-                    <input type="password" placeholder="Kata sandi (min. 6 karakter)">
+                    <input type="password" id="passwordInput" placeholder="Kata sandi (min. 6 karakter)">
                 </div>
 
                 <a class="forgot-pw" id="forgotPwLink">Lupa kata sandi?</a>
 
-                <button class="btn-submit" onclick="prosesMasukEmail()" id="btnSubmitForm">Masuk &rarr;</button>
+                <button class="btn-submit" onclick="submitAuthForm()" id="btnSubmitForm">Masuk &rarr;</button>
 
                 <p class="switch-mode-text" id="switchModeText">Belum punya akun? <span onclick="switchMode('register')">Daftar</span></p>
             </div>
@@ -235,39 +236,31 @@
     </div>
 
     <script>
-        const MAX_FREE_SHOTS = 5;
+        // ==========================================
+        // KONFIGURASI FIREBASE ANDA
+        // ==========================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
+            authDomain: "the-last-call-film.firebaseapp.com",
+            projectId: "the-last-call-film",
+            storageBucket: "the-last-call-film.firebasestorage.app",
+            messagingSenderId: "665352445108",
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1",
+            measurementId: "G-31E0XP89W5"
+        };
+        
+        // Inisialisasi Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
 
-        // --- SISTEM TAMPILAN DASHBOARD / LANDING PAGE ---
-        function initApp() {
-            const user = localStorage.getItem('tlc_user');
-            if (user) {
-                document.getElementById('landingPage').style.display = 'none';
-                document.getElementById('dashboardPage').style.display = 'block';
-                document.getElementById('navAuthButtons').style.display = 'none';
-                document.getElementById('navUserButtons').style.display = 'flex';
-                
-                document.getElementById('dashUserName').innerText = user.split('@')[0];
-                
-                let usedShots = parseInt(localStorage.getItem('tlc_used_shots')) || 0;
-                let sisa = MAX_FREE_SHOTS - usedShots;
-                document.getElementById('sisaKuotaDash').innerText = sisa < 0 ? 0 : sisa;
-            } else {
-                document.getElementById('landingPage').style.display = 'block';
-                document.getElementById('dashboardPage').style.display = 'none';
-                document.getElementById('navAuthButtons').style.display = 'flex';
-                document.getElementById('navUserButtons').style.display = 'none';
-            }
-        }
-
-        // --- SISTEM HALAMAN LOGIN / REGISTER ---
+        // ==========================================
+        // LOGIKA TAMPILAN (UI)
+        // ==========================================
         const loginPage = document.getElementById('loginPage');
-        const formTitle = document.getElementById('formTitle');
-        const formSubtitle = document.getElementById('formSubtitle');
         const tabLogin = document.getElementById('tabLogin');
         const tabRegister = document.getElementById('tabRegister');
-        const forgotPwLink = document.getElementById('forgotPwLink');
-        const btnSubmitForm = document.getElementById('btnSubmitForm');
-        const switchModeText = document.getElementById('switchModeText');
+        let isLoginMode = true;
 
         function bukaLogin(mode) {
             loginPage.style.display = 'block';
@@ -281,62 +274,103 @@
         }
 
         function switchMode(mode) {
-            if(mode === 'login') {
+            isLoginMode = (mode === 'login');
+            if(isLoginMode) {
                 tabLogin.classList.add('active');
                 tabRegister.classList.remove('active');
-                formTitle.innerHTML = "Selamat datang<br>kembali.";
-                formSubtitle.innerText = "Masuk untuk mengelola acara dan tamumu.";
-                forgotPwLink.style.display = "block";
-                btnSubmitForm.innerHTML = "Masuk &rarr;";
-                switchModeText.innerHTML = 'Belum punya akun? <span onclick="switchMode(\'register\')">Daftar</span>';
+                document.getElementById('formTitle').innerHTML = "Selamat datang<br>kembali.";
+                document.getElementById('formSubtitle').innerText = "Masuk untuk mengelola acara dan tamumu.";
+                document.getElementById('forgotPwLink').style.display = "block";
+                document.getElementById('btnSubmitForm').innerHTML = "Masuk &rarr;";
+                document.getElementById('switchModeText').innerHTML = 'Belum punya akun? <span onclick="switchMode(\'register\')">Daftar</span>';
             } else {
                 tabRegister.classList.add('active');
                 tabLogin.classList.remove('active');
-                formTitle.innerHTML = "Mulai";
-                formSubtitle.innerText = "Buat akun gratis.";
-                forgotPwLink.style.display = "none";
-                btnSubmitForm.innerHTML = "Buat akun &rarr;";
-                switchModeText.innerHTML = 'Sudah punya akun? <span onclick="switchMode(\'login\')">Masuk</span>';
+                document.getElementById('formTitle').innerHTML = "Mulai";
+                document.getElementById('formSubtitle').innerText = "Buat akun gratis.";
+                document.getElementById('forgotPwLink').style.display = "none";
+                document.getElementById('btnSubmitForm').innerHTML = "Buat akun &rarr;";
+                document.getElementById('switchModeText').innerHTML = 'Sudah punya akun? <span onclick="switchMode(\'login\')">Masuk</span>';
             }
         }
 
-        // --- SIMULASI AUTENTIKASI EMAIL ---
-        function prosesMasukEmail() {
-            const email = document.getElementById('emailInput').value.trim();
-            if (!email || !email.includes('@')) {
-                alert("Harap masukkan format alamat email yang benar!");
-                return;
-            }
-            
-            localStorage.setItem('tlc_user', email);
-            if (!localStorage.getItem('tlc_used_shots')) localStorage.setItem('tlc_used_shots', 0);
-            
-            tutupLogin();
-            initApp();
-        }
-
-        // --- SIMULASI AUTENTIKASI GOOGLE ---
-        function prosesMasukCepat() {
-            // Memunculkan pop-up yang mensimulasikan jendela pemilihan akun Google
-            const emailGoogle = prompt("Menghubungkan ke Google...\n\nSilakan pilih atau masukkan alamat Gmail Anda untuk melanjutkan:");
-            
-            if (emailGoogle && emailGoogle.includes('@')) {
-                localStorage.setItem('tlc_user', emailGoogle);
-                if (!localStorage.getItem('tlc_used_shots')) localStorage.setItem('tlc_used_shots', 0);
+        function updateUI(user) {
+            if (user) {
+                document.getElementById('landingPage').style.display = 'none';
+                document.getElementById('dashboardPage').style.display = 'block';
+                document.getElementById('navAuthButtons').style.display = 'none';
+                document.getElementById('navUserButtons').style.display = 'flex';
+                
+                // Menampilkan nama depan email atau display name dari Google
+                const displayName = user.displayName || user.email.split('@')[0];
+                document.getElementById('dashUserName').innerText = displayName;
+                
+                localStorage.setItem('tlc_user', user.email);
+                let usedShots = parseInt(localStorage.getItem('tlc_used_shots')) || 0;
+                let sisa = 5 - usedShots;
+                document.getElementById('sisaKuotaDash').innerText = sisa < 0 ? 0 : sisa;
                 
                 tutupLogin();
-                initApp();
-            } else if (emailGoogle) {
-                alert("Format email tidak valid. Pendaftaran dibatalkan.");
+            } else {
+                document.getElementById('landingPage').style.display = 'block';
+                document.getElementById('dashboardPage').style.display = 'none';
+                document.getElementById('navAuthButtons').style.display = 'flex';
+                document.getElementById('navUserButtons').style.display = 'none';
+                localStorage.removeItem('tlc_user');
             }
         }
 
-        function logout() {
-            localStorage.removeItem('tlc_user');
-            initApp();
+        // ==========================================
+        // PROSES AUTENTIKASI FIREBASE
+        // ==========================================
+        
+        // Memantau status login
+        auth.onAuthStateChanged(user => {
+            updateUI(user);
+        });
+
+        // 1. Login dengan Google (POP-UP ASLI)
+        function loginDenganGoogle() {
+            auth.signInWithPopup(googleProvider)
+            .catch((error) => {
+                // Jangan tampilkan alert jika user hanya menutup pop-up (batal)
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert("Gagal masuk dengan Google: " + error.message);
+                }
+            });
         }
 
-        initApp();
+        // 2. Login / Daftar dengan Email & Password
+        function submitAuthForm() {
+            const email = document.getElementById('emailInput').value.trim();
+            const password = document.getElementById('passwordInput').value;
+
+            if (!email || !password) {
+                alert("Email dan kata sandi wajib diisi!");
+                return;
+            }
+
+            document.getElementById('btnSubmitForm').innerText = "Memproses...";
+
+            if (isLoginMode) {
+                auth.signInWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    alert("Gagal masuk: Email atau sandi salah.");
+                    document.getElementById('btnSubmitForm').innerHTML = "Masuk &rarr;";
+                });
+            } else {
+                auth.createUserWithEmailAndPassword(email, password)
+                .catch((error) => {
+                    alert("Gagal daftar: " + error.message);
+                    document.getElementById('btnSubmitForm').innerHTML = "Buat akun &rarr;";
+                });
+            }
+        }
+
+        // 3. Proses Logout
+        function prosesLogout() {
+            auth.signOut();
+        }
     </script>
 </body>
 </html>
