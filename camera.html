@@ -17,50 +17,54 @@
         
         .app-container { width: 100%; max-width: 420px; margin: 0 auto; position: relative; padding-bottom: 50px; }
         
-        /* Header Kamera */
-        .app-header { text-align: center; margin-bottom: 20px; }
-        .app-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 600; margin-bottom: 4px; }
+        .top-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-back { background: rgba(255, 255, 255, 0.08); border: 1px solid var(--border-color); color: #fff; padding: 8px 14px; border-radius: 12px; font-size: 0.85rem; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+
+        .app-header { text-align: center; }
+        .app-title { font-family: 'Playfair Display', serif; font-size: 1.6rem; font-weight: 600; margin-bottom: 4px; }
         .film-counter { display: inline-block; background: rgba(110, 231, 183, 0.15); color: var(--accent); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; border: 1px solid rgba(110, 231, 183, 0.3); }
 
-        /* Input Nama Tamu */
         .guest-input-box { margin-bottom: 16px; }
         .guest-input-box input { width: 100%; padding: 12px 16px; border-radius: 14px; border: 1px solid var(--border-color); font-size: 0.95rem; text-align: center; outline: none; background: rgba(255, 255, 255, 0.05); color: #fff; }
-        .guest-input-box input:focus { border-color: var(--accent); }
 
-        /* Jendela Viewfinder Kamera */
         .camera-wrapper { background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; }
         .camera-box { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #000; border-radius: 12px; overflow: hidden; }
         video, canvas { width: 100%; height: 100%; object-fit: cover; }
         canvas { display: none; }
         
-        /* Tombol Jepret */
-        .btn-capture { width: 100%; padding: 16px; border: none; border-radius: 16px; background-color: #fff; color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; transition: transform 0.1s; font-size: 0.9rem; }
-        .btn-capture:active { transform: scale(0.97); }
+        .btn-capture { width: 100%; padding: 16px; border: none; border-radius: 16px; background-color: #fff; color: #000; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; cursor: pointer; font-size: 0.9rem; }
         .btn-capture:disabled { background: #555; color: #888; cursor: not-allowed; }
         
         .status-msg { text-align: center; font-size: 0.8rem; color: var(--text-muted); font-weight: 500; margin-top: 12px; }
         
-        /* Galeri Foto Hasil Jepretan Tamu */
         .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
         .gallery-item { background: rgba(255, 255, 255, 0.03); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; }
-        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
         .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 8px; color: rgba(255,255,255,0.9); }
         
-        .btn-download { display: block; width: 100%; padding: 8px; background-color: rgba(255, 255, 255, 0.1); color: #fff; text-decoration: none; font-size: 0.75rem; font-weight: 600; border-radius: 8px; margin-top: auto; transition: background 0.2s; }
-        .btn-download:hover { background-color: rgba(255, 255, 255, 0.2); }
+        .btn-action { display: block; width: 100%; padding: 8px; background-color: rgba(255, 255, 255, 0.1); color: #fff; border: none; text-decoration: none; font-size: 0.75rem; font-weight: 600; border-radius: 8px; margin-top: auto; cursor: pointer; text-align: center; }
+        .btn-action:hover { background-color: rgba(255, 255, 255, 0.2); }
+
+        /* Lightbox Modal */
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; }
+        #lightboxClose { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2.5rem; background: none; border: none; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div class="app-container">
-        <div class="app-header">
-            <h1 class="app-title font-serif">The Last Call</h1>
-            <!-- Peringatan Sisa Rol Film -->
+        <div class="top-nav">
+            <a href="index.html" class="btn-back">&larr; Kembali</a>
             <div class="film-counter" id="filmCounter">Sisa Rol: 15 / 15 Foto</div>
         </div>
 
-        <div class="guest-input-box">
+        <div class="app-header">
+            <h1 class="app-title font-serif">The Last Call</h1>
+        </div>
+
+        <div class="guest-input-box" style="margin-top: 15px;">
             <input type="text" id="namaTamuInput" placeholder="Ketik nama Anda di sini..." autocomplete="off">
         </div>
 
@@ -78,6 +82,11 @@
 
         <h3 class="gallery-section-title font-serif">Hasil Jepretan Sesi Ini</h3>
         <div class="gallery-grid" id="galleryGrid"></div>
+    </div>
+
+    <div id="lightbox" onclick="tutupLightbox()">
+        <button id="lightboxClose">&times;</button>
+        <img id="lightboxImg" src="" alt="Preview">
     </div>
 
     <script>
@@ -101,9 +110,10 @@
         const galleryGrid = document.getElementById('galleryGrid');
         const namaTamuInput = document.getElementById('namaTamuInput');
         const filmCounter = document.getElementById('filmCounter');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
 
-        // Batas kuota rol film per sesi perangkat
-        let sisaFilm = parseInt(localStorage.getItem('tlc_sisa_film')) || 15;
+        let sisaFilm = parseInt(localStorage.getItem('tlc_sisa_film')) ?? 15;
         updateCounterUI();
 
         function updateCounterUI() {
@@ -125,6 +135,24 @@
         }
         initCamera();
 
+        function bukaLightbox(url) {
+            lightboxImg.src = url;
+            lightbox.style.display = 'flex';
+        }
+
+        function tutupLightbox() {
+            lightbox.style.display = 'none';
+        }
+
+        function unduhFoto(url, namaFile) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = namaFile;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
         captureBtn.addEventListener('click', async () => {
             if (sisaFilm <= 0) return;
 
@@ -136,7 +164,6 @@
             video.style.opacity = '0';
             setTimeout(() => { video.style.opacity = '1'; }, 150);
 
-            // Kompresi gambar agar cepat
             const MAX_WIDTH = 600;
             const scale = MAX_WIDTH / video.videoWidth;
             canvas.width = MAX_WIDTH;
@@ -146,24 +173,35 @@
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             const imageDataUrl = canvas.toDataURL('image/jpeg', 0.6);
 
-            // Kurangi kuota sisa film
             sisaFilm--;
             localStorage.setItem('tlc_sisa_film', sisaFilm);
             updateCounterUI();
 
-            // Perbaikan Tombol Unduh (Langsung Memicu Download di Safari/Chrome)
             const namaFile = `TheLastCall_${namaTamu.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
+            
+            // Buat elemen galeri tamu dengan penanganan event JS murni
             const item = document.createElement('div');
             item.className = 'gallery-item';
-            item.innerHTML = `
-                <img src="${imageDataUrl}">
-                <div class="guest-tag">${namaTamu}</div>
-                <a href="${imageDataUrl}" download="${namaFile}" class="btn-download">Unduh Foto</a>
-            `;
+            
+            const imgEl = document.createElement('img');
+            imgEl.src = imageDataUrl;
+            imgEl.onclick = () => bukaLightbox(imageDataUrl);
+
+            const tagEl = document.createElement('div');
+            tagEl.className = 'guest-tag';
+            tagEl.innerText = namaTamu;
+
+            const btnEl = document.createElement('button');
+            btnEl.className = 'btn-action';
+            btnEl.innerText = 'Unduh Foto';
+            btnEl.onclick = () => unduhFoto(imageDataUrl, namaFile);
+
+            item.appendChild(imgEl);
+            item.appendChild(tagEl);
+            item.appendChild(btnEl);
             galleryGrid.prepend(item);
 
             try {
-                // Simpan ke database Firestore Admin
                 await db.collection("photos").add({
                     url: imageDataUrl,
                     guestName: namaTamu,
