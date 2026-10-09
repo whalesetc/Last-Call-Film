@@ -33,12 +33,12 @@
         .hero-title { font-size: 3rem; margin-bottom: 15px; line-height: 1.2; }
         
         /* Dasbor Customer */
-        .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+        .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
+        .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
         .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
 
-        /* Formulir Buat Acara */
+        /* Formulir */
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
         .form-control { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; outline: none; font-family: inherit; }
@@ -60,14 +60,14 @@
         <div id="navMenu"></div>
     </nav>
 
-    <!-- 1. HALAMAN LANDING (SEBELUM LOGIN) -->
+    <!-- 1. HALAMAN LANDING -->
     <div id="landingPage" class="section active-section">
         <h1 class="hero-title font-serif">Abadikan Momen.<br>Tanpa Batas.</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px;">Platform photobooth digital elegan untuk acaramu.</p>
         <button class="btn-primary" onclick="loginGoogle()">Mulai Buat Acara</button>
     </div>
 
-    <!-- 2. DASBOR CUSTOMER (DAFTAR ACARA MEREKA) -->
+    <!-- 2. DASBOR CUSTOMER -->
     <div id="customerDashboard" class="section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
             <h2 class="font-serif" style="font-size: 2rem;">Acara Saya</h2>
@@ -84,7 +84,6 @@
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Detail Acara Baru</h2>
         
         <form id="eventForm">
-            <!-- Jenis & Nama Acara -->
             <div class="form-group">
                 <label>Jenis Acara</label>
                 <select id="eventType" class="form-control" onchange="updatePlaceholder()">
@@ -104,7 +103,12 @@
                 <input type="date" id="eventDate" class="form-control" required>
             </div>
 
-            <!-- Privasi Galeri -->
+            <div class="form-group">
+                <label>Batas Maksimal Foto per Tamu</label>
+                <input type="number" id="guestPhotoLimit" class="form-control" min="1" max="36" value="15" required>
+                <span style="font-size:0.75rem; color:var(--text-muted)">Berapa kali maksimal 1 orang tamu boleh menjepret? (Maks: 36)</span>
+            </div>
+
             <div class="form-group">
                 <label>Privasi Galeri Foto Tamu</label>
                 <div class="radio-group">
@@ -121,9 +125,8 @@
                 </div>
             </div>
 
-            <!-- Pilihan Paket Kuota -->
             <div class="form-group">
-                <label>Pilihan Kuota Pengguna (Tamu)</label>
+                <label>Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)</label>
                 <div class="radio-group" id="packageGroup">
                     <label class="radio-card"><input type="radio" name="package" value="5" required>5 Orang<span class="price-tag">Gratis</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="10">10 Orang<span class="price-tag">Rp 50.000</span></label>
@@ -136,7 +139,6 @@
                 </div>
             </div>
 
-            <!-- Upload Wallpaper -->
             <div class="form-group">
                 <label>Wallpaper / Sampul Kamera Tamu</label>
                 <label class="file-upload">
@@ -146,6 +148,32 @@
             </div>
 
             <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px;">Buat & Proses Pembayaran</button>
+        </form>
+    </div>
+
+    <!-- 4. PENGATURAN ACARA (KELOLA ACARA) -->
+    <div id="manageEventSection" class="section">
+        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Kembali ke Dasbor</button>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Pengaturan Acara</h2>
+        
+        <form id="editEventForm">
+            <input type="hidden" id="editEventId">
+            
+            <div class="form-group">
+                <label>Batas Maksimal Foto per Tamu</label>
+                <input type="number" id="editGuestPhotoLimit" class="form-control" min="1" max="36" required>
+                <span style="font-size:0.75rem; color:var(--text-muted)">Ubah batas berapa kali satu orang tamu boleh menjepret foto (Maks: 36).</span>
+            </div>
+
+            <div class="form-group">
+                <label>Privasi Galeri Foto Tamu</label>
+                <select id="editPrivacy" class="form-control">
+                    <option value="visible">Publik (Visible) - Semua tamu bisa melihat galeri</option>
+                    <option value="private">Privat (Private) - Tamu hanya melihat fotonya sendiri</option>
+                </select>
+            </div>
+
+            <button type="submit" id="btnUpdateEvent" class="btn-primary" style="width: 100%; margin-top: 10px;">Simpan Perubahan</button>
         </form>
     </div>
 
@@ -173,6 +201,14 @@
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         function bukaForm() { showSection('createEventForm'); document.getElementById('eventForm').reset(); document.getElementById('fileName').innerText = "Klik untuk unggah gambar dari perangkat"; }
         
+        // Membuka halaman Kelola Pengaturan Acara
+        function bukaPengaturan(eventId, currentLimit, currentPrivacy) {
+            document.getElementById('editEventId').value = eventId;
+            document.getElementById('editGuestPhotoLimit').value = currentLimit || 15;
+            document.getElementById('editPrivacy').value = currentPrivacy || 'visible';
+            showSection('manageEventSection');
+        }
+
         function updatePlaceholder() {
             const tipe = document.getElementById('eventType').value;
             const label = document.getElementById('labelEventName');
@@ -198,27 +234,24 @@
             if (user) {
                 navMenu.innerHTML = `<button class="btn-outline" onclick="auth.signOut()">Keluar Akun</button>`;
                 bukaDasbor(); 
-                
                 db.collection('users').doc(user.uid).set({
                     name: user.displayName,
                     email: user.email,
                     lastLogin: firebase.firestore.FieldValue.serverTimestamp()
                 }, { merge: true });
-
             } else {
                 navMenu.innerHTML = `<button class="btn-primary" onclick="loginGoogle()">Masuk</button>`;
                 showSection('landingPage');
             }
         });
 
-        // MENAMPILKAN DAFTAR ACARA MILIK CUSTOMER (Sudah diperbaiki)
+        // MENAMPILKAN DAFTAR ACARA MILIK CUSTOMER
         async function muatAcaraSaya() {
             if(!currentUser) return;
             const listDiv = document.getElementById('eventList');
             listDiv.innerHTML = '<p style="text-align:center; color:#888;">Memuat data...</p>';
 
             try {
-                // Tarik data tanpa orderBy agar tidak error Index
                 const snapshot = await db.collection("events").where("ownerId", "==", currentUser.uid).get();
                 
                 if (snapshot.empty) {
@@ -226,9 +259,12 @@
                     return;
                 }
 
-                // Urutkan data secara manual menggunakan JavaScript dari yang paling baru
                 let daftarAcara = [];
-                snapshot.forEach(doc => daftarAcara.push(doc.data()));
+                snapshot.forEach(doc => {
+                    let eventData = doc.data();
+                    eventData.id = doc.id; // Simpan ID dokumen
+                    daftarAcara.push(eventData);
+                });
                 
                 daftarAcara.sort((a, b) => {
                     const timeA = a.createdAt ? a.createdAt.toMillis() : 0;
@@ -239,16 +275,18 @@
                 listDiv.innerHTML = '';
                 daftarAcara.forEach(data => {
                     let statusBadge = data.status === 'Aktif' ? '<span class="badge" style="background:#6ee7b7;">Aktif</span>' : '<span class="badge" style="background:#fbbc05;">Menunggu Pembayaran</span>';
+                    let limitText = data.guestPhotoLimit ? data.guestPhotoLimit : 15;
                     
                     listDiv.innerHTML += `
                         <div class="event-card">
                             <div class="event-info">
                                 <h3>${data.eventName} <span style="font-size:0.8rem; font-weight:normal;">(${data.eventType})</span></h3>
-                                <p>Tanggal: ${data.date} • Paket: ${data.quota === 9999 ? 'Tak Terbatas' : data.quota + ' Orang'} • Privasi: ${data.privacy}</p>
+                                <p>Tgl: ${data.date} • Paket: ${data.quota === 9999 ? 'Tak Terbatas' : data.quota + ' Orang'}</p>
+                                <p>Batas Jepretan per Tamu: <strong>${limitText} Foto</strong> • Privasi: ${data.privacy}</p>
                                 <p style="margin-top: 5px;">${statusBadge}</p>
                             </div>
                             <div>
-                                <button class="btn-outline" onclick="alert('Kode QR & Dasbor Acara sedang dalam pengembangan untuk tahap berikutnya!')">Kelola Acara</button>
+                                <button class="btn-outline" onclick="bukaPengaturan('${data.id}', ${limitText}, '${data.privacy}')">Kelola Acara</button>
                             </div>
                         </div>
                     `;
@@ -259,7 +297,7 @@
             }
         }
 
-        // MENYIMPAN ACARA BARU KE DATABASE FIREBASE
+        // MENYIMPAN ACARA BARU
         document.getElementById('eventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -270,8 +308,8 @@
             const eventName = document.getElementById('eventName').value;
             const eventDate = document.getElementById('eventDate').value;
             const privacy = document.querySelector('input[name="privacy"]:checked').value;
+            const guestPhotoLimit = parseInt(document.getElementById('guestPhotoLimit').value);
             
-            // Logika Paket (Harga & Kuota)
             const packageVal = document.querySelector('input[name="package"]:checked').value;
             let kuota = parseInt(packageVal);
             let harga = 0;
@@ -284,7 +322,6 @@
             else if (kuota === 150) harga = 350000;
             else if (kuota === 200) harga = 470000;
 
-            // Proses Upload Gambar Wallpaper ke ImgBB
             let wallpaperUrl = "";
             const fileInput = document.getElementById('wallpaperFile').files[0];
             if (fileInput) {
@@ -301,8 +338,6 @@
             }
 
             btn.innerText = "Menyimpan Acara...";
-
-            // Menyimpan Data Acara ke Database Firestore Anda
             try {
                 await db.collection("events").add({
                     ownerId: currentUser.uid,
@@ -311,11 +346,12 @@
                     eventName: eventName,
                     date: eventDate,
                     privacy: privacy,
+                    guestPhotoLimit: guestPhotoLimit, // Menyimpan batas foto ke DB
                     quota: kuota,
                     remainingQuota: kuota,
                     price: harga,
                     wallpaperUrl: wallpaperUrl,
-                    status: harga === 0 ? "Aktif" : "Pending", // Gratis langsung aktif
+                    status: harga === 0 ? "Aktif" : "Pending",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
@@ -326,6 +362,34 @@
                 alert("Terjadi kesalahan saat menyimpan data.");
             } finally {
                 btn.innerText = "Buat & Proses Pembayaran";
+                btn.disabled = false;
+            }
+        });
+
+        // MENYIMPAN PERUBAHAN PENGATURAN ACARA
+        document.getElementById('editEventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnUpdateEvent');
+            btn.innerText = "Menyimpan...";
+            btn.disabled = true;
+
+            const eventId = document.getElementById('editEventId').value;
+            const newLimit = parseInt(document.getElementById('editGuestPhotoLimit').value);
+            const newPrivacy = document.getElementById('editPrivacy').value;
+
+            try {
+                // Update dokumen acara di Firebase Firestore
+                await db.collection('events').doc(eventId).update({
+                    guestPhotoLimit: newLimit,
+                    privacy: newPrivacy
+                });
+                alert("Pengaturan acara berhasil diperbarui!");
+                bukaDasbor();
+            } catch (error) {
+                console.error(error);
+                alert("Gagal mengupdate acara: " + error.message);
+            } finally {
+                btn.innerText = "Simpan Perubahan";
                 btn.disabled = false;
             }
         });
