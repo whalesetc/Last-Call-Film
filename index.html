@@ -59,10 +59,10 @@
 
     <nav>
         <a class="logo" href="#">✦ The Last Call</a>
-        <button class="btn-primary" onclick="auth.signOut()" style="background: transparent; color: #fff; border: 1px solid #333;">Keluar Akun</button>
+        <button class="btn-primary" onclick="auth.signOut().then(() => window.location.reload())" style="background: transparent; color: #fff; border: 1px solid #333;">Keluar Akun</button>
     </nav>
 
-    <div id="loginMessage">Memeriksa sesi Anda...</div>
+    <div id="loginMessage">Memeriksa sesi login Anda...</div>
 
     <div id="dashboardPage">
         <div class="dash-header">
@@ -133,6 +133,7 @@
             lightbox.style.display = 'none';
         }
 
+        // Tunggu status auth benar-benar merespon
         auth.onAuthStateChanged(user => {
             if (user) {
                 document.getElementById('loginMessage').style.display = 'none';
@@ -147,8 +148,8 @@
 
                 muatFoto();
             } else {
-                document.getElementById('loginMessage').innerHTML = 'Anda belum login. Harap refresh halaman dan masuk kembali.';
-                document.getElementById('dashboardPage').style.display = 'none';
+                // Jika benar-benar belum login, arahkan atau beri opsi login
+                document.getElementById('loginMessage').innerHTML = 'Sesi masuk tidak ditemukan. Pastikan Anda sudah login melalui halaman utama.';
             }
         });
 
