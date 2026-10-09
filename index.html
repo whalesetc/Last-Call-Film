@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>The Last Call Film • Digital Photobooth</title>
+    <title>The Last Call Film • Buat Acara</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     
     <!-- FIREBASE SDK -->
@@ -12,125 +12,141 @@
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
     
     <style>
-        :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.08); }
+        :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; -webkit-font-smoothing: antialiased; min-height: 100vh; display: flex; flex-direction: column; }
+        body { background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
-        nav { padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.5); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; text-decoration: none; cursor: pointer; }
-        .btn-primary { background: #fff; color: #000; padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; border: none; font-size: 0.85rem; text-decoration: none; transition: background 0.2s; }
-        .btn-primary:hover { background: #e0e0e0; }
-        .btn-outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px; border-radius: 12px; font-weight: 600; cursor: pointer; font-size: 0.85rem; transition: background 0.2s; }
-        .btn-outline:hover { background: rgba(255,255,255,0.05); }
+        /* Navbar */
+        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; }
+        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; }
+        .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; }
+        .btn-primary { background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-primary:active { transform: scale(0.98); }
 
-        /* Tampilan Sebelum Login (Landing Page) */
-        #landingPage { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 80px 20px; }
-        .hero-title { font-size: 3.5rem; line-height: 1.1; margin-bottom: 15px; }
-        .hero-subtitle { font-size: 1.1rem; color: var(--text-muted); max-width: 500px; margin: 0 auto 40px; }
-        .hero-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
-        
-        @media(max-width: 600px) {
-            .hero-title { font-size: 2.5rem; }
-        }
+        /* Sections */
+        .section { display: none; padding: 40px 5%; max-width: 800px; margin: 0 auto; width: 100%; flex: 1; }
+        .active-section { display: block; }
 
-        /* Tampilan Setelah Login (Dashboard Admin) */
-        #dashboardPage { display: none; max-width: 1000px; width: 100%; margin: 0 auto; padding: 40px 5%; flex: 1; }
-        .dash-header { margin-bottom: 40px; }
-        .dash-header h1 { font-size: 2.5rem; margin-bottom: 5px; }
+        /* Landing Page */
+        #landingPage { text-align: center; padding-top: 100px; }
+        .hero-title { font-size: 3rem; margin-bottom: 15px; line-height: 1.2; }
+        
+        /* Dasbor Customer */
+        .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+        .event-info p { color: var(--text-muted); font-size: 0.85rem; }
+        .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
 
-        .admin-panel { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 40px; }
-        @media(min-width: 768px) { .admin-panel { grid-template-columns: 1fr 1fr; } }
+        /* Formulir Buat Acara */
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
+        .form-control { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; outline: none; font-family: inherit; }
+        .form-control:focus { border-color: var(--accent); }
         
-        .dash-card { background: #111; border: 1px solid var(--border-color); padding: 30px; border-radius: 20px; display: flex; flex-direction: column; justify-content: space-between; }
-        .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; }
-        
-        .qr-box { display: flex; align-items: center; gap: 20px; }
-        .qr-box img { border-radius: 12px; border: 4px solid #fff; width: 100px; height: 100px;}
-        .qr-info p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
-        
-        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px;}
-        .gallery-header h2 { font-size: 1.5rem; font-family: 'Playfair Display', serif;}
-        
-        .admin-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        @media(min-width: 768px) { .admin-gallery { grid-template-columns: repeat(4, 1fr); } }
-        .photo-card { background: #1a1a1a; border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; position: relative; }
-        .photo-card img { width: 100%; aspect-ratio: 3/4; object-fit: cover; display: block; cursor: pointer; transition: opacity 0.2s;}
-        .photo-card img:hover { opacity: 0.8; }
-        .photo-info { padding: 10px; text-align: center; }
-        .photo-info p { font-family: 'Playfair Display', serif; font-size: 0.9rem; font-style: italic; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
-        .photo-info span { font-size: 0.7rem; color: var(--text-muted); }
-        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); border: 1px dashed var(--border-color); border-radius: 16px;}
+        .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+        .radio-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: 0.2s; background: rgba(255,255,255,0.02); }
+        .radio-card input { display: none; }
+        .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(110, 231, 183, 0.1); }
+        .price-tag { font-weight: 700; color: var(--accent); display: block; margin-top: 5px; }
 
-        /* Lightbox Modal */
-        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; }
-        #lightboxClose { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2.5rem; background: none; border: none; cursor: pointer; }
+        .file-upload { border: 2px dashed var(--border-color); padding: 30px; text-align: center; border-radius: 8px; color: var(--text-muted); cursor: pointer; }
     </style>
 </head>
 <body>
 
     <nav>
-        <!-- Logo diklik akan kembali menyegarkan halaman -->
-        <a class="logo font-serif" onclick="location.reload()">✦ The Last Call</a>
-        <div id="navRight">
-            <!-- Tombol Navigasi Otomatis (Login / Logout) Diisi oleh JavaScript -->
-        </div>
+        <div class="logo font-serif" onclick="location.reload()">✦ The Last Call</div>
+        <div id="navMenu"></div>
     </nav>
 
-    <!-- TAMPILAN KETIKA BELUM LOGIN (LANDING PAGE UTAMA WEB) -->
-    <div id="landingPage">
+    <!-- 1. HALAMAN LANDING (SEBELUM LOGIN) -->
+    <div id="landingPage" class="section active-section">
         <h1 class="hero-title font-serif">Abadikan Momen.<br>Tanpa Batas.</h1>
-        <p class="hero-subtitle">
-            Hadirkan pengalaman <i>disposable camera</i> digital untuk tamu undangan di hari spesial Anda. Jepret, simpan, dan kenang selamanya.
-        </p>
-        <div class="hero-buttons">
-            <button class="btn-primary" onclick="window.open('camera.html', '_blank')">Buka Kamera Tamu</button>
-            <button class="btn-outline" onclick="loginGoogle()">Buat Album (Admin)</button>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Platform photobooth digital elegan untuk acaramu.</p>
+        <button class="btn-primary" onclick="loginGoogle()">Mulai Buat Acara</button>
+    </div>
+
+    <!-- 2. DASBOR CUSTOMER (DAFTAR ACARA MEREKA) -->
+    <div id="customerDashboard" class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <h2 class="font-serif" style="font-size: 2rem;">Acara Saya</h2>
+            <button class="btn-primary" onclick="bukaForm()">+ Buat Baru</button>
+        </div>
+        <div id="eventList">
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">Memuat acara...</div>
         </div>
     </div>
 
-    <!-- TAMPILAN DASHBOARD ADMIN (MUNCUL SETELAH LOGIN) -->
-    <div id="dashboardPage">
-        <div class="dash-header">
-            <h1 class="font-serif">Dashboard Acara</h1>
-            <p style="color: var(--text-muted); font-size: 1.1rem;">Selamat datang, <strong id="dashUserName" style="color: #fff;">-</strong></p>
-        </div>
+    <!-- 3. FORMULIR PEMBUATAN ACARA BARU -->
+    <div id="createEventForm" class="section">
+        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Kembali</button>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Detail Acara Baru</h2>
+        
+        <form id="eventForm">
+            <!-- Jenis & Nama Acara -->
+            <div class="form-group">
+                <label>Jenis Acara</label>
+                <select id="eventType" class="form-control" onchange="updatePlaceholder()">
+                    <option value="Wedding">Wedding (Pernikahan)</option>
+                    <option value="Birthday">Birthday (Ulang Tahun)</option>
+                    <option value="Event">Event Lainnya</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label id="labelEventName">Nama Mempelai (Contoh: Romeo & Juliet)</label>
+                <input type="text" id="eventName" class="form-control" required>
+            </div>
 
-        <div class="admin-panel">
-            <div class="dash-card">
-                <h3>Bagikan ke Tamu</h3>
-                <div class="qr-box">
-                    <img id="qrCodeImage" src="" alt="QR Code">
-                    <div class="qr-info">
-                        <p>Cetak QR Code ini dan letakkan di meja undangan agar tamu bisa langsung memotret.</p>
-                        <button class="btn-primary" onclick="window.open('camera.html', '_blank')">Uji Coba Kamera &rarr;</button>
-                    </div>
+            <div class="form-group">
+                <label>Tanggal Acara</label>
+                <input type="date" id="eventDate" class="form-control" required>
+            </div>
+
+            <!-- Privasi Galeri -->
+            <div class="form-group">
+                <label>Privasi Galeri Foto Tamu</label>
+                <div class="radio-group">
+                    <label class="radio-card">
+                        <input type="radio" name="privacy" value="visible" checked>
+                        <strong>Publik (Visible)</strong>
+                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Semua tamu bisa melihat galeri</span>
+                    </label>
+                    <label class="radio-card">
+                        <input type="radio" name="privacy" value="private">
+                        <strong>Privat (Private)</strong>
+                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Tamu hanya melihat fotonya sendiri</span>
+                    </label>
                 </div>
             </div>
 
-            <div class="dash-card">
-                <h3>Statistik Rol Film</h3>
-                <div style="margin-top: 10px;">
-                    <p style="font-size: 2.5rem; font-family: 'Playfair Display', serif; font-weight: 600; line-height: 1;"><span id="totalFotoText">0</span></p>
-                    <span style="font-size: 0.85rem; color: var(--text-muted);">Total foto dari tamu sejauh ini</span>
+            <!-- Pilihan Paket Kuota -->
+            <div class="form-group">
+                <label>Pilihan Kuota Pengguna (Tamu)</label>
+                <div class="radio-group" id="packageGroup">
+                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 Orang<span class="price-tag">Gratis</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="10">10 Orang<span class="price-tag">Rp 50.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="25">25 Orang<span class="price-tag">Rp 85.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="50">50 Orang<span class="price-tag">Rp 160.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="100">100 Orang<span class="price-tag">Rp 250.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="150">150 Orang<span class="price-tag">Rp 350.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="200">200 Orang<span class="price-tag">Rp 470.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="unlimited">Tak Terbatas<span class="price-tag">Rp 800.000</span></label>
                 </div>
             </div>
-        </div>
 
-        <div class="gallery-header">
-            <h2>Album Digital</h2>
-            <button class="btn-outline" onclick="muatFoto()" style="font-size: 0.8rem;">🔄 Segarkan Album</button>
-        </div>
-        <div class="admin-gallery" id="adminGallery">
-            <div class="empty-state">Memuat koleksi foto...</div>
-        </div>
-    </div>
+            <!-- Upload Wallpaper -->
+            <div class="form-group">
+                <label>Wallpaper / Sampul Kamera Tamu</label>
+                <label class="file-upload">
+                    <input type="file" id="wallpaperFile" accept="image/*" style="display:none;" onchange="previewFile()">
+                    <span id="fileName">Klik untuk unggah gambar dari perangkat (Format vertikal lebih baik)</span>
+                </label>
+            </div>
 
-    <!-- Lightbox Modal untuk Pratinjau Foto Admin -->
-    <div id="lightbox" onclick="tutupLightbox()">
-        <button id="lightboxClose">&times;</button>
-        <img id="lightboxImg" src="" alt="Preview">
+            <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px;">Buat & Proses Pembayaran</button>
+        </form>
     </div>
 
     <script>
@@ -140,111 +156,172 @@
             projectId: "the-last-call-film",
             storageBucket: "the-last-call-film.firebasestorage.app",
             messagingSenderId: "665352445108",
-            appId: "1:665352445108:web:3ae79656e3dfcb22254be1",
-            measurementId: "G-31E0XP89W5"
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
-        
         firebase.initializeApp(firebaseConfig);
         const auth = firebase.auth();
         const db = firebase.firestore();
 
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
+        let currentUser = null;
 
-        function bukaLightbox(url) {
-            lightboxImg.src = url;
-            lightbox.style.display = 'flex';
+        // FUNGSI NAVIGASI TAMPILAN
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active-section'));
+            document.getElementById(sectionId).classList.add('active-section');
         }
 
-        function tutupLightbox() {
-            lightbox.style.display = 'none';
+        function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
+        function bukaForm() { showSection('createEventForm'); document.getElementById('eventForm').reset(); document.getElementById('fileName').innerText = "Klik untuk unggah gambar dari perangkat"; }
+        
+        function updatePlaceholder() {
+            const tipe = document.getElementById('eventType').value;
+            const label = document.getElementById('labelEventName');
+            if(tipe === "Wedding") label.innerText = "Nama Mempelai (Contoh: Romeo & Juliet)";
+            else if(tipe === "Birthday") label.innerText = "Nama yang Ulang Tahun (Contoh: Rina's 21st)";
+            else label.innerText = "Nama Event (Contoh: Reuni Akbar Angkatan 2010)";
         }
 
+        function previewFile() {
+            const file = document.getElementById('wallpaperFile').files[0];
+            if(file) document.getElementById('fileName').innerText = "Terpilih: " + file.name;
+        }
+
+        // FUNGSI AUTENTIKASI
         function loginGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(error => {
-                alert("Gagal masuk: " + error.message);
-            });
+            auth.signInWithPopup(provider);
         }
 
-        function logoutAkun() {
-            auth.signOut().then(() => {
-                window.location.reload();
-            });
-        }
-
-        // Memantau Pergantian Sesi (Landing vs Dashboard)
         auth.onAuthStateChanged(user => {
-            const navRight = document.getElementById('navRight');
-            const landingPage = document.getElementById('landingPage');
-            const dashboardPage = document.getElementById('dashboardPage');
-
+            currentUser = user;
+            const navMenu = document.getElementById('navMenu');
             if (user) {
-                // Tampilan JIKA LOGIN BERHASIL
-                landingPage.style.display = 'none';
-                dashboardPage.style.display = 'block';
+                navMenu.innerHTML = `<button class="btn-outline" onclick="auth.signOut()">Keluar Akun</button>`;
+                bukaDasbor(); // Langsung buka dasbor customer jika login
                 
-                navRight.innerHTML = `<button class="btn-outline" onclick="logoutAkun()">Keluar Akun</button>`;
-                
-                const displayName = user.displayName || user.email.split('@')[0];
-                document.getElementById('dashUserName').innerText = displayName;
-                
-                const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
-                const cameraUrl = domainAnda + "/camera.html";
-                document.getElementById('qrCodeImage').src = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(cameraUrl);
+                // Simpan data user ke database
+                db.collection('users').doc(user.uid).set({
+                    name: user.displayName,
+                    email: user.email,
+                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
 
-                muatFoto();
             } else {
-                // Tampilan JIKA BELUM LOGIN
-                landingPage.style.display = 'flex';
-                dashboardPage.style.display = 'none';
-                navRight.innerHTML = `<button class="btn-primary" onclick="loginGoogle()">Masuk Admin</button>`;
+                navMenu.innerHTML = `<button class="btn-primary" onclick="loginGoogle()">Masuk</button>`;
+                showSection('landingPage');
             }
         });
 
-        async function muatFoto() {
-            const gallery = document.getElementById('adminGallery');
-            gallery.innerHTML = '<div class="empty-state">Menarik data rol film...</div>';
-            
-            try {
-                const snapshot = await db.collection("photos").orderBy("timestamp", "desc").get();
-                document.getElementById('totalFotoText').innerText = snapshot.size;
+        // MENAMPILKAN DAFTAR ACARA MILIK CUSTOMER
+        async function muatAcaraSaya() {
+            if(!currentUser) return;
+            const listDiv = document.getElementById('eventList');
+            listDiv.innerHTML = '<p style="text-align:center; color:#888;">Memuat data...</p>';
 
+            try {
+                // Ambil acara yang dimiliki user yang sedang login saja
+                const snapshot = await db.collection("events").where("ownerId", "==", currentUser.uid).orderBy("createdAt", "desc").get();
+                
                 if (snapshot.empty) {
-                    gallery.innerHTML = '<div class="empty-state">Belum ada foto. Tunggu tamu Anda menjepret!</div>';
+                    listDiv.innerHTML = '<div style="text-align: center; padding: 40px; border: 1px dashed #444; border-radius: 12px; color: #888;">Anda belum membuat acara. Klik tombol Buat Baru.</div>';
                     return;
                 }
 
-                gallery.innerHTML = '';
-                
+                listDiv.innerHTML = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    let waktuString = "Baru saja";
-                    if(data.timestamp) {
-                        const t = data.timestamp.toDate();
-                        waktuString = t.getHours().toString().padStart(2, '0') + ":" + t.getMinutes().toString().padStart(2, '0');
-                    }
-
-                    const card = document.createElement('div');
-                    card.className = 'photo-card';
+                    let statusBadge = data.status === 'Aktif' ? '<span class="badge" style="background:#6ee7b7;">Aktif</span>' : '<span class="badge" style="background:#fbbc05;">Menunggu Pembayaran</span>';
                     
-                    const imgEl = document.createElement('img');
-                    imgEl.src = data.url;
-                    imgEl.onclick = () => bukaLightbox(data.url);
-
-                    const infoEl = document.createElement('div');
-                    infoEl.className = 'photo-info';
-                    infoEl.innerHTML = `<p>${data.guestName || 'Tamu Anonim'}</p><span>${waktuString}</span>`;
-
-                    card.appendChild(imgEl);
-                    card.appendChild(infoEl);
-                    gallery.appendChild(card);
+                    listDiv.innerHTML += `
+                        <div class="event-card">
+                            <div class="event-info">
+                                <h3>${data.eventName} <span style="font-size:0.8rem; font-weight:normal;">(${data.eventType})</span></h3>
+                                <p>Tanggal: ${data.date} • Paket: ${data.quota === 9999 ? 'Tak Terbatas' : data.quota + ' Orang'} • Privasi: ${data.privacy}</p>
+                                <p style="margin-top: 5px;">${statusBadge}</p>
+                            </div>
+                            <div>
+                                <button class="btn-outline" onclick="alert('Kode QR & Dasbor Acara sedang dalam pengembangan untuk tahap berikutnya!')">Kelola Acara</button>
+                            </div>
+                        </div>
+                    `;
                 });
             } catch (error) {
-                console.error("Gagal muat foto:", error);
-                gallery.innerHTML = '<div class="empty-state">Terjadi kesalahan saat memuat database.</div>';
+                console.error(error);
+                listDiv.innerHTML = '<p style="color:red; text-align:center;">Gagal memuat acara. Pastikan pengaturan Index Firestore sudah benar.</p>';
             }
         }
+
+        // MENYIMPAN ACARA BARU KE DATABASE FIREBASE
+        document.getElementById('eventForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btnSubmit');
+            btn.innerText = "Memproses...";
+            btn.disabled = true;
+
+            const eventType = document.getElementById('eventType').value;
+            const eventName = document.getElementById('eventName').value;
+            const eventDate = document.getElementById('eventDate').value;
+            const privacy = document.querySelector('input[name="privacy"]:checked').value;
+            
+            // Logika Paket (Harga & Kuota)
+            const packageVal = document.querySelector('input[name="package"]:checked').value;
+            let kuota = parseInt(packageVal);
+            let harga = 0;
+            if (packageVal === "unlimited") { kuota = 9999; harga = 800000; }
+            else if (kuota === 5) harga = 0;
+            else if (kuota === 10) harga = 50000;
+            else if (kuota === 25) harga = 85000;
+            else if (kuota === 50) harga = 160000;
+            else if (kuota === 100) harga = 250000;
+            else if (kuota === 150) harga = 350000;
+            else if (kuota === 200) harga = 470000;
+
+            // Proses Upload Gambar Wallpaper ke ImgBB
+            let wallpaperUrl = "";
+            const fileInput = document.getElementById('wallpaperFile').files[0];
+            if (fileInput) {
+                btn.innerText = "Mengunggah Wallpaper...";
+                const formData = new FormData();
+                formData.append('image', fileInput);
+                // Menggunakan API Key ImgBB Anda sebelumnya
+                try {
+                    const response = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', { method: 'POST', body: formData });
+                    const result = await response.json();
+                    if (result.success) wallpaperUrl = result.data.url;
+                } catch(err) {
+                    alert("Gagal mengunggah gambar. Pastikan gambar tidak terlalu besar.");
+                }
+            }
+
+            btn.innerText = "Menyimpan Acara...";
+
+            // Menyimpan Data Acara ke Database Firestore Anda
+            try {
+                await db.collection("events").add({
+                    ownerId: currentUser.uid,
+                    ownerEmail: currentUser.email,
+                    eventType: eventType,
+                    eventName: eventName,
+                    date: eventDate,
+                    privacy: privacy,
+                    quota: kuota,
+                    remainingQuota: kuota,
+                    price: harga,
+                    wallpaperUrl: wallpaperUrl,
+                    status: harga === 0 ? "Aktif" : "Pending", // Gratis langsung aktif
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                
+                alert(harga === 0 ? "Acara berhasil dibuat secara gratis!" : `Pesanan Diterima! Silakan bayar sebesar Rp ${harga.toLocaleString('id-ID')} agar QR Code aktif.`);
+                bukaDasbor();
+            } catch (error) {
+                console.error(error);
+                alert("Terjadi kesalahan saat menyimpan data.");
+            } finally {
+                btn.innerText = "Buat & Proses Pembayaran";
+                btn.disabled = false;
+            }
+        });
     </script>
 </body>
 </html>
