@@ -50,12 +50,11 @@
         .hero p { color: var(--text-muted); font-size: 1.05rem; max-width: 600px; margin: 0 auto 30px; line-height: 1.6; }
         .btn-hero { background: #fff; color: #000; padding: 14px 40px; border-radius: 16px; font-size: 1rem; font-weight: 600; border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
 
-        /* --- HALAMAN LOGIN SPLIT (GAYA BARU) --- */
+        /* --- HALAMAN LOGIN SPLIT --- */
         #loginPage { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg-dark); z-index: 200; overflow: hidden; }
         .login-grid { display: grid; grid-template-columns: 1fr; height: 100%; }
         @media(min-width: 900px) { .login-grid { grid-template-columns: 1fr 1fr; } }
         
-        /* Kolom Kiri (Info) */
         .login-left { display: none; padding: 60px; background: linear-gradient(135deg, rgba(20,20,20,1) 0%, rgba(30,25,20,1) 100%); flex-direction: column; justify-content: center; position: relative;}
         @media(min-width: 900px) { .login-left { display: flex; } }
         .login-left-logo { position: absolute; top: 40px; left: 60px; font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.5rem; display: flex; align-items: center; gap: 8px;}
@@ -68,19 +67,18 @@
         .feature-text h4 { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px;}
         .feature-text span { font-size: 0.8rem; color: var(--text-muted);}
 
-        /* Kolom Kanan (Form) */
+        /* Kolom Kanan */
         .login-right { padding: 40px; display: flex; flex-direction: column; justify-content: center; max-width: 500px; margin: 0 auto; width: 100%; position: relative;}
         .btn-close-login { position: absolute; top: 30px; left: 20px; background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; }
         .login-right-header { margin-bottom: 30px; margin-top: 20px;}
         .login-right-header h2 { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 10px; }
         .login-right-header p { color: var(--text-muted); font-size: 0.95rem; }
         
-        /* Toggle Switch (Masuk / Buat akun) */
         .auth-toggle { display: flex; background: rgba(255,255,255,0.05); border-radius: 12px; padding: 4px; margin-bottom: 25px; }
         .auth-toggle button { flex: 1; padding: 10px; border: none; background: transparent; color: var(--text-muted); font-weight: 500; font-size: 0.9rem; cursor: pointer; border-radius: 8px; transition: all 0.3s; }
         .auth-toggle button.active { background: #fff; color: #000; }
 
-        /* Tombol Google */
+        /* Tombol Google SVG yang tidak akan rusak */
         .btn-google { width: 100%; padding: 14px; background: transparent; border: 1px solid var(--border-color); border-radius: 12px; color: #fff; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 25px; transition: background 0.2s;}
         .btn-google:hover { background: rgba(255,255,255,0.05); }
 
@@ -89,7 +87,6 @@
         .divider:not(:empty)::before { margin-right: 15px; }
         .divider:not(:empty)::after { margin-left: 15px; }
 
-        /* Input Form */
         .form-group { margin-bottom: 15px; position: relative; }
         .form-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 1rem; }
         .form-group input { width: 100%; padding: 16px 16px 16px 45px; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 12px; color: #fff; outline: none; font-size: 0.95rem; transition: border-color 0.2s;}
@@ -188,8 +185,14 @@
                     <button id="tabRegister" onclick="switchMode('register')">Buat akun</button>
                 </div>
 
+                <!-- Tombol Google dengan Logo Vector SVG yang tidak akan rusak -->
                 <button class="btn-google" onclick="prosesMasukCepat()">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" alt="Google">
+                    <svg version="1.1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="18px" height="18px" style="display: block;">
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"></path>
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"></path>
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"></path>
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"></path>
+                    </svg>
                     Lanjut dengan Google
                 </button>
 
@@ -243,7 +246,7 @@
                 document.getElementById('navAuthButtons').style.display = 'none';
                 document.getElementById('navUserButtons').style.display = 'flex';
                 
-                document.getElementById('dashUserName').innerText = user.split('@')[0]; // Ambil nama depan dari email
+                document.getElementById('dashUserName').innerText = user.split('@')[0];
                 
                 let usedShots = parseInt(localStorage.getItem('tlc_used_shots')) || 0;
                 let sisa = MAX_FREE_SHOTS - usedShots;
@@ -268,7 +271,7 @@
 
         function bukaLogin(mode) {
             loginPage.style.display = 'block';
-            document.body.style.overflow = 'hidden'; // Kunci scroll di belakang
+            document.body.style.overflow = 'hidden';
             switchMode(mode);
         }
 
@@ -297,7 +300,7 @@
             }
         }
 
-        // --- SIMULASI PROSES AUTENTIKASI ---
+        // --- SIMULASI AUTENTIKASI EMAIL ---
         function prosesMasukEmail() {
             const email = document.getElementById('emailInput').value.trim();
             if (!email || !email.includes('@')) {
@@ -305,7 +308,6 @@
                 return;
             }
             
-            // Simpan email ke penyimpanan browser sebagai "user login"
             localStorage.setItem('tlc_user', email);
             if (!localStorage.getItem('tlc_used_shots')) localStorage.setItem('tlc_used_shots', 0);
             
@@ -313,13 +315,20 @@
             initApp();
         }
 
+        // --- SIMULASI AUTENTIKASI GOOGLE ---
         function prosesMasukCepat() {
-            // Simulasi instan tombol "Lanjut dengan Google"
-            localStorage.setItem('tlc_user', 'google_user@gmail.com');
-            if (!localStorage.getItem('tlc_used_shots')) localStorage.setItem('tlc_used_shots', 0);
+            // Memunculkan pop-up yang mensimulasikan jendela pemilihan akun Google
+            const emailGoogle = prompt("Menghubungkan ke Google...\n\nSilakan pilih atau masukkan alamat Gmail Anda untuk melanjutkan:");
             
-            tutupLogin();
-            initApp();
+            if (emailGoogle && emailGoogle.includes('@')) {
+                localStorage.setItem('tlc_user', emailGoogle);
+                if (!localStorage.getItem('tlc_used_shots')) localStorage.setItem('tlc_used_shots', 0);
+                
+                tutupLogin();
+                initApp();
+            } else if (emailGoogle) {
+                alert("Format email tidak valid. Pendaftaran dibatalkan.");
+            }
         }
 
         function logout() {
