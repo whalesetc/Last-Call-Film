@@ -147,7 +147,6 @@
         const statusDiv = document.getElementById('status');
         const captureBtn = document.getElementById('captureBtn');
 
-        // Peringatan jika tamu mau keluar saat foto masih diunggah
         window.addEventListener('beforeunload', (e) => {
             if (pendingUploads > 0) {
                 e.preventDefault();
@@ -272,7 +271,6 @@
             }
         }
 
-        // FUNGSI FETCH DENGAN AUTO-RETRY
         async function fetchWithRetry(url, options, retries = 1) {
             for (let i = 0; i <= retries; i++) {
                 try {
@@ -286,11 +284,9 @@
             }
         }
 
-        // FUNGSI JEPRET BARU: 100% ANTI-GAGAL & BEBAS KOTAK HITAM
         async function jepretDanUnggahLatar() {
             if ((maxShots - shotsTaken) <= 0) return;
             
-            // 1. TANGKAP GAMBAR DULU SEBELUM FLASH (Mencegah Layar Hitam di iPad)
             const MAX_DIMENSION = 1080;
             let width = video.videoWidth;
             let height = video.videoHeight;
@@ -304,23 +300,18 @@
             canvas.height = height;
             canvas.getContext('2d').drawImage(video, 0, 0, width, height);
             
-            // 2. EFEK FLASH DIJALANKAN SETELAH GAMBAR TERTANGKAP
             video.style.opacity = '0'; setTimeout(() => { video.style.opacity = '1'; }, 150);
 
-            // Kualitas JPEG 80% (Bagus & Ringan untuk Fallback Firestore)
             const localDataUrl = canvas.toDataURL('image/jpeg', 0.80);
             const base64Image = localDataUrl.split(',')[1];
 
-            // Potong Kuota Lokal
             shotsTaken++; 
             localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
             updateSisaUI();
             
-            // Buat Placeholder di Galeri dan LANGSUNG TAMPILKAN FOTONYA (Bukan Kotak Hitam)
             const tempId = 'temp_' + Date.now();
             tambahPlaceholderUI(tempId, localDataUrl);
 
-            // Jalankan Upload di Latar
             pendingUploads++;
             prosesUploadDiLatar(base64Image, tempId, localDataUrl);
         }
@@ -328,7 +319,6 @@
         async function prosesUploadDiLatar(base64Data, tempId, localDataUrl) {
             let finalUrl = "";
             try {
-                // Percobaan 1: Menggunakan ImgBB Server
                 const formData = new FormData(); 
                 formData.append('key', '16a4714fa54ed030ef5416ae07a05f68'); 
                 formData.append('image', base64Data);
@@ -336,16 +326,14 @@
                 const result = await fetchWithRetry('https://api.imgbb.com/1/upload', { method: 'POST', body: formData }, 1);
                 finalUrl = result.data.url;
             } catch (error) {
-                // FALLBACK ANTI-GAGAL: Jika ImgBB Gagal/Time-Out, Simpan Base64 Langsung ke Database Firebase!
                 console.warn("Server Gambar Gagal. Beralih ke penyimpanan Database Darurat.");
                 finalUrl = localDataUrl; 
             }
 
             try {
-                // Simpan ke Firestore
                 const docRef = await db.collection("photos").add({ 
                     eventId: eventId, 
-                    url: finalUrl, // Akan berisi URL ImgBB ATAU Data URL Base64 jika gagal
+                    url: finalUrl,
                     guestName: namaTamuGlobal, 
                     sessionId: sessionId, 
                     timestamp: firebase.firestore.FieldValue.serverTimestamp() 
@@ -355,18 +343,16 @@
                     shotsTaken: firebase.firestore.FieldValue.increment(1) 
                 });
                 
-                // Ubah Tampilan Menjadi Real (Ganti Tombol Loading Menjadi Aktif)
                 ubahPlaceholderMenjadiAsli(tempId, finalUrl, docRef.id, localDataUrl);
                 
             } catch (error) {
-                // Ini hanya terjadi jika tamu benar-benar offline (Tidak ada sinyal sama sekali)
                 gagalUpload(tempId);
             } finally {
                 pendingUploads--;
             }
         }
 
-        // TAMPILKAN FOTO SECARA INSTAN TANPA MENUNGGU SERVER
+        // PENULISAN DOM YANG AMAN DARI ERROR STRING
         function tambahPlaceholderUI(tempId, localDataUrl) {
             const galleryDiv = document.getElementById('cameraGalleryGrid');
             if(galleryDiv.innerHTML.includes('Belum ada jepretan')) galleryDiv.innerHTML = '';
@@ -374,19 +360,31 @@
             const item = document.createElement('div');
             item.className = 'gallery-item';
             item.id = tempId;
-            item.innerHTML = `
-                <div class="uploading-overlay">
-                    <div class="spinner"></div>
-                    <div style="font-size:0.7rem; color:#fff; font-weight:bold;">Menyimpan...</div>
-                </div>
-                <img src="${localDataUrl}" style="opacity:0.6; filter: grayscale(40%); pointer-events:none;">
-                <div style="font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;">${namaTamuGlobal}</div>
-                <div class="action-group">
-                    <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Lihat</button>
-                    <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Unduh</button>
-                    <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Hapus</button>
-                </div>
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'uploading-overlay';
+            overlay.innerHTML = '<div class="spinner"></div><div style="font-size:0.7rem; color:#fff; font-weight:bold;">Menyimpan...</div>';
+            item.appendChild(overlay);
+
+            const img = document.createElement('img');
+            img.src = localDataUrl;
+            img.style = "opacity:0.6; filter: grayscale(40%); pointer-events:none;";
+            item.appendChild(img);
+
+            const nameDiv = document.createElement('div');
+            nameDiv.style = "font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;";
+            nameDiv.innerText = namaTamuGlobal;
+            item.appendChild(nameDiv);
+
+            const act = document.createElement('div');
+            act.className = 'action-group';
+            act.innerHTML = `
+                <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Lihat</button>
+                <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Unduh</button>
+                <button class="btn-action" disabled style="background:rgba(255,255,255,0.05); color:#888;">Hapus</button>
             `;
+            item.appendChild(act);
+            
             galleryDiv.prepend(item);
         }
 
@@ -395,19 +393,44 @@
             if(!item) return;
             
             const fileName = `TLC_${namaTamuGlobal.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
-            // Gunakan gambar lokal sebagai tampilan agar layar tamu tidak pernah berkedip hitam
             const displayUrl = localDataUrl || realUrl;
             
-            item.innerHTML = `
-                <img src="${displayUrl}" onerror="this.src='https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'" onclick="bukaLightbox('${realUrl}')">
-                <div style="font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;">${namaTamuGlobal}</div>
-                <div class="action-group">
-                    <button class="btn-action" onclick="bukaLightbox('${realUrl}')">Lihat</button>
-                    <button class="btn-action" onclick="unduhLangsung('${realUrl}', '${fileName}')">Unduh</button>
-                    <button class="btn-action btn-delete" onclick="hapusFoto('${docId}', this)">Hapus</button>
-                </div>
-            `;
+            item.innerHTML = '';
             item.removeAttribute('id');
+
+            const img = document.createElement('img');
+            img.src = displayUrl;
+            img.onerror = () => { img.src = 'https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'; };
+            img.onclick = () => bukaLightbox(realUrl);
+            item.appendChild(img);
+
+            const nameDiv = document.createElement('div');
+            nameDiv.style = "font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;";
+            nameDiv.innerText = namaTamuGlobal;
+            item.appendChild(nameDiv);
+
+            const actionGroup = document.createElement('div');
+            actionGroup.className = 'action-group';
+
+            const btnView = document.createElement('button');
+            btnView.className = 'btn-action';
+            btnView.innerText = 'Lihat';
+            btnView.onclick = () => bukaLightbox(realUrl);
+            actionGroup.appendChild(btnView);
+
+            const btnUnduh = document.createElement('button');
+            btnUnduh.className = 'btn-action';
+            btnUnduh.innerText = 'Unduh';
+            btnUnduh.onclick = () => unduhLangsung(realUrl, fileName);
+            actionGroup.appendChild(btnUnduh);
+
+            const btnHapus = document.createElement('button');
+            btnHapus.className = 'btn-action btn-delete';
+            btnHapus.innerText = 'Hapus';
+            btnHapus.onclick = function() { hapusFoto(docId, this); };
+            actionGroup.appendChild(btnHapus);
+
+            item.appendChild(actionGroup);
         }
 
         function gagalUpload(tempId) {
@@ -461,39 +484,73 @@
             } catch(e) { galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat.</div>'; }
         }
 
+        // PENULISAN DOM AMAN UNTUK GALERI
         function renderGaleriHTML(photos, galleryDiv) {
             galleryDiv.innerHTML = '';
             photos.forEach(photo => {
-                const item = document.createElement('div'); item.className = 'gallery-item';
-                const isOwner = photo.sessionId === sessionId;
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                
                 const fileName = `TLC_${photo.guestName.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
                 
-                let actionButtons = `
-                    <button class="btn-action" onclick="bukaLightbox('${photo.url}')">Lihat</button>
-                    <button class="btn-action" onclick="unduhLangsung('${photo.url}', '${fileName}')">Unduh</button>
-                `;
-                if(isOwner) actionButtons += `<button class="btn-action btn-delete" onclick="hapusFoto('${photo.id}', this)">Hapus</button>`;
+                const img = document.createElement('img');
+                img.src = photo.url;
+                img.onerror = () => { img.src = 'https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'; };
+                img.onclick = () => bukaLightbox(photo.url);
+                item.appendChild(img);
 
-                item.innerHTML = `
-                    <img src="${photo.url}" onerror="this.src='https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'" onclick="bukaLightbox('${photo.url}')">
-                    <div style="font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;">${photo.guestName}</div>
-                    <div class="action-group">${actionButtons}</div>
-                `;
+                const nameDiv = document.createElement('div');
+                nameDiv.style = "font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;";
+                nameDiv.innerText = photo.guestName;
+                item.appendChild(nameDiv);
+
+                const actionGroup = document.createElement('div');
+                actionGroup.className = 'action-group';
+
+                const btnView = document.createElement('button');
+                btnView.className = 'btn-action';
+                btnView.innerText = 'Lihat';
+                btnView.onclick = () => bukaLightbox(photo.url);
+                actionGroup.appendChild(btnView);
+
+                const btnUnduh = document.createElement('button');
+                btnUnduh.className = 'btn-action';
+                btnUnduh.innerText = 'Unduh';
+                btnUnduh.onclick = () => unduhLangsung(photo.url, fileName);
+                actionGroup.appendChild(btnUnduh);
+
+                if (photo.sessionId === sessionId) {
+                    const btnHapus = document.createElement('button');
+                    btnHapus.className = 'btn-action btn-delete';
+                    btnHapus.innerText = 'Hapus';
+                    btnHapus.onclick = function() { hapusFoto(photo.id, this); };
+                    actionGroup.appendChild(btnHapus);
+                }
+
+                item.appendChild(actionGroup);
                 galleryDiv.appendChild(item);
             });
         }
 
+        // FITUR UNDUH: MENDUKUNG iOS NATIVE SHARE (Simpan Gambar)
         async function unduhLangsung(url, namaFile) {
-            // Jika Fallback Firestore diaktifkan, URL berupa data Base64 panjang. Langsung unduh.
-            if(url.startsWith('data:image')) {
-                const a = document.createElement('a'); a.href = url; a.download = namaFile;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                return;
-            }
-            
             try {
                 const response = await fetch(url);
                 const blob = await response.blob();
+                
+                // Jika perangkat mendukung Web Share API (Safari / iOS)
+                if (navigator.share && navigator.canShare) {
+                    const file = new File([blob], namaFile, { type: blob.type || 'image/jpeg' });
+                    if (navigator.canShare({ files: [file] })) {
+                        await navigator.share({
+                            files: [file],
+                            title: 'The Last Call Photo'
+                        });
+                        return; // Berhasil membuka menu Share bawaan iOS
+                    }
+                }
+                
+                // Fallback untuk Android / Desktop (Langsung unduh)
                 const blobUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
@@ -504,13 +561,8 @@
                 window.URL.revokeObjectURL(blobUrl);
                 document.body.removeChild(a);
             } catch (e) {
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = namaFile;
-                a.target = "_blank";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                // Fallback terakhir jika diblokir
+                window.open(url, '_blank');
             }
         }
 
