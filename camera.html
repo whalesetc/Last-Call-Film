@@ -120,7 +120,6 @@
 
     <!-- SCREEN 2: KAMERA -->
     <div id="cameraScreen" class="screen">
-        <!-- Header Kustom Acara -->
         <div class="camera-header">
             <button class="icon-btn" onclick="kembaliKeWelcome()">&larr;</button>
             <div class="camera-title" id="cameraTopTitle">Judul Acara</div>
@@ -132,11 +131,9 @@
             <canvas id="canvasElement" style="display: none;"></canvas>
         </div>
 
-        <!-- Film Strip -->
         <div class="film-strip" id="filmStrip"></div>
 
         <div class="camera-ui">
-            <!-- Indikator Roll Film Klasik -->
             <div class="roll-counter" onclick="bukaGaleri()" title="Lihat Galeri Saya">
                 <span style="font-size: 0.65rem; color: #ccc; letter-spacing: 1px; display: block; margin-bottom: -2px;">SISA</span>
                 <span id="quotaText" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: bold; color: #fff;">0</span>
@@ -183,6 +180,7 @@
         let jumlahFotoSaya = 0;
         let currentStream = null;
         let facingMode = "environment"; 
+        let isDataLoaded = false; // Penanda agar tidak memuat ulang data jika nama sama
 
         window.onload = async () => {
             if(!eventId) return showError("Link tidak valid (ID Acara hilang).");
@@ -191,11 +189,8 @@
                 if(!doc.exists) return showError("Acara tidak ditemukan.");
                 
                 eventData = doc.data();
-                
-                // Set Judul di Top Bar Kamera
                 document.getElementById('cameraTopTitle').innerText = eventData.eventName;
                 
-                // Logika Teks Judul Layar Awal
                 let formattedTitle = "";
                 let namaAcaraTeks = eventData.eventName.replace('&', '<br>&');
 
@@ -208,7 +203,6 @@
                 }
                 document.getElementById('displayEventName').innerHTML = formattedTitle;
 
-                // Logika Wallpaper Latar Belakang
                 let bgUrl = eventData.wallpaperUrl;
                 if(!bgUrl || bgUrl === "") {
                     if(eventData.eventType === "Wedding") bgUrl = "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
@@ -243,8 +237,18 @@
         async function masukKamera() {
             const input = document.getElementById('guestNameInput').value.trim();
             if(!input) return alert("Tulis nama Anda terlebih dahulu!");
-            namaTamu = input;
-            await muatDataAwal();
+            
+            // Cek apakah nama yang diinput berubah
+            if (namaTamu !== input) {
+                namaTamu = input;
+                isDataLoaded = false; // Reset data agar dimuat ulang
+            }
+
+            if (!isDataLoaded) {
+                await muatDataAwal();
+                isDataLoaded = true; // Tandai data sudah dimuat
+            }
+            
             tampilkanScreen('cameraScreen');
             mulaiKamera();
         }
@@ -291,7 +295,13 @@
         async function muatDataAwal() {
             try {
                 const snap = await db.collection("photos").where("eventId", "==", eventId).where("guestName", "==", namaTamu).get();
-                jumlahFotoSaya = snap.size;
+                
+                let firestoreCount = snap.size;
+                // Ambil cadangan perhitungan dari Local Storage browser
+                let localCount = parseInt(localStorage.getItem(`tlcf_count_${eventId}_${namaTamu}`)) || 0;
+                
+                // Gunakan angka terbesar antara database dan riwayat lokal ponsel tamu
+                jumlahFotoSaya = Math.max(firestoreCount, localCount);
                 perbaruiUIRollFilm();
                 
                 const filmStrip = document.getElementById('filmStrip');
@@ -325,6 +335,9 @@
                 
                 jumlahFotoSaya++;
                 perbaruiUIRollFilm();
+                
+                // KUNCI ANGKA HITUNGAN DI BROWSER TAMU
+                localStorage.setItem(`tlcf_count_${eventId}_${namaTamu}`, jumlahFotoSaya);
 
                 unggahDiLatarBelakang(blob);
             }, 'image/jpeg', 0.85);
