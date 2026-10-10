@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>The Last Call Film • Kamera & Album Tamu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <title>The Last Call Film • Kamera</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Courier+Prime:wght@700&display=swap" rel="stylesheet">
     
     <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
@@ -14,130 +14,103 @@
         :root { --bg-app: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.7); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         
-        body { 
-            background-color: var(--bg-app); color: var(--text-light); line-height: 1.6; 
-            padding: 20px; display: flex; flex-direction: column; align-items: center; 
-            min-height: 100vh; background-size: cover; background-position: center; 
-            background-attachment: fixed; position: relative;
-        }
-
-        #bgOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); z-index: -1; backdrop-filter: blur(5px); }
+        body { background-color: var(--bg-app); color: var(--text-light); line-height: 1.6; padding: 20px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; background-size: cover; background-position: center; background-attachment: fixed; position: relative; }
+        #bgOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); z-index: -1; backdrop-filter: blur(10px); }
         
         .app-container { width: 100%; max-width: 480px; margin: 0 auto; position: relative; z-index: 1; display: none; }
-        
-        /* PESAN ERROR / LOADING */
-        #messageScreen { text-align: center; padding: 40px 20px; margin-top: 10vh; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 20px; backdrop-filter: blur(10px); }
-        
-        /* 1. LAYAR INTRO (LOGIN TAMU) */
-        #introScreen { text-align: center; margin-top: 10vh; padding: 30px; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 20px; backdrop-filter: blur(10px); }
+        #messageScreen, #introScreen { text-align: center; margin-top: 10vh; padding: 30px; background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); border-radius: 20px; backdrop-filter: blur(10px); }
         .intro-title { font-family: 'Playfair Display', serif; font-size: 2rem; margin-bottom: 10px; line-height: 1.2; }
         .intro-input { width: 100%; padding: 15px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.3); background: rgba(0,0,0,0.5); color: #fff; font-size: 1rem; text-align: center; margin-bottom: 20px; outline: none; }
         .intro-input:focus { border-color: var(--accent); }
         
-        /* TOMBOL GLOBAL */
         .btn-primary { width: 100%; padding: 16px; background: #fff; color: #000; border: none; border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px;}
         .btn-primary:active { transform: scale(0.97); }
         .btn-primary:disabled { background: #555; color: #888; cursor: not-allowed; }
-        
         .btn-outline { width: 100%; padding: 14px; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px);}
-        .btn-outline:active { transform: scale(0.97); }
-
-        /* 2. LAYAR DASBOR ALBUM TAMU */
-        .album-header { margin-bottom: 25px; margin-top: 10px; text-align: center; }
-        .album-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-        .album-subtitle { font-size: 0.85rem; color: var(--text-muted); }
-        .dashboard-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 30px; text-align: center; backdrop-filter: blur(10px); }
         
-        /* 3. LAYAR KAMERA */
+        .album-header { margin-bottom: 25px; margin-top: 10px; text-align: center; }
+        .album-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; line-height: 1.2; }
+        .dashboard-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 30px; text-align: center; }
+        
+        /* Indikator Roll Film Retro */
+        .retro-counter { font-family: 'Courier Prime', monospace; background: #111; color: #e5e5e5; padding: 8px 16px; border: 2px solid #333; border-radius: 6px; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; box-shadow: inset 0px 4px 10px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.1); display: inline-flex; align-items: center; gap: 8px; }
+        .retro-counter span { background: #000; padding: 2px 6px; border-radius: 4px; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
+        
         .camera-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .film-counter { background: rgba(0,0,0,0.6); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; border: 1px solid var(--border-color); backdrop-filter: blur(10px); }
-
-        .camera-wrapper { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; backdrop-filter: blur(10px); }
+        .camera-wrapper { background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); margin-bottom: 20px; }
         .camera-box { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #000; border-radius: 12px; overflow: hidden; }
         video, canvas { width: 100%; height: 100%; object-fit: cover; }
         canvas { display: none; }
-        
-        .status-msg { text-align: center; font-size: 0.85rem; color: var(--text-light); font-weight: 500; margin-top: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .status-msg { text-align: center; font-size: 0.85rem; color: var(--text-muted); margin-top: 15px; }
 
-        /* Galeri Grid */
         .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding-bottom: 40px; }
-        .gallery-item { background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
-        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
-        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 10px; color: #fff; }
+        .gallery-item { background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #111; cursor: pointer; transition: 0.2s; }
+        .gallery-item img:active { transform: scale(0.95); }
         
-        /* Tombol Aksi di Galeri */
         .action-group { display: flex; gap: 6px; margin-top: auto; }
-        .btn-action { flex: 1; padding: 8px 4px; background-color: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s;}
-        .btn-action:active { transform: scale(0.95); }
+        .btn-action { flex: 1; padding: 8px 0; background-color: rgba(255, 255, 255, 0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600; border-radius: 6px; cursor: pointer; transition: 0.2s; text-align: center; }
+        .btn-action:active { transform: scale(0.9); }
         .btn-delete { background-color: rgba(255, 60, 60, 0.15); color: #ff6b6b; border-color: rgba(255, 60, 60, 0.3); }
 
-        /* Lightbox */
-        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; }
-        #lightboxClose { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2.5rem; background: none; border: none; cursor: pointer; }
+        /* Lightbox Layar Penuh */
+        #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s ease; }
+        #lightbox.show { display: flex; opacity: 1; }
+        #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        #lightboxClose { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2.5rem; background: none; border: none; cursor: pointer; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     </style>
 </head>
 <body>
 
     <div id="bgOverlay"></div>
 
-    <!-- PESAN LOADING / ERROR -->
-    <div class="app-container" id="messageScreen" style="display: flex;">
+    <div class="app-container" id="messageScreen" style="display: flex; flex-direction: column;">
         <h2 class="font-serif" id="msgTitle">Memuat Acara...</h2>
         <p id="msgDesc" style="color: var(--text-muted); margin-top: 10px;">Mohon tunggu sebentar.</p>
     </div>
 
-    <!-- 1. LAYAR LOGIN TAMU -->
     <div class="app-container" id="introScreen">
         <h1 class="intro-title" id="introEventTitle">Nama Acara</h1>
-        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 25px;">Selamat datang! Silakan masukkan nama Anda untuk masuk ke album acara ini. 1 nama = 1 akses tamu.</p>
-        
+        <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 25px;">Masukkan nama Anda untuk masuk ke album acara ini. 1 nama = 1 akses tamu.</p>
         <input type="text" id="namaTamuInput" class="intro-input" placeholder="Ketik nama Anda di sini..." autocomplete="off">
         <button class="btn-primary" id="btnStartSession" onclick="mulaiSesiTamu()">Masuk ke Album</button>
     </div>
 
-    <!-- 2. LAYAR DASBOR ALBUM TAMU -->
     <div class="app-container" id="guestDashboardScreen">
         <div class="album-header">
             <h1 class="album-title" id="dashEventTitle">Acara</h1>
-            <p class="album-subtitle" id="dashGuestName">Tamu: -</p>
+            <p style="font-size: 0.85rem; color: var(--text-muted);" id="dashGuestName">Tamu: -</p>
         </div>
-
         <div class="dashboard-card">
-            <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Sisa Jatah Foto Anda</h3>
-            <div style="font-size: 2.5rem; font-family: 'Playfair Display', serif; font-weight: 700; color: var(--accent); margin-bottom: 15px; line-height: 1;" id="dashSisaFoto">0</div>
-            
-            <button class="btn-primary" id="btnBukaKamera" onclick="bukaLayarKamera()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M4 4h3l2-2h6l2 2h3c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 3c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>
-                Buka Kamera Saya
-            </button>
+            <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 15px;">Sisa Roll Film Anda</h3>
+            <div class="retro-counter" style="margin-bottom: 20px; font-size: 2rem;">
+                <span id="dashSisaFoto">00</span>
+            </div>
+            <button class="btn-primary" id="btnBukaKamera" onclick="bukaLayarKamera()">Buka Kamera Saya</button>
         </div>
-
-        <h3 class="gallery-section-title font-serif">Album <span id="privacyLabelText" style="font-size:0.8rem; font-family:'Inter', sans-serif; font-weight:normal; color:var(--text-muted); float:right; margin-top:5px;">(Memuat...)</span></h3>
+        <h3 class="gallery-section-title">Album <span id="privacyLabelText" style="font-size:0.8rem; font-family:'Inter', sans-serif; font-weight:normal; color:var(--text-muted); float:right; margin-top:5px;"></span></h3>
         <div class="gallery-grid" id="albumGalleryGrid"></div>
     </div>
 
-    <!-- 3. LAYAR KAMERA UTAMA -->
     <div class="app-container" id="cameraScreen" style="padding-bottom: 30px;">
         <div class="camera-header">
-            <button class="btn-outline" style="width: auto; padding: 6px 12px; font-size:0.8rem;" onclick="kembaliKeAlbum()">&larr; Album</button>
-            <div class="film-counter" id="filmCounter">Sisa Jepretan: -</div>
+            <button class="btn-outline" style="width: auto; padding: 8px 16px; font-size:0.85rem;" onclick="kembaliKeAlbum()">&larr; Album</button>
+            <div class="retro-counter">
+                EXP: <span id="filmCounter">00</span>
+            </div>
         </div>
-
         <div class="camera-wrapper">
             <div class="camera-box">
                 <video id="video" autoplay playsinline></video>
                 <canvas id="canvas"></canvas>
             </div>
         </div>
-
         <div class="controls">
             <button class="btn-primary" id="captureBtn" onclick="jepretFotoLaluSimpan()">Jepret & Simpan</button>
             <div id="status" class="status-msg">Ketuk jepret, foto akan langsung tersimpan.</div>
         </div>
-
-        <h3 class="gallery-section-title font-serif" style="margin-top: 40px;">Riwayat Foto Anda</h3>
+        <h3 class="gallery-section-title" style="margin-top: 40px;">Riwayat Jepretan Anda</h3>
         <div class="gallery-grid" id="cameraGalleryGrid"></div>
     </div>
 
@@ -161,49 +134,36 @@
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
 
-        let eventData = null;
-        let sessionId = null;
-        let shotsTaken = 0;
-        let maxShots = 15;
-        let namaTamuGlobal = "Tamu";
-        
+        let eventData = null, sessionId = null, shotsTaken = 0, maxShots = 15, namaTamuGlobal = "Tamu";
         let videoStream = null;
+        
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const statusDiv = document.getElementById('status');
         const captureBtn = document.getElementById('captureBtn');
 
-        // 1. MEMUAT DATA ACARA
         async function loadEventData() {
             if (!eventId) return tampilkanPesan("Tautan Tidak Valid", "Pindai QR Code dari undangan yang benar.");
-
             try {
                 const doc = await db.collection("events").doc(eventId).get();
                 if (!doc.exists) return tampilkanPesan("Acara Tidak Ditemukan", "Acara ini mungkin telah dihapus.");
                 eventData = doc.data();
-
                 if (eventData.status !== "Aktif") return tampilkanPesan("Kamera Terkunci", "Acara ini belum diaktifkan oleh pemilik.");
-
                 if (eventData.wallpaperUrl) document.body.style.backgroundImage = `url(${eventData.wallpaperUrl})`;
 
-                let judul = eventData.eventName;
-                if(eventData.eventType === "Wedding") judul = `Wedding of<br>${eventData.eventName}`;
-                else if(eventData.eventType === "Birthday") judul = `Birthday of<br>${eventData.eventName}`;
-                
+                let judul = eventData.eventType === "Wedding" ? `Wedding of<br>${eventData.eventName}` : (eventData.eventType === "Birthday" ? `Birthday of<br>${eventData.eventName}` : eventData.eventName);
                 document.getElementById('introEventTitle').innerHTML = judul;
                 document.getElementById('dashEventTitle').innerHTML = judul;
                 document.getElementById('privacyLabelText').innerText = eventData.privacy === 'visible' ? "(Publik)" : "(Privat)";
                 maxShots = eventData.guestPhotoLimit || 15;
 
                 sessionId = localStorage.getItem('tlc_session_' + eventId);
-                if (sessionId) {
-                    await lanjutkanSesi();
-                } else {
+                if (sessionId) await lanjutkanSesi();
+                else {
                     document.getElementById('messageScreen').style.display = 'none';
                     document.getElementById('introScreen').style.display = 'block';
                 }
             } catch (error) {
-                console.error(error);
                 tampilkanPesan("Koneksi Gagal", "Periksa jaringan internet Anda.");
             }
         }
@@ -215,343 +175,217 @@
             document.getElementById('msgDesc').innerText = deskripsi;
         }
 
-        function sembunyikanSemuaLayar() {
-            document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
-        }
-
-        // 2. DAFTAR NAMA TAMU BARU
         async function mulaiSesiTamu() {
             const nama = document.getElementById('namaTamuInput').value.trim();
             if(!nama) return alert('Silakan masukkan nama Anda terlebih dahulu!');
-            
             const btn = document.getElementById('btnStartSession');
-            btn.disabled = true;
-            btn.innerText = "Memeriksa Kuota...";
+            btn.disabled = true; btn.innerText = "Memeriksa Kuota...";
 
             try {
                 const doc = await db.collection("events").doc(eventId).get();
                 const currentData = doc.data();
-                
                 if (currentData.quota !== 9999 && currentData.remainingQuota <= 0) {
-                    btn.innerText = "Masuk ke Album";
-                    btn.disabled = false;
+                    btn.innerText = "Masuk ke Album"; btn.disabled = false;
                     return alert("Maaf, kuota jumlah tamu untuk acara ini telah penuh.");
                 }
-
                 if (currentData.quota !== 9999) {
-                    await db.collection("events").doc(eventId).update({
-                        remainingQuota: firebase.firestore.FieldValue.increment(-1)
-                    });
+                    await db.collection("events").doc(eventId).update({ remainingQuota: firebase.firestore.FieldValue.increment(-1) });
                 }
-
                 sessionId = 'GUEST_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                 localStorage.setItem('tlc_session_' + eventId, sessionId);
                 namaTamuGlobal = nama;
 
-                await db.collection("guest_sessions").doc(sessionId).set({
-                    eventId: eventId,
-                    guestName: nama,
-                    shotsTaken: 0,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                shotsTaken = 0;
-                bukaDasborAlbum();
-
+                await db.collection("guest_sessions").doc(sessionId).set({ eventId: eventId, guestName: nama, shotsTaken: 0, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+                shotsTaken = 0; bukaDasborAlbum();
             } catch (error) {
-                console.error(error);
-                alert("Gagal terhubung. Coba lagi.");
-                btn.disabled = false;
-                btn.innerText = "Masuk ke Album";
+                alert("Gagal terhubung. Coba lagi."); btn.disabled = false; btn.innerText = "Masuk ke Album";
             }
         }
 
-        // 3. MELANJUTKAN SESI LAMA
         async function lanjutkanSesi() {
             try {
                 const sessionDoc = await db.collection("guest_sessions").doc(sessionId).get();
-                if(sessionDoc.exists) {
-                    shotsTaken = sessionDoc.data().shotsTaken || 0;
-                    namaTamuGlobal = sessionDoc.data().guestName || "Tamu";
-                } else {
-                    shotsTaken = 0;
-                }
+                if(sessionDoc.exists) { shotsTaken = sessionDoc.data().shotsTaken || 0; namaTamuGlobal = sessionDoc.data().guestName || "Tamu"; }
+                else shotsTaken = 0;
                 bukaDasborAlbum();
             } catch(e) {
-                console.error("Gagal load sesi", e);
-                shotsTaken = parseInt(localStorage.getItem('tlc_shots_' + eventId)) || 0;
-                bukaDasborAlbum();
+                shotsTaken = parseInt(localStorage.getItem('tlc_shots_' + eventId)) || 0; bukaDasborAlbum();
             }
         }
 
-        // 4. MEMBUKA DASBOR ALBUM
+        function formatAngkaRetro(angka) { return angka < 10 ? '0' + angka : angka; }
+
         function bukaDasborAlbum() {
-            sembunyikanSemuaLayar();
+            document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
             document.getElementById('guestDashboardScreen').style.display = 'block';
             document.getElementById('dashGuestName').innerText = `Tamu: ${namaTamuGlobal}`;
-            
-            updateSisaUI();
-            muatGaleriUtama('albumGalleryGrid');
+            updateSisaUI(); muatGaleriUtama('albumGalleryGrid');
         }
 
-        // 5. NAVIGASI KE KAMERA
         async function bukaLayarKamera() {
             if (maxShots - shotsTaken <= 0) return alert("Maaf, batas jepretan Anda telah habis.");
-            
-            sembunyikanSemuaLayar();
+            document.querySelectorAll('.app-container').forEach(el => el.style.display = 'none');
             document.getElementById('cameraScreen').style.display = 'block';
-            updateSisaUI();
-            statusDiv.innerText = "Ketuk jepret, foto akan langsung tersimpan.";
+            updateSisaUI(); statusDiv.innerText = "Ketuk jepret, foto akan langsung tersimpan.";
 
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
                 video.srcObject = videoStream;
-            } catch (err) {
-                statusDiv.innerText = "Gagal mengakses kamera. Berikan izin di browser Anda.";
-            }
-
-            // Muat galeri pribadi tamu di bawah kamera
+            } catch (err) { statusDiv.innerText = "Gagal mengakses kamera. Berikan izin di browser Anda."; }
             muatGaleriPribadi('cameraGalleryGrid');
         }
 
         function kembaliKeAlbum() {
-            if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop());
-            }
+            if (videoStream) videoStream.getTracks().forEach(track => track.stop());
             bukaDasborAlbum();
         }
 
         function updateSisaUI() {
             const sisa = maxShots - shotsTaken;
-            document.getElementById('dashSisaFoto').innerText = sisa;
-            document.getElementById('filmCounter').innerText = `Sisa Jepretan: ${sisa} / ${maxShots}`;
+            const strSisa = formatAngkaRetro(sisa);
+            document.getElementById('dashSisaFoto').innerText = strSisa;
+            document.getElementById('filmCounter').innerText = strSisa;
             
             const btnDash = document.getElementById('btnBukaKamera');
             if(sisa <= 0) {
-                btnDash.disabled = true;
-                btnDash.innerHTML = "Jatah Habis";
-                captureBtn.disabled = true;
-                captureBtn.innerText = "Jatah Habis";
+                btnDash.disabled = true; btnDash.innerText = "Roll Habis";
+                captureBtn.disabled = true; captureBtn.innerText = "Roll Habis";
             } else {
-                btnDash.disabled = false;
-                btnDash.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;"><path d="M4 4h3l2-2h6l2 2h3c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 3c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>Buka Kamera Saya`;
-                captureBtn.disabled = false;
-                captureBtn.innerText = "Jepret & Simpan";
+                btnDash.disabled = false; btnDash.innerText = "Buka Kamera Saya";
+                captureBtn.disabled = false; captureBtn.innerText = "Jepret & Simpan";
             }
         }
 
-        // 6. ALUR JEPRET LANGSUNG SIMPAN
         async function jepretFotoLaluSimpan() {
             if ((maxShots - shotsTaken) <= 0) return;
+            video.style.opacity = '0'; setTimeout(() => { video.style.opacity = '1'; }, 150);
+            captureBtn.disabled = true; captureBtn.innerText = "Memproses...";
+            statusDiv.innerText = "Menyimpan ke album...";
 
-            // Efek Flash & Loading
-            video.style.opacity = '0';
-            setTimeout(() => { video.style.opacity = '1'; }, 150);
-            captureBtn.disabled = true;
-            captureBtn.innerText = "Menyimpan...";
-            statusDiv.innerText = "Sedang diproses ke album...";
-
-            // Ambil Frame Kamera
-            const MAX_WIDTH = 600;
-            const scale = MAX_WIDTH / video.videoWidth;
-            canvas.width = MAX_WIDTH;
-            canvas.height = video.videoHeight * scale;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            
+            const MAX_WIDTH = 600; const scale = MAX_WIDTH / video.videoWidth;
+            canvas.width = MAX_WIDTH; canvas.height = video.videoHeight * scale;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
             const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
             try {
-                // Upload ke ImgBB
-                const formData = new FormData();
-                formData.append('key', '16a4714fa54ed030ef5416ae07a05f68');
-                formData.append('image', base64Image);
-
+                const formData = new FormData(); formData.append('key', '16a4714fa54ed030ef5416ae07a05f68'); formData.append('image', base64Image);
                 const response = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: formData });
                 const result = await response.json();
 
                 if (result.success) {
-                    // Simpan Firestore
-                    const docRef = await db.collection("photos").add({
-                        eventId: eventId,
-                        url: result.data.url,
-                        guestName: namaTamuGlobal,
-                        sessionId: sessionId,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    
-                    // POTONG KUOTA LOKAL & SERVER
-                    await db.collection("guest_sessions").doc(sessionId).update({
-                        shotsTaken: firebase.firestore.FieldValue.increment(1)
-                    });
-                    shotsTaken++;
-                    localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
-                    updateSisaUI();
-
-                    statusDiv.innerText = "Tersimpan! Silakan cek di bawah.";
-                    
-                    // Segarkan Galeri di Bawah Kamera
+                    await db.collection("photos").add({ eventId: eventId, url: result.data.url, guestName: namaTamuGlobal, sessionId: sessionId, timestamp: firebase.firestore.FieldValue.serverTimestamp() });
+                    await db.collection("guest_sessions").doc(sessionId).update({ shotsTaken: firebase.firestore.FieldValue.increment(1) });
+                    shotsTaken++; localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
+                    updateSisaUI(); statusDiv.innerText = "Berhasil! Foto telah disimpan.";
                     muatGaleriPribadi('cameraGalleryGrid');
-
-                } else {
-                    statusDiv.innerText = "Gagal upload gambar ke server.";
-                }
+                } else statusDiv.innerText = "Gagal upload. Coba lagi.";
             } catch (error) {
-                console.error(error);
                 statusDiv.innerText = "Koneksi terputus saat menyimpan.";
             } finally {
-                if ((maxShots - shotsTaken) > 0) {
-                    captureBtn.disabled = false;
-                    captureBtn.innerText = "Jepret & Simpan";
-                }
+                if ((maxShots - shotsTaken) > 0) { captureBtn.disabled = false; captureBtn.innerText = "Jepret & Simpan"; }
             }
         }
 
-        // 7. FUNGSI MENGHAPUS FOTO
         async function hapusFoto(docId, btnElement) {
-            if(!confirm('Apakah Anda yakin ingin menghapus foto ini? Sisa jatah jepretan Anda akan dikembalikan 1.')) return;
-            
-            btnElement.disabled = true;
-            btnElement.innerText = "Hapus...";
-
+            if(!confirm('Hapus foto ini? 1 Roll jepretan akan dikembalikan ke kamera Anda.')) return;
+            btnElement.disabled = true; btnElement.innerText = "Hapus...";
             try {
-                // Hapus dokumen foto dari Firestore
                 await db.collection("photos").doc(docId).delete();
-                
-                // Kembalikan Kuota di Server & Lokal
-                await db.collection("guest_sessions").doc(sessionId).update({
-                    shotsTaken: firebase.firestore.FieldValue.increment(-1)
-                });
-                shotsTaken--;
-                localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
-                
-                // Update Layar
+                await db.collection("guest_sessions").doc(sessionId).update({ shotsTaken: firebase.firestore.FieldValue.increment(-1) });
+                shotsTaken--; localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
                 updateSisaUI();
-                btnElement.closest('.gallery-item').remove(); // Hapus kartu foto dari layar
-                statusDiv.innerText = "Foto dihapus. Jatah jepretan dikembalikan.";
-
+                btnElement.closest('.gallery-item').remove();
             } catch (error) {
-                console.error("Gagal menghapus", error);
-                alert("Gagal menghapus foto. Silakan periksa koneksi.");
-                btnElement.disabled = false;
-                btnElement.innerText = "Hapus";
+                alert("Gagal menghapus."); btnElement.disabled = false; btnElement.innerText = "Hapus";
             }
         }
 
-        // 8. MEMUAT GALERI (DENGAN TOMBOL AKSI VIEW/DOWNLOAD/DELETE)
-        
-        // A. Galeri Utama (Di Dasbor Album, mengikuti aturan Publik/Privat)
         async function muatGaleriUtama(elementId) {
             const galleryDiv = document.getElementById(elementId);
             galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Memuat album...</div>';
-            
             try {
                 let query = db.collection("photos").where("eventId", "==", eventId);
-                if (eventData.privacy === "private") {
-                    query = query.where("sessionId", "==", sessionId);
-                }
-
+                if (eventData.privacy === "private") query = query.where("sessionId", "==", sessionId);
                 const snapshot = await query.get();
-                if(snapshot.empty) {
-                    galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem; padding:20px; border:1px dashed var(--border-color); border-radius:12px;">Album masih kosong. Mulailah memotret!</div>';
-                    return;
-                }
-
-                let photos = [];
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    data.id = doc.id;
-                    photos.push(data);
-                });
-                
-                photos.sort((a, b) => {
-                    let timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-                    let timeB = b.timestamp ? b.timestamp.toMillis() : 0;
-                    return timeB - timeA;
-                });
-
+                if(snapshot.empty) return galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem; padding:20px; border:1px dashed var(--border-color); border-radius:12px;">Album masih kosong.</div>';
+                let photos = []; snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; photos.push(data); });
+                photos.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
                 renderGaleriHTML(photos, galleryDiv);
-            } catch(e) {
-                galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat foto.</div>';
-            }
+            } catch(e) { galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat foto.</div>'; }
         }
 
-        // B. Galeri Pribadi (Di Layar Kamera, hanya menampilkan foto milik tamu sendiri)
         async function muatGaleriPribadi(elementId) {
             const galleryDiv = document.getElementById(elementId);
-            galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Memuat riwayat Anda...</div>';
-            
+            galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Memuat riwayat...</div>';
             try {
-                // Selalu hanya tarik yang "sessionId" nya sama untuk di bawah kamera
-                let query = db.collection("photos")
-                            .where("eventId", "==", eventId)
-                            .where("sessionId", "==", sessionId);
-
+                let query = db.collection("photos").where("eventId", "==", eventId).where("sessionId", "==", sessionId);
                 const snapshot = await query.get();
-                if(snapshot.empty) {
-                    galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem; padding:20px;">Belum ada jepretan Anda di sesi ini.</div>';
-                    return;
-                }
-
-                let photos = [];
-                snapshot.forEach(doc => {
-                    let data = doc.data();
-                    data.id = doc.id;
-                    photos.push(data);
-                });
-                
-                photos.sort((a, b) => {
-                    let timeA = a.timestamp ? a.timestamp.toMillis() : 0;
-                    let timeB = b.timestamp ? b.timestamp.toMillis() : 0;
-                    return timeB - timeA;
-                });
-
+                if(snapshot.empty) return galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Belum ada jepretan Anda.</div>';
+                let photos = []; snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; photos.push(data); });
+                photos.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
                 renderGaleriHTML(photos, galleryDiv);
-            } catch(e) {
-                galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat riwayat.</div>';
-            }
+            } catch(e) { galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat.</div>'; }
         }
 
-        // C. Fungsi Bantuan untuk Melukis HTML Galeri
         function renderGaleriHTML(photos, galleryDiv) {
             galleryDiv.innerHTML = '';
             photos.forEach(photo => {
-                const item = document.createElement('div');
-                item.className = 'gallery-item';
-                
-                // Cek apakah tamu ini pemilik foto tersebut (Boleh menghapus)
+                const item = document.createElement('div'); item.className = 'gallery-item';
                 const isOwner = photo.sessionId === sessionId;
-                const fileName = `TLC_${photo.guestName.replace(/\s+/g, '_')}.jpg`;
-
+                const fileName = `TLC_${photo.guestName.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
+                
+                // Tambahkan 'onerror' pada tag img agar jika gambar rusak, tidak merusak tampilan total
                 let actionButtons = `
                     <button class="btn-action" onclick="bukaLightbox('${photo.url}')">Lihat</button>
-                    <button class="btn-action" onclick="unduhFoto('${photo.url}', '${fileName}')">Unduh</button>
+                    <button class="btn-action" onclick="unduhLangsung('${photo.url}', '${fileName}')">Unduh</button>
                 `;
-
-                // Jika dia pemiliknya, tambahkan tombol hapus
-                if(isOwner) {
-                    actionButtons += `<button class="btn-action btn-delete" onclick="hapusFoto('${photo.id}', this)">Hapus</button>`;
-                }
+                if(isOwner) actionButtons += `<button class="btn-action btn-delete" onclick="hapusFoto('${photo.id}', this)">Hapus</button>`;
 
                 item.innerHTML = `
-                    <img src="${photo.url}" onclick="bukaLightbox('${photo.url}')">
-                    <div class="guest-tag">${photo.guestName}</div>
-                    <div class="action-group">
-                        ${actionButtons}
-                    </div>
+                    <img src="${photo.url}" onerror="this.src='https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'" onclick="bukaLightbox('${photo.url}')">
+                    <div style="font-family:'Playfair Display', serif; font-size:0.8rem; margin-bottom:8px; text-align:center;">${photo.guestName}</div>
+                    <div class="action-group">${actionButtons}</div>
                 `;
                 galleryDiv.appendChild(item);
             });
         }
 
-        // Lightbox Functions
+        // FUNGSI UNDUH PAKSA (BLOB FETCH)
+        async function unduhLangsung(url, namaFile) {
+            try {
+                const response = await fetch(url);
+                const blob = await response.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = blobUrl;
+                a.download = namaFile;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(blobUrl);
+                document.body.removeChild(a);
+            } catch (e) {
+                // Fallback jika diblokir sistem
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = namaFile;
+                a.target = "_blank";
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+        }
+
+        // LIGHTBOX
         const lightbox = document.getElementById('lightbox');
         const lightboxImg = document.getElementById('lightboxImg');
-        function bukaLightbox(url) { lightboxImg.src = url; lightbox.style.display = 'flex'; }
-        function tutupLightbox() { lightbox.style.display = 'none'; }
-        function unduhFoto(url, namaFile) {
-            const a = document.createElement('a'); a.href = url; a.download = namaFile;
-            document.body.appendChild(a); a.click(); document.body.removeChild(a);
+        function bukaLightbox(url) { 
+            lightboxImg.src = url; 
+            lightbox.classList.add('show');
+        }
+        function tutupLightbox() { 
+            lightbox.classList.remove('show');
+            setTimeout(() => { lightboxImg.src = ""; }, 300); // Bersihkan cache setelah animasi
         }
 
         loadEventData();
