@@ -80,6 +80,14 @@
 
     <!-- KONTEN UTAMA ALBUM -->
     <div class="app-container" id="mainContent">
+        
+        <!-- ============================================== -->
+        <!-- TOMBOL KEMBALI -->
+        <!-- ============================================== -->
+        <button onclick="window.close(); window.location.href='index.html';" style="background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; font-size: 0.85rem; cursor: pointer; margin-bottom: 25px; transition: 0.2s;">
+            &larr; Kembali
+        </button>
+
         <div class="header-panel">
             <div>
                 <p style="font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 5px;">Album Foto</p>
@@ -158,7 +166,6 @@
             }
         }
 
-        // PERBAIKAN: Menggunakan CDN Proxy wsrv.nl untuk bypass pemblokiran Safari
         function renderGaleri() {
             const galleryDiv = document.getElementById('albumGallery');
             galleryDiv.innerHTML = '';
@@ -169,10 +176,7 @@
                 item.id = `item_${photo.id}`;
                 if(selectedPhotoIds.has(photo.id)) item.classList.add('selected');
                 
-                // Proxy URL untuk mem-bypass ITP Apple/Safari
-                // Untuk thumbnail kita request resolusi lebih kecil agar loading cepat
                 const thumbnailProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}&w=400`;
-                // Untuk lightbox kita pakai resolusi penuh
                 const fullProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
 
                 item.innerHTML = `
@@ -192,7 +196,7 @@
 
         function bukaLightbox(url) {
             const imgEl = document.getElementById('lightboxImg');
-            imgEl.src = ""; // Reset gambar sebelumnya
+            imgEl.src = ""; 
             imgEl.src = url;
             document.getElementById('lightbox').style.display = 'flex';
         }
@@ -234,7 +238,6 @@
             else bar.classList.remove('show');
         }
 
-        // FUNGSI UNDUH ZIP (Cepat dan Terlihat Progress-nya)
         async function unduhZipPilihan() {
             if(selectedPhotoIds.size === 0) return;
 
