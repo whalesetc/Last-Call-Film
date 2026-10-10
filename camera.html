@@ -85,7 +85,6 @@
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; background: #222; aspect-ratio: 3/4; cursor: pointer; display: flex; flex-direction: column; transition: 0.2s; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; }
         
-        /* Ciri-ciri Pemilihan Gambar */
         .check-circle { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; transition: 0.2s; pointer-events: none; z-index: 2; }
         .check-circle::after { content: ''; width: 10px; height: 5px; border-left: 2px solid #000; border-bottom: 2px solid #000; transform: rotate(-45deg); opacity: 0; margin-top: -2px; }
         
@@ -124,7 +123,7 @@
         <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 15px;">Tekan & Tahan gambar untuk menyimpan</p>
     </div>
 
-    <!-- Tetingkap Pemuatan semasa memuat turun ZIP -->
+    <!-- Tetingkap Pemuatan -->
     <div id="loadingScreen">
         <div class="spinner" id="spinnerIcon"></div>
         <h3 class="font-serif" id="loadingText" style="font-size: 1.5rem;">Memuat Sistem...</h3>
@@ -217,7 +216,6 @@
         let facingMode = "environment"; 
         let isDataLoaded = false; 
 
-        // Pembolehubah untuk sistem ZIP Galeri Tamu
         let allGalleryPhotos = [];
         let selectedPhotoIds = new Set();
 
@@ -234,6 +232,7 @@
             if(!eventId) return showError("Pautan tidak sah (ID Acara hilang).");
             
             deviceId = dapatkanAtauBuatDeviceId(); 
+            namaTamu = localStorage.getItem(`tlcf_name_${eventId}`) || "";
 
             try {
                 const doc = await db.collection("events").doc(eventId).get();
@@ -263,8 +262,20 @@
                 document.getElementById('welcomeScreen').style.backgroundImage = `url('${bgUrl}')`;
 
                 sisaJepretan = eventData.guestPhotoLimit || 15;
-                document.getElementById('loadingScreen').style.display = 'none';
-                tampilkanScreen('welcomeScreen');
+                
+                // CEK APAKAH TAMU SUDAH PERNAH MASUK SEBELUMNYA (Agar Refresh Tidak Kembali ke Depan)
+                let savedScreen = localStorage.getItem(`tlcf_screen_${eventId}`) || 'welcomeScreen';
+                if(savedScreen !== 'welcomeScreen' && namaTamu !== "") {
+                    document.getElementById('guestNameInput').value = namaTamu;
+                    await muatDataAwal();
+                    isDataLoaded = true;
+                    tampilkanScreen(savedScreen);
+                    if(savedScreen === 'cameraScreen') mulaiKamera();
+                    else if(savedScreen === 'galleryScreen') bukaGaleriLangsung();
+                } else {
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    tampilkanScreen('welcomeScreen');
+                }
             } catch(e) {
                 showError("Gagal menyambung ke pelayan.");
             }
@@ -279,11 +290,13 @@
         function tampilkanScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+            localStorage.setItem(`tlcf_screen_${eventId}`, screenId);
             if(screenId !== 'galleryScreen') sembunyikanFloatingBar();
         }
         
         function kembaliKeWelcome() {
             matikanKamera();
+            localStorage.removeItem(`tlcf_screen_${eventId}`);
             tampilkanScreen('welcomeScreen');
         }
 
@@ -292,6 +305,7 @@
             if(!input) return alert("Sila tulis nama anda terlebih dahulu!");
             
             namaTamu = input; 
+            localStorage.setItem(`tlcf_name_${eventId}`, namaTamu);
 
             if (!isDataLoaded) {
                 await muatDataAwal();
@@ -411,13 +425,14 @@
             }
         }
 
-        // ==========================================
-        // SISTEM GALERI DAN MUAT TURUN ZIP
-        // ==========================================
         async function bukaGaleri() {
             matikanKamera();
             tampilkanScreen('galleryScreen');
-            document.getElementById('galleryGuestName').innerText = namaTamu;
+            bukaGaleriLangsung();
+        }
+
+        async function bukaGaleriLangsung() {
+            document.getElementById('galleryGuestName').innerText = namaTamu || "Tamu";
             const galeri = document.getElementById('guestGallery');
             galeri.innerHTML = '<p style="color:#888; grid-column:1/-1; text-align:center;">Memuat foto...</p>';
             
@@ -449,7 +464,6 @@
                     allGalleryPhotos.sort((a,b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
                     
                     allGalleryPhotos.forEach(p => {
-                        // Menggunakan wsrv.nl proxy agar gambar dimuat dengan pantas dan tidak tersekat
                         const thumbnailUrl = `https://wsrv.nl/?url=${encodeURIComponent(p.url)}&w=400`;
                         const fullUrl = `https://wsrv.nl/?url=${encodeURIComponent(p.url)}`;
                         
@@ -471,7 +485,7 @@
                     });
                 }
             } catch(e) {
-                galeri.innerHTML = '<p style="color:red; grid-column:1/-1;">Gagal memuat galeri. Pastikan internet anda stabil.</p>';
+                galeri.innerHTML = '<p style="color:red; grid-column:1/-1;">Gagal memuat galeri.</p>';
                 document.getElementById('galleryCount').innerText = "Ralat";
             }
         }
@@ -527,13 +541,13 @@
             const loadingDesc = document.getElementById('loadingSubText');
             
             document.getElementById('spinnerIcon').style.display = 'block';
-            loadingTitle.innerText = "Memuat Turun...";
+            loadingTitle.innerText = "Downloading..."; // Diperbarui sesuai permintaan
             loadingDesc.style.display = 'block';
-            loadingDesc.innerHTML = `Menyediakan fail 0 / ${selectedPhotoIds.size}...`;
+            loadingDesc.innerHTML = `Please wait: 0 / ${selectedPhotoIds.size} files`; // Diperbarui sesuai permintaan
             overlay.style.display = 'flex';
             
             const zip = new JSZip();
-            const folder = zip.folder(`Photobooth_${namaTamu}`);
+            const folder = zip.folder(`Photobooth_${namaTamu || 'Tamu'}`);
             
             let berjaya = 0;
             let gagal = 0;
@@ -550,7 +564,7 @@
                         const blob = await response.blob();
                         folder.file(namaFile, blob);
                         berjaya++;
-                        loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berjaya} / ${photosToDownload.length}</span><br>Menarik gambar...`;
+                        loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berjaya} / ${photosToDownload.length}</span><br>Please wait...`; // Diperbarui
                     } else {
                         gagal++;
                     }
@@ -559,8 +573,8 @@
                 }
             }
 
-            loadingTitle.innerText = "Membungkus ZIP";
-            loadingDesc.innerHTML = "Sila tunggu sebentar...";
+            loadingTitle.innerText = "Downloading...";
+            loadingDesc.innerHTML = "Please wait, preparing zip file..."; // Diperbarui
 
             try {
                 const zipContent = await zip.generateAsync({ type: "blob" });
@@ -568,7 +582,7 @@
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = zipUrl;
-                a.download = `Galeri_Photobooth_${namaTamu}.zip`;
+                a.download = `Galeri_Photobooth_${namaTamu || 'Tamu'}.zip`;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(zipUrl);
@@ -576,9 +590,8 @@
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    if(gagal > 0) alert(`Selesai! Namun terdapat ${gagal} gambar yang gagal dimuat turun akibat masalah sambungan.`);
+                    if(gagal > 0) alert(`Selesai! Namun terdapat ${gagal} gambar yang gagal dimuat turun.`);
                     
-                    // Nyahpilih selepas berjaya
                     selectedPhotoIds.clear();
                     document.querySelectorAll('.photo-item').forEach(el => el.classList.remove('selected'));
                     kemasKiniFloatingBar();
