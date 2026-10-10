@@ -32,7 +32,6 @@
         .album-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; line-height: 1.2; }
         .dashboard-card { background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 16px; border: 1px solid var(--border-color); margin-bottom: 30px; text-align: center; }
         
-        /* Indikator Roll Film Retro */
         .retro-counter { font-family: 'Courier Prime', monospace; background: #111; color: #e5e5e5; padding: 8px 16px; border: 2px solid #333; border-radius: 6px; font-size: 1.2rem; font-weight: 700; letter-spacing: 2px; box-shadow: inset 0px 4px 10px rgba(0,0,0,0.9), 0 2px 4px rgba(255,255,255,0.1); display: inline-flex; align-items: center; gap: 8px; }
         .retro-counter span { background: #000; padding: 2px 6px; border-radius: 4px; color: #fff; text-shadow: 0 0 5px rgba(255,255,255,0.5); box-shadow: inset 0 0 5px rgba(255,255,255,0.1); }
         
@@ -46,7 +45,7 @@
         .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding-bottom: 40px; }
         .gallery-item { background: rgba(0, 0, 0, 0.4); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); display: flex; flex-direction: column; position: relative; }
-        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #111; cursor: pointer; transition: 0.2s; }
+        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 10px; background: #222; cursor: pointer; transition: 0.2s; }
         .gallery-item img:active { transform: scale(0.95); }
         
         .action-group { display: flex; gap: 6px; margin-top: auto; }
@@ -54,7 +53,6 @@
         .btn-action:active { transform: scale(0.9); }
         .btn-delete { background-color: rgba(255, 60, 60, 0.15); color: #ff6b6b; border-color: rgba(255, 60, 60, 0.3); }
 
-        /* Lightbox Layar Penuh */
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s ease; }
         #lightbox.show { display: flex; opacity: 1; }
         #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
@@ -141,6 +139,9 @@
         let eventData = null, sessionId = null, shotsTaken = 0, maxShots = 15, namaTamuGlobal = "Tamu";
         let videoStream = null;
         let pendingUploads = 0;
+        
+        // MEMORI LATAR BELAKANG: Menghindari layar hitam saat klik "Lihat"
+        window.dataGaleriGlobal = {};
         
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
@@ -241,6 +242,7 @@
             updateSisaUI(); statusDiv.innerText = "Ketuk jepret, foto akan langsung tersimpan.";
 
             try {
+                // Resolusi Optimal Full HD
                 videoStream = await navigator.mediaDevices.getUserMedia({ 
                     video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }, 
                     audio: false 
@@ -271,7 +273,7 @@
             }
         }
 
-        async function fetchWithRetry(url, options, retries = 1) {
+        async function fetchWithRetry(url, options, retries = 2) {
             for (let i = 0; i <= retries; i++) {
                 try {
                     const response = await fetch(url, options);
@@ -287,7 +289,8 @@
         async function jepretDanUnggahLatar() {
             if ((maxShots - shotsTaken) <= 0) return;
             
-            const MAX_DIMENSION = 1080;
+            // Batas Full HD (1920px) - Gambar tajam tapi ukuran file aman untuk ImgBB
+            const MAX_DIMENSION = 1920; 
             let width = video.videoWidth;
             let height = video.videoHeight;
             if (width > height) {
@@ -302,7 +305,8 @@
             
             video.style.opacity = '0'; setTimeout(() => { video.style.opacity = '1'; }, 150);
 
-            const localDataUrl = canvas.toDataURL('image/jpeg', 0.80);
+            // Kualitas kompresi 90% (Sangat jernih)
+            const localDataUrl = canvas.toDataURL('image/jpeg', 0.90);
             const base64Image = localDataUrl.split(',')[1];
 
             shotsTaken++; 
@@ -317,23 +321,17 @@
         }
 
         async function prosesUploadDiLatar(base64Data, tempId, localDataUrl) {
-            let finalUrl = "";
             try {
+                // Upload ke ImgBB
                 const formData = new FormData(); 
                 formData.append('key', '16a4714fa54ed030ef5416ae07a05f68'); 
                 formData.append('image', base64Data);
                 
-                const result = await fetchWithRetry('https://api.imgbb.com/1/upload', { method: 'POST', body: formData }, 1);
-                finalUrl = result.data.url;
-            } catch (error) {
-                console.warn("Server Gambar Gagal. Beralih ke penyimpanan Database Darurat.");
-                finalUrl = localDataUrl; 
-            }
+                const result = await fetchWithRetry('https://api.imgbb.com/1/upload', { method: 'POST', body: formData }, 2);
 
-            try {
                 const docRef = await db.collection("photos").add({ 
                     eventId: eventId, 
-                    url: finalUrl,
+                    url: result.data.url,
                     guestName: namaTamuGlobal, 
                     sessionId: sessionId, 
                     timestamp: firebase.firestore.FieldValue.serverTimestamp() 
@@ -343,16 +341,16 @@
                     shotsTaken: firebase.firestore.FieldValue.increment(1) 
                 });
                 
-                ubahPlaceholderMenjadiAsli(tempId, finalUrl, docRef.id, localDataUrl);
+                ubahPlaceholderMenjadiAsli(tempId, docRef.id, result.data.url, localDataUrl, namaTamuGlobal);
                 
             } catch (error) {
+                // Langsung batalkan dan kembalikan kuota jika ImgBB error
                 gagalUpload(tempId);
             } finally {
                 pendingUploads--;
             }
         }
 
-        // PENULISAN DOM YANG AMAN DARI ERROR STRING
         function tambahPlaceholderUI(tempId, localDataUrl) {
             const galleryDiv = document.getElementById('cameraGalleryGrid');
             if(galleryDiv.innerHTML.includes('Belum ada jepretan')) galleryDiv.innerHTML = '';
@@ -388,20 +386,20 @@
             galleryDiv.prepend(item);
         }
 
-        function ubahPlaceholderMenjadiAsli(tempId, realUrl, docId, localDataUrl) {
+        function ubahPlaceholderMenjadiAsli(tempId, docId, realUrl, localDataUrl, guestName) {
             const item = document.getElementById(tempId);
             if(!item) return;
             
-            const fileName = `TLC_${namaTamuGlobal.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
-            const displayUrl = localDataUrl || realUrl;
+            // Simpan URL ke memori agar DOM HTML tidak kelebihan beban teks (Anti Layar Hitam)
+            window.dataGaleriGlobal[docId] = { url: realUrl, guestName: guestName };
             
             item.innerHTML = '';
             item.removeAttribute('id');
 
             const img = document.createElement('img');
-            img.src = displayUrl;
+            img.src = localDataUrl || realUrl;
             img.onerror = () => { img.src = 'https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'; };
-            img.onclick = () => bukaLightbox(realUrl);
+            img.onclick = () => lihatFotoAman(docId);
             item.appendChild(img);
 
             const nameDiv = document.createElement('div');
@@ -415,13 +413,13 @@
             const btnView = document.createElement('button');
             btnView.className = 'btn-action';
             btnView.innerText = 'Lihat';
-            btnView.onclick = () => bukaLightbox(realUrl);
+            btnView.onclick = () => lihatFotoAman(docId);
             actionGroup.appendChild(btnView);
 
             const btnUnduh = document.createElement('button');
             btnUnduh.className = 'btn-action';
             btnUnduh.innerText = 'Unduh';
-            btnUnduh.onclick = () => unduhLangsung(realUrl, fileName);
+            btnUnduh.onclick = () => unduhFotoAman(docId);
             actionGroup.appendChild(btnUnduh);
 
             const btnHapus = document.createElement('button');
@@ -440,7 +438,7 @@
             shotsTaken--;
             localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
             updateSisaUI();
-            alert("Sistem gagal menyimpan 1 foto karena sinyal terputus total. Jatah film dikembalikan.");
+            alert("Gagal mengunggah foto karena ukuran terlalu besar atau koneksi terputus. Jatah film dikembalikan.");
         }
 
         async function hapusFoto(docId, btnElement) {
@@ -484,19 +482,19 @@
             } catch(e) { galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat.</div>'; }
         }
 
-        // PENULISAN DOM AMAN UNTUK GALERI
         function renderGaleriHTML(photos, galleryDiv) {
             galleryDiv.innerHTML = '';
             photos.forEach(photo => {
+                // Simpan URL di memori RAM
+                window.dataGaleriGlobal[photo.id] = { url: photo.url, guestName: photo.guestName };
+                
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
                 
-                const fileName = `TLC_${photo.guestName.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
-                
                 const img = document.createElement('img');
                 img.src = photo.url;
-                img.onerror = () => { img.src = 'https://via.placeholder.com/300x400/111111/ffffff?text=Image+Error'; };
-                img.onclick = () => bukaLightbox(photo.url);
+                img.onerror = () => { img.src = 'https://via.placeholder.com/300x400/222222/6ee7b7?text=Foto+Aman'; };
+                img.onclick = () => lihatFotoAman(photo.id);
                 item.appendChild(img);
 
                 const nameDiv = document.createElement('div');
@@ -510,13 +508,13 @@
                 const btnView = document.createElement('button');
                 btnView.className = 'btn-action';
                 btnView.innerText = 'Lihat';
-                btnView.onclick = () => bukaLightbox(photo.url);
+                btnView.onclick = () => lihatFotoAman(photo.id);
                 actionGroup.appendChild(btnView);
 
                 const btnUnduh = document.createElement('button');
                 btnUnduh.className = 'btn-action';
                 btnUnduh.innerText = 'Unduh';
-                btnUnduh.onclick = () => unduhLangsung(photo.url, fileName);
+                btnUnduh.onclick = () => unduhFotoAman(photo.id);
                 actionGroup.appendChild(btnUnduh);
 
                 if (photo.sessionId === sessionId) {
@@ -532,49 +530,50 @@
             });
         }
 
-        // FITUR UNDUH: MENDUKUNG iOS NATIVE SHARE (Simpan Gambar)
-        async function unduhLangsung(url, namaFile) {
+        function lihatFotoAman(id) {
+            const data = window.dataGaleriGlobal[id];
+            if(!data) return;
+            const lightboxImg = document.getElementById('lightboxImg');
+            lightboxImg.src = data.url;
+            document.getElementById('lightbox').classList.add('show');
+        }
+
+        function tutupLightbox() {
+            document.getElementById('lightbox').classList.remove('show');
+            setTimeout(() => { document.getElementById('lightboxImg').src = ""; }, 300);
+        }
+
+        async function unduhFotoAman(id) {
+            const data = window.dataGaleriGlobal[id];
+            if(!data) return;
+            const fileName = `TLC_${data.guestName.replace(/\s+/g, '_')}_${Date.now()}.jpg`;
+
             try {
-                const response = await fetch(url);
+                const response = await fetch(data.url);
                 const blob = await response.blob();
                 
-                // Jika perangkat mendukung Web Share API (Safari / iOS)
+                // Native Share iOS (Solusi untuk iPad/iPhone)
                 if (navigator.share && navigator.canShare) {
-                    const file = new File([blob], namaFile, { type: blob.type || 'image/jpeg' });
+                    const file = new File([blob], fileName, { type: 'image/jpeg' });
                     if (navigator.canShare({ files: [file] })) {
-                        await navigator.share({
-                            files: [file],
-                            title: 'The Last Call Photo'
-                        });
-                        return; // Berhasil membuka menu Share bawaan iOS
+                        await navigator.share({ files: [file], title: 'The Last Call Photo' });
+                        return; 
                     }
                 }
-                
-                // Fallback untuk Android / Desktop (Langsung unduh)
+
                 const blobUrl = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = blobUrl;
-                a.download = namaFile;
+                a.download = fileName;
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(blobUrl);
                 document.body.removeChild(a);
-            } catch (e) {
-                // Fallback terakhir jika diblokir
-                window.open(url, '_blank');
-            }
-        }
 
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
-        function bukaLightbox(url) { 
-            lightboxImg.src = url; 
-            lightbox.classList.add('show');
-        }
-        function tutupLightbox() { 
-            lightbox.classList.remove('show');
-            setTimeout(() => { lightboxImg.src = ""; }, 300); 
+            } catch (e) {
+                window.open(data.url, '_blank');
+            }
         }
 
         loadEventData();
