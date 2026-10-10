@@ -24,39 +24,52 @@
         .header-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; line-height: 1.2; }
         
         .btn-text { background: none; border: none; color: var(--accent); font-size: 0.9rem; font-weight: 600; cursor: pointer; padding: 5px 10px; }
-        .btn-text:active { opacity: 0.7; }
         
         /* Grid Galeri */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
         
-        /* Desain Item Foto Interaktif (Bisa di-Select) */
-        .gallery-item { position: relative; cursor: pointer; border-radius: 12px; overflow: hidden; background: #222; transition: 0.2s; aspect-ratio: 3/4; }
+        /* Desain Item Foto */
+        .gallery-item { position: relative; border-radius: 12px; overflow: hidden; background: #222; transition: 0.2s; aspect-ratio: 3/4; display: flex; flex-direction: column; }
         .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; display: block; }
         
-        /* Indikator Centang (Checkbox) */
-        .check-circle { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); background: rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; transition: 0.2s; pointer-events: none; z-index: 2; }
+        /* Indikator Centang */
+        .check-circle { position: absolute; top: 8px; right: 8px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; transition: 0.2s; pointer-events: none; z-index: 2; }
         .check-circle::after { content: ''; width: 10px; height: 5px; border-left: 2px solid #000; border-bottom: 2px solid #000; transform: rotate(-45deg); opacity: 0; margin-top: -2px; }
         
-        /* Efek Saat Foto Terpilih (Selected) */
-        .gallery-item.selected img { transform: scale(0.85); border-radius: 8px; opacity: 0.8; }
-        .gallery-item.selected { background: var(--accent); }
-        .gallery-item.selected .check-circle { background: #fff; border-color: #fff; }
+        /* Efek Terpilih */
+        .gallery-item.selected img { transform: scale(0.9); border-radius: 8px; opacity: 0.7; }
+        .gallery-item.selected .check-circle { background: var(--accent); border-color: var(--accent); }
         .gallery-item.selected .check-circle::after { opacity: 1; }
         
-        /* Floating Action Bar (Bar Unduh di Bawah) */
+        /* Tombol Aksi di dalam Foto */
+        .action-bar { position: absolute; bottom: 0; left: 0; width: 100%; padding: 8px; display: flex; gap: 5px; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); z-index: 5; }
+        .btn-action { flex: 1; padding: 8px 0; border: none; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-action.lihat { background: rgba(255,255,255,0.2); color: #fff; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        .btn-action.pilih { background: #fff; color: #000; }
+        .gallery-item.selected .btn-action.pilih { background: var(--accent); }
+        
+        /* Floating Bar Unduh */
         .floating-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 100px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; }
         .floating-bar.show { transform: translateX(-50%) translateY(0); }
         .floating-text { font-weight: 600; font-size: 0.95rem; }
         .btn-download-float { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
-        .btn-download-float:active { transform: scale(0.95); }
         
-        /* Loading Screen */
-        #loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-app); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px;}
+        /* Loading & Lightbox */
+        #loadingOverlay, #lightbox { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-app); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px; }
+        #lightbox { display: none; background: rgba(0,0,0,0.95); }
+        #lightbox img { max-width: 100%; max-height: 80vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .btn-close-lightbox { position: absolute; top: 30px; right: 30px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
         .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+
+    <!-- LIGHTBOX LAYAR PENUH UNTUK MELIHAT FOTO -->
+    <div id="lightbox">
+        <button class="btn-close-lightbox" onclick="tutupLightbox()">&times;</button>
+        <img id="lightboxImg" src="">
+    </div>
 
     <!-- LAYAR LOADING -->
     <div id="loadingOverlay">
@@ -88,7 +101,6 @@
     </div>
 
     <script>
-        // KONFIGURASI FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -105,18 +117,10 @@
         let currentEventId = "";
         let eventNameGlobal = "Album_TLC";
 
-        // MENGAMBIL PARAMETER URL
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const idDariUrl = urlParams.get('event');
-            
-            if(idDariUrl) {
-                muatAlbum(idDariUrl);
-            } else {
-                document.getElementById('spinnerIcon').style.display = 'none';
-                document.getElementById('loadingTitle').innerText = "Tautan Tidak Valid";
-                document.getElementById('loadingDesc').innerText = "Silakan buka album melalui dasbor Anda.";
-            }
+            if(idDariUrl) muatAlbum(idDariUrl);
         };
 
         async function muatAlbum(eventId) {
@@ -129,43 +133,32 @@
                 if(evtDoc.exists) {
                     eventNameGlobal = evtDoc.data().eventName || "Album_TLC"; 
                     document.getElementById('eventTitle').innerText = eventNameGlobal;
-                    document.title = `${eventNameGlobal} • Album`;
-                } else {
-                    throw new Error("Acara tidak ditemukan");
                 }
 
                 const snapshot = await db.collection("photos").where("eventId", "==", eventId).get();
-                
                 overlay.style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
 
                 if(snapshot.empty) {
                     document.getElementById('totalPhotosText').innerText = "0 Foto Diambil";
-                    galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding: 40px 0;">Belum ada foto yang diambil tamu Anda.</div>';
+                    galleryDiv.innerHTML = '<div style="color:var(--text-muted); padding:40px 0;">Belum ada foto yang diambil.</div>';
                     return;
                 }
 
                 allPhotosData = [];
-                snapshot.forEach(doc => { 
-                    let data = doc.data(); 
-                    data.id = doc.id; 
-                    allPhotosData.push(data); 
-                });
-                
+                snapshot.forEach(doc => { let data = doc.data(); data.id = doc.id; allPhotosData.push(data); });
                 allPhotosData.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
                 
                 document.getElementById('totalPhotosText').innerText = `${allPhotosData.length} Foto Diambil`;
                 document.getElementById('btnPilihSemua').style.display = 'block';
                 
                 renderGaleri();
-
             } catch(e) {
-                document.getElementById('spinnerIcon').style.display = 'none';
                 document.getElementById('loadingTitle').innerText = "Gagal Memuat";
-                document.getElementById('loadingDesc').innerText = "Acara tidak ditemukan atau terhapus.";
             }
         }
 
+        // PERBAIKAN: Menghapus crossorigin dari img display dan menambahkan 2 Tombol
         function renderGaleri() {
             const galleryDiv = document.getElementById('albumGallery');
             galleryDiv.innerHTML = '';
@@ -174,27 +167,43 @@
                 const item = document.createElement('div');
                 item.className = 'gallery-item';
                 item.id = `item_${photo.id}`;
-                
                 if(selectedPhotoIds.has(photo.id)) item.classList.add('selected');
                 
                 item.innerHTML = `
                     <div class="check-circle"></div>
-                    <img src="${photo.url}" loading="lazy" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
+                    <!-- Gambar Normal Tanpa Pembatasan -->
+                    <img src="${photo.url}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
+                    
+                    <div class="action-bar">
+                        <button class="btn-action lihat" onclick="event.stopPropagation(); bukaLightbox('${photo.url}')">Lihat</button>
+                        <button class="btn-action pilih" onclick="event.stopPropagation(); togglePilihFoto('${photo.id}')">Pilih</button>
+                    </div>
                 `;
-                
-                item.onclick = () => togglePilihFoto(photo.id, item);
+                // Jika area foto (selain tombol) diklik, juga berfungsi memilih
+                item.onclick = () => togglePilihFoto(photo.id);
                 galleryDiv.appendChild(item);
             });
             updateFloatingBar();
         }
 
-        function togglePilihFoto(id, element) {
+        function bukaLightbox(url) {
+            document.getElementById('lightboxImg').src = url;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+
+        function tutupLightbox() {
+            document.getElementById('lightbox').style.display = 'none';
+            document.getElementById('lightboxImg').src = '';
+        }
+
+        function togglePilihFoto(id) {
+            const el = document.getElementById(`item_${id}`);
             if (selectedPhotoIds.has(id)) {
                 selectedPhotoIds.delete(id);
-                element.classList.remove('selected');
+                el.classList.remove('selected');
             } else {
                 selectedPhotoIds.add(id);
-                element.classList.add('selected');
+                el.classList.add('selected');
             }
             updateFloatingBar();
         }
@@ -214,35 +223,18 @@
         function updateFloatingBar() {
             const bar = document.getElementById('floatingBar');
             const countText = document.getElementById('selectedCount');
-            const btnSemua = document.getElementById('btnPilihSemua');
-            
             countText.innerText = selectedPhotoIds.size;
-            
-            if (selectedPhotoIds.size > 0) {
-                bar.classList.add('show');
-            } else {
-                bar.classList.remove('show');
-            }
-
-            if(selectedPhotoIds.size > 0 && selectedPhotoIds.size === allPhotosData.length) {
-                btnSemua.innerText = "Batalkan Pilihan";
-            } else {
-                btnSemua.innerText = "Pilih Semua";
-            }
+            if (selectedPhotoIds.size > 0) bar.classList.add('show');
+            else bar.classList.remove('show');
         }
 
-        // FUNGSI UNDUH ZIP (DIPERCEPAT & MENGGUNAKAN LOOP BERURUTAN)
         async function unduhZipPilihan() {
-            if(selectedPhotoIds.size === 0) return;
-            
             const overlay = document.getElementById('loadingOverlay');
             const loadingTitle = document.getElementById('loadingTitle');
             const loadingDesc = document.getElementById('loadingDesc');
             
-            // Mereset Tampilan Awal Proses
             document.getElementById('spinnerIcon').style.display = 'block';
             loadingTitle.innerText = "Mengunduh Foto...";
-            loadingDesc.innerHTML = `Mempersiapkan unduhan 0 / ${selectedPhotoIds.size} foto...`;
             overlay.style.background = 'rgba(0,0,0,0.95)';
             overlay.style.display = 'flex';
             
@@ -251,64 +243,49 @@
             const folder = zip.folder(`Album_${cleanEventName}`);
             
             let berhasil = 0;
-            let gagal = 0;
-
             const photosToDownload = allPhotosData.filter(p => selectedPhotoIds.has(p.id));
 
-            // Mengunduh foto SECARA BERURUTAN (Satu per satu) agar progress terbaca jelas
             for (let i = 0; i < photosToDownload.length; i++) {
                 const photo = photosToDownload[i];
                 const guestClean = photo.guestName ? photo.guestName.replace(/[^a-zA-Z0-9]/g, '_') : 'Tamu';
                 const namaFile = `${String(i + 1).padStart(2, '0')}_${guestClean}.jpg`;
                 
                 try {
-                    // Menggunakan CDN Proxy khusus Gambar agar tidak diblokir Safari dan sangat cepat
+                    // Proxy CDN untuk Bypass Safari saat Download
                     const fastProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
                     const response = await fetch(fastProxyUrl);
-                    
-                    if(!response.ok) throw new Error("Gagal mengunduh");
-                    
-                    const blob = await response.blob();
-                    folder.file(namaFile, blob);
-                    berhasil++;
-                    
-                    // Memperbarui Teks Progress Secara Real-time (Misal: 5 / 10 berhasil diunduh)
-                    loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berhasil} / ${photosToDownload.length}</span><br>Foto berhasil ditarik ke dalam sistem...`;
-                    
-                } catch(e) {
-                    gagal++;
-                    console.error("Error pada file:", photo.url);
-                }
+                    if(response.ok) {
+                        const blob = await response.blob();
+                        folder.file(namaFile, blob);
+                        berhasil++;
+                        loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berhasil} / ${photosToDownload.length}</span><br>Foto sedang ditarik...`;
+                    }
+                } catch(e) { console.error("Error file:", photo.url); }
             }
 
-            // Setelah semua foto diunduh ke memori, saatnya membungkusnya jadi .zip
             loadingTitle.innerText = "Membungkus ke ZIP";
-            loadingDesc.innerHTML = "Menyatukan semua foto menjadi satu file...<br>Proses ini selesai dalam beberapa detik.";
+            loadingDesc.innerHTML = "Menyatukan foto menjadi satu file...<br>Mohon tunggu.";
 
             try {
                 const zipContent = await zip.generateAsync({ type: "blob" });
                 const zipUrl = window.URL.createObjectURL(zipContent);
-                
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = zipUrl;
                 a.download = `Album_${cleanEventName}.zip`;
                 document.body.appendChild(a);
                 a.click();
-                
                 window.URL.revokeObjectURL(zipUrl);
                 document.body.removeChild(a);
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    if(gagal > 0) alert(`Selesai! Namun ada ${gagal} foto yang gagal diunduh akibat koneksi yang terputus.`);
                     selectedPhotoIds.clear();
                     renderGaleri();
-                }, 1500);
-
+                }, 1000);
             } catch(e) {
                 overlay.style.display = 'none';
-                alert("Terjadi kesalahan saat menyusun file ZIP.");
+                alert("Terjadi kesalahan sistem saat membungkus ZIP.");
             }
         }
     </script>
