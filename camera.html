@@ -79,7 +79,7 @@
 
         /* Layar Galeri */
         #galleryScreen { padding: 20px; background: var(--bg-dark); padding-bottom: 100px; }
-        .gallery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+        .gallery-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
         .grid-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
         
         .photo-item { position: relative; border-radius: 12px; overflow: hidden; background: #222; aspect-ratio: 3/4; cursor: pointer; display: flex; flex-direction: column; transition: 0.2s; }
@@ -174,7 +174,8 @@
     <!-- SCREEN 3: GALERI -->
     <div id="galleryScreen" class="screen">
         <div class="gallery-header">
-            <div>
+            <button class="icon-btn" onclick="kembaliKeKamera()" style="background: rgba(255,255,255,0.15); border: 1px solid var(--border);">&#8592;</button>
+            <div style="flex: 1;">
                 <h2 class="font-serif">Galeri <span id="galleryGuestName">Tamu</span></h2>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" id="galleryCount">Memuat...</p>
             </div>
@@ -263,7 +264,6 @@
 
                 sisaJepretan = eventData.guestPhotoLimit || 15;
                 
-                // Pulihkan status halaman terakhir agar refresh tetap di tempatnya
                 let savedScreen = localStorage.getItem(`tlcf_screen_${eventId}`) || 'welcomeScreen';
                 
                 if(savedScreen !== 'welcomeScreen' && namaTamu !== "") {
@@ -271,7 +271,6 @@
                     await muatDataAwal();
                     isDataLoaded = true;
                     
-                    // LANGSUNG HILANGKAN LOADING SCREEN AGAR TIDAK TERTAHAN
                     document.getElementById('loadingScreen').style.display = 'none';
                     
                     tampilkanScreen(savedScreen);
