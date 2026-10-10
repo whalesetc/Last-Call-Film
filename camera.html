@@ -27,7 +27,13 @@
         .btn-primary { width: 100%; padding: 16px; border-radius: 12px; border: none; background: #fff; color: #000; font-weight: 700; font-size: 1.05rem; cursor: pointer; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.97); }
 
-        /* Layar Kamera (Tampilan Vendor) */
+        /* HEADER KAMERA (Custom Judul) */
+        .camera-header { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 20px; display: flex; justify-content: space-between; align-items: center; z-index: 30; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+        .camera-title { font-family: 'Playfair Display', serif; font-size: 1.15rem; font-weight: 600; text-align: center; flex: 1; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px; }
+        .icon-btn { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; font-size: 1.2rem; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
+        .icon-btn:active { background: rgba(255,255,255,0.3); }
+
+        /* Layar Kamera */
         #cameraContainer { 
             flex: 1; 
             position: relative; 
@@ -35,7 +41,7 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            padding: 80px 20px 210px 20px; /* Jarak bawah ditambah untuk film strip */
+            padding: 90px 20px 210px 20px;
         }
         video { 
             width: 100%; 
@@ -50,17 +56,20 @@
         }
         video.no-mirror { transform: scaleX(1); }
         
-        .camera-ui { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); z-index: 20; }
-        .btn-capture { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .btn-capture .inner-circle { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.1s; }
-        .btn-capture:active .inner-circle { transform: scale(0.85); background: #ddd; }
-        .btn-switch, .btn-gallery { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.2); border: none; color: #fff; cursor: pointer; backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        /* BOTTOM UI KAMERA */
+        .camera-ui { position: absolute; bottom: 0; left: 0; width: 100%; padding: 30px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to top, rgba(0,0,0,0.95), transparent); z-index: 20; }
         
-        .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px; display: flex; justify-content: space-between; z-index: 20; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); }
-        .quota-badge { background: rgba(0,0,0,0.5); padding: 6px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; backdrop-filter: blur(5px); border: 1px solid var(--border); color: var(--accent); }
-
+        .roll-counter { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 12px; padding: 8px 15px; text-align: center; cursor: pointer; backdrop-filter: blur(5px); min-width: 65px; transition: 0.2s; }
+        .roll-counter:active { transform: scale(0.95); }
+        
+        .btn-capture { width: 75px; height: 75px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; margin: 0 10px; }
+        .btn-capture .inner-circle { width: 58px; height: 58px; border-radius: 50%; background: #fff; transition: 0.1s; }
+        .btn-capture:active .inner-circle { transform: scale(0.85); background: #ddd; }
+        
+        .btn-switch { width: 50px; height: 50px; border-radius: 50%; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2); color: #fff; cursor: pointer; backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; font-size: 1.2rem; }
+        
         /* Film Strip (Pratinjau Hasil Jepretan) */
-        .film-strip { position: absolute; bottom: 110px; left: 0; width: 100%; height: 80px; display: flex; gap: 12px; padding: 0 20px; overflow-x: auto; z-index: 15; scroll-behavior: smooth; }
+        .film-strip { position: absolute; bottom: 125px; left: 0; width: 100%; height: 80px; display: flex; gap: 12px; padding: 0 20px; overflow-x: auto; z-index: 15; scroll-behavior: smooth; }
         .film-strip::-webkit-scrollbar { display: none; }
         .film-strip img { height: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.8); box-shadow: 0 4px 10px rgba(0,0,0,0.5); flex-shrink: 0; animation: popIn 0.3s ease-out forwards; background: #222; }
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -78,7 +87,7 @@
         #lightbox img { max-width: 90%; max-height: 80vh; border-radius: 12px; object-fit: contain; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         .btn-close-lightbox { position: absolute; top: 25px; right: 25px; background: rgba(255,255,255,0.2); color: #fff; border: none; width: 40px; height: 40px; border-radius: 50%; font-size: 1.8rem; cursor: pointer; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
 
-        /* Loading Screen (Hanya untuk inisialisasi awal) */
+        /* Loading Screen */
         #loadingScreen { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; text-align: center; }
         .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
@@ -101,7 +110,7 @@
     <div id="welcomeScreen" class="screen">
         <div class="overlay"></div>
         <div class="welcome-content">
-            <h1 class="font-serif" id="displayEventName" style="font-size: 2.2rem; margin-bottom: 5px;">Nama Acara</h1>
+            <h1 class="font-serif" id="displayEventName" style="font-size: 2.2rem; margin-bottom: 5px; line-height: 1.2;">Nama Acara</h1>
             <p style="color: rgba(255,255,255,0.7); font-size: 0.9rem; margin-bottom: 25px;">Photobooth Digital</p>
             
             <input type="text" id="guestNameInput" placeholder="Masukkan Nama Anda (Contoh: Budi)" required>
@@ -111,9 +120,11 @@
 
     <!-- SCREEN 2: KAMERA -->
     <div id="cameraScreen" class="screen">
-        <div class="top-bar">
-            <button class="btn-gallery" onclick="bukaGaleri()" style="width: auto; padding: 0 15px; border-radius: 20px; font-size: 0.85rem; font-weight: bold;">Galeri Tamu</button>
-            <div class="quota-badge"><span id="quotaText">0</span> Sisa</div>
+        <!-- Header Kustom Acara -->
+        <div class="camera-header">
+            <button class="icon-btn" onclick="kembaliKeWelcome()">&larr;</button>
+            <div class="camera-title" id="cameraTopTitle">Judul Acara</div>
+            <button class="icon-btn" onclick="alert('Bagikan link ini ke teman lain yang hadir di acara ini!')">🔗</button>
         </div>
 
         <div id="cameraContainer">
@@ -125,10 +136,16 @@
         <div class="film-strip" id="filmStrip"></div>
 
         <div class="camera-ui">
-            <button class="btn-gallery" onclick="bukaGaleri()">🖼️</button>
+            <!-- Indikator Roll Film Klasik -->
+            <div class="roll-counter" onclick="bukaGaleri()" title="Lihat Galeri Saya">
+                <span style="font-size: 0.65rem; color: #ccc; letter-spacing: 1px; display: block; margin-bottom: -2px;">SISA</span>
+                <span id="quotaText" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: bold; color: #fff;">0</span>
+            </div>
+            
             <button class="btn-capture" onclick="jepretFoto()">
                 <div class="inner-circle"></div>
             </button>
+            
             <button class="btn-switch" onclick="tukarKamera()">🔄</button>
         </div>
     </div>
@@ -140,7 +157,7 @@
                 <h2 class="font-serif">Galeri <span id="galleryGuestName">Tamu</span></h2>
                 <p style="color: var(--text-muted); font-size: 0.8rem;" id="galleryCount">Memuat...</p>
             </div>
-            <button class="btn-gallery" onclick="kembaliKeKamera()" style="width: auto; padding: 10px 15px; border-radius: 8px; font-size: 0.9rem; font-weight: bold; background: #fff; color: #000;">+ Foto Lagi</button>
+            <button class="btn-primary" onclick="kembaliKeKamera()" style="padding: 10px 15px; font-size: 0.85rem;">+ Foto Lagi</button>
         </div>
 
         <div class="grid-gallery" id="guestGallery"></div>
@@ -165,7 +182,7 @@
         let sisaJepretan = 15;
         let jumlahFotoSaya = 0;
         let currentStream = null;
-        let facingMode = "environment"; // DEFAULT KAMERA BELAKANG
+        let facingMode = "environment"; 
 
         window.onload = async () => {
             if(!eventId) return showError("Link tidak valid (ID Acara hilang).");
@@ -174,10 +191,32 @@
                 if(!doc.exists) return showError("Acara tidak ditemukan.");
                 
                 eventData = doc.data();
-                document.getElementById('displayEventName').innerHTML = eventData.eventName.replace('&', '<br>&');
-                if(eventData.wallpaperUrl) {
-                    document.getElementById('welcomeScreen').style.backgroundImage = `url(${eventData.wallpaperUrl})`;
+                
+                // Set Judul di Top Bar Kamera
+                document.getElementById('cameraTopTitle').innerText = eventData.eventName;
+                
+                // Logika Teks Judul Layar Awal
+                let formattedTitle = "";
+                let namaAcaraTeks = eventData.eventName.replace('&', '<br>&');
+
+                if(eventData.eventType === "Wedding") {
+                    formattedTitle = `<span style="font-size: 1.1rem; font-weight: 300; font-family: 'Inter', sans-serif; opacity: 0.9;">The Wedding of</span><br>${namaAcaraTeks}`;
+                } else if(eventData.eventType === "Birthday") {
+                    formattedTitle = `<span style="font-size: 1.1rem; font-weight: 300; font-family: 'Inter', sans-serif; opacity: 0.9;">Celebrating the Birthday of</span><br>${namaAcaraTeks}`;
+                } else {
+                    formattedTitle = namaAcaraTeks;
                 }
+                document.getElementById('displayEventName').innerHTML = formattedTitle;
+
+                // Logika Wallpaper Latar Belakang
+                let bgUrl = eventData.wallpaperUrl;
+                if(!bgUrl || bgUrl === "") {
+                    if(eventData.eventType === "Wedding") bgUrl = "https://images.unsplash.com/photo-1519225421980-715cb0215aed?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+                    else if(eventData.eventType === "Birthday") bgUrl = "https://images.unsplash.com/photo-1530103862679-de3093126895?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+                    else bgUrl = "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80";
+                }
+                document.getElementById('welcomeScreen').style.backgroundImage = `url('${bgUrl}')`;
+
                 sisaJepretan = eventData.guestPhotoLimit || 15;
                 document.getElementById('loadingScreen').style.display = 'none';
                 tampilkanScreen('welcomeScreen');
@@ -194,6 +233,11 @@
         function tampilkanScreen(screenId) {
             document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById(screenId).classList.add('active');
+        }
+        
+        function kembaliKeWelcome() {
+            matikanKamera();
+            tampilkanScreen('welcomeScreen');
         }
 
         async function masukKamera() {
@@ -230,7 +274,6 @@
             if(currentStream) currentStream.getTracks().forEach(t => t.stop());
         }
 
-        // --- SISTEM PERHITUNGAN DAN FILM STRIP ---
         function perbaruiUIRollFilm() {
             let sisa = sisaJepretan - jumlahFotoSaya;
             if (sisa < 0) sisa = 0;
@@ -241,8 +284,8 @@
             const filmStrip = document.getElementById('filmStrip');
             const img = document.createElement('img');
             img.src = url;
-            img.onclick = () => bukaLightbox(url); // Bisa di-klik untuk melihat besar
-            filmStrip.insertBefore(img, filmStrip.firstChild); // Jepretan terbaru muncul di paling kiri
+            img.onclick = () => bukaLightbox(url); 
+            filmStrip.insertBefore(img, filmStrip.firstChild); 
         }
 
         async function muatDataAwal() {
@@ -251,7 +294,6 @@
                 jumlahFotoSaya = snap.size;
                 perbaruiUIRollFilm();
                 
-                // Masukkan foto lama ke film strip
                 const filmStrip = document.getElementById('filmStrip');
                 filmStrip.innerHTML = '';
                 let photos = [];
@@ -262,7 +304,6 @@
             } catch(e) {}
         }
 
-        // --- SISTEM JEPRET TANPA LOADING ---
         async function jepretFoto() {
             if (jumlahFotoSaya >= sisaJepretan) return alert("Kuota foto Anda sudah habis!");
             
@@ -278,7 +319,6 @@
             }
             context.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Tampilkan foto di UI secara instan menggunakan memori browser
             canvas.toBlob((blob) => {
                 const localUrl = URL.createObjectURL(blob);
                 tambahKeFilmStrip(localUrl);
@@ -286,7 +326,6 @@
                 jumlahFotoSaya++;
                 perbaruiUIRollFilm();
 
-                // Proses unggah di belakang layar (Background Upload)
                 unggahDiLatarBelakang(blob);
             }, 'image/jpeg', 0.85);
         }
@@ -308,7 +347,7 @@
                     });
                 }
             } catch(e) {
-                console.error("Gagal menyimpan foto secara background.", e);
+                console.error("Gagal menyimpan foto.", e);
             }
         }
 
