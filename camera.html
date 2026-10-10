@@ -176,14 +176,29 @@
         let eventId = new URLSearchParams(window.location.search).get('event');
         let eventData = null;
         let namaTamu = "";
+        let deviceId = ""; // Variabel baru untuk melacak identitas HP tamu
         let sisaJepretan = 15;
         let jumlahFotoSaya = 0;
         let currentStream = null;
         let facingMode = "environment"; 
-        let isDataLoaded = false; // Penanda agar tidak memuat ulang data jika nama sama
+        let isDataLoaded = false; 
+
+        // Fungsi membuat ID unik untuk perangkat jika belum ada
+        function dapatkanAtauBuatDeviceId() {
+            let id = localStorage.getItem(`tlcf_device_${eventId}`);
+            if (!id) {
+                // Generate ID unik acak berbasis waktu
+                id = 'device_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+                localStorage.setItem(`tlcf_device_${eventId}`, id);
+            }
+            return id;
+        }
 
         window.onload = async () => {
             if(!eventId) return showError("Link tidak valid (ID Acara hilang).");
+            
+            deviceId = dapatkanAtauBuatDeviceId(); // Dapatkan identitas perangkat
+
             try {
                 const doc = await db.collection("events").doc(eventId).get();
                 if(!doc.exists) return showError("Acara tidak ditemukan.");
@@ -238,15 +253,11 @@
             const input = document.getElementById('guestNameInput').value.trim();
             if(!input) return alert("Tulis nama Anda terlebih dahulu!");
             
-            // Cek apakah nama yang diinput berubah
-            if (namaTamu !== input) {
-                namaTamu = input;
-                isDataLoaded = false; // Reset data agar dimuat ulang
-            }
+            namaTamu = input; // Nama tetap disimpan untuk admin/galeri
 
             if (!isDataLoaded) {
                 await muatDataAwal();
-                isDataLoaded = true; // Tandai data sudah dimuat
+                isDataLoaded = true; 
             }
             
             tampilkanScreen('cameraScreen');
@@ -294,13 +305,13 @@
 
         async function muatDataAwal() {
             try {
-                const snap = await db.collection("photos").where("eventId", "==", eventId).where("guestName", "==", namaTamu).get();
+                // SEKARANG MENCARI FOTO BERDASARKAN DEVICE ID
+                const snap = await db.collection("photos").where("eventId", "==", eventId).where("deviceId", "==", deviceId).get();
                 
                 let firestoreCount = snap.size;
-                // Ambil cadangan perhitungan dari Local Storage browser
-                let localCount = parseInt(localStorage.getItem(`tlcf_count_${eventId}_${namaTamu}`)) || 0;
+                // Ambil cadangan perhitungan dari Local Storage browser berdasarkan device ID
+                let localCount = parseInt(localStorage.getItem(`tlcf_count_${eventId}_${deviceId}`)) || 0;
                 
-                // Gunakan angka terbesar antara database dan riwayat lokal ponsel tamu
                 jumlahFotoSaya = Math.max(firestoreCount, localCount);
                 perbaruiUIRollFilm();
                 
@@ -336,8 +347,8 @@
                 jumlahFotoSaya++;
                 perbaruiUIRollFilm();
                 
-                // KUNCI ANGKA HITUNGAN DI BROWSER TAMU
-                localStorage.setItem(`tlcf_count_${eventId}_${namaTamu}`, jumlahFotoSaya);
+                // KUNCI ANGKA HITUNGAN DI BROWSER BERDASARKAN DEVICE ID
+                localStorage.setItem(`tlcf_count_${eventId}_${deviceId}`, jumlahFotoSaya);
 
                 unggahDiLatarBelakang(blob);
             }, 'image/jpeg', 0.85);
@@ -354,7 +365,8 @@
                 if(result.success) {
                     await db.collection("photos").add({
                         eventId: eventId,
-                        guestName: namaTamu,
+                        guestName: namaTamu, // Nama tetap disimpan agar admin tahu
+                        deviceId: deviceId, // Disimpan untuk pelacakan kuota akurat
                         url: result.data.url,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
@@ -373,7 +385,8 @@
 
             try {
                 let query = db.collection("photos").where("eventId", "==", eventId);
-                if (eventData.privacy === 'private') query = query.where("guestName", "==", namaTamu);
+                // JIKA PRIVAT, HANYA TAMPILKAN FOTO DARI DEVICE ID INI
+                if (eventData.privacy === 'private') query = query.where("deviceId", "==", deviceId);
                 
                 const snapshot = await query.get();
                 galeri.innerHTML = '';
