@@ -58,11 +58,11 @@
 </head>
 <body>
 
-    <!-- LAYAR LOADING AWAL -->
+    <!-- LAYAR LOADING -->
     <div id="loadingOverlay">
         <div class="spinner" id="spinnerIcon"></div>
         <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 10px;" id="loadingTitle">Memuat Album...</h3>
-        <p style="color: var(--text-muted); font-size: 0.9rem;" id="loadingDesc">Mencari data acara ke dalam server.</p>
+        <p style="color: var(--text-muted); font-size: 0.95rem;" id="loadingDesc">Mencari data acara ke dalam server.</p>
     </div>
 
     <!-- KONTEN UTAMA ALBUM -->
@@ -231,7 +231,7 @@
             }
         }
 
-        // FUNGSI UNDUH ZIP DENGAN SOLUSI ANTI-CORS SAFARI
+        // FUNGSI UNDUH ZIP (DIPERCEPAT & MENGGUNAKAN LOOP BERURUTAN)
         async function unduhZipPilihan() {
             if(selectedPhotoIds.size === 0) return;
             
@@ -239,9 +239,11 @@
             const loadingTitle = document.getElementById('loadingTitle');
             const loadingDesc = document.getElementById('loadingDesc');
             
+            // Mereset Tampilan Awal Proses
             document.getElementById('spinnerIcon').style.display = 'block';
-            loadingTitle.innerText = "Sedang Mengunduh...";
-            overlay.style.background = 'rgba(0,0,0,0.9)';
+            loadingTitle.innerText = "Mengunduh Foto...";
+            loadingDesc.innerHTML = `Mempersiapkan unduhan 0 / ${selectedPhotoIds.size} foto...`;
+            overlay.style.background = 'rgba(0,0,0,0.95)';
             overlay.style.display = 'flex';
             
             const zip = new JSZip();
@@ -253,50 +255,35 @@
 
             const photosToDownload = allPhotosData.filter(p => selectedPhotoIds.has(p.id));
 
-            const promises = photosToDownload.map(async (photo, index) => {
+            // Mengunduh foto SECARA BERURUTAN (Satu per satu) agar progress terbaca jelas
+            for (let i = 0; i < photosToDownload.length; i++) {
+                const photo = photosToDownload[i];
                 const guestClean = photo.guestName ? photo.guestName.replace(/[^a-zA-Z0-9]/g, '_') : 'Tamu';
-                const namaFile = `${String(index + 1).padStart(2, '0')}_${guestClean}.jpg`;
+                const namaFile = `${String(i + 1).padStart(2, '0')}_${guestClean}.jpg`;
                 
                 try {
-                    // Percobaan 1: Menggunakan fetch standar
-                    const response = await fetch(photo.url);
-                    if(!response.ok) throw new Error("CORS Blocked");
+                    // Menggunakan CDN Proxy khusus Gambar agar tidak diblokir Safari dan sangat cepat
+                    const fastProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
+                    const response = await fetch(fastProxyUrl);
+                    
+                    if(!response.ok) throw new Error("Gagal mengunduh");
+                    
                     const blob = await response.blob();
                     folder.file(namaFile, blob);
                     berhasil++;
+                    
+                    // Memperbarui Teks Progress Secara Real-time (Misal: 5 / 10 berhasil diunduh)
+                    loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berhasil} / ${photosToDownload.length}</span><br>Foto berhasil ditarik ke dalam sistem...`;
+                    
                 } catch(e) {
-                    try {
-                        // Percobaan 2 (Solusi Safari/iOS): Memaksa load lewat Image Canvas
-                        const img = new Image();
-                        img.crossOrigin = "Anonymous";
-                        img.src = photo.url;
-                        
-                        await new Promise((resolve, reject) => {
-                            img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width;
-                                canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0);
-                                canvas.toBlob((blob) => {
-                                    folder.file(namaFile, blob);
-                                    berhasil++;
-                                    resolve();
-                                }, 'image/jpeg', 0.95);
-                            };
-                            img.onerror = reject;
-                        });
-                    } catch(err2) {
-                        gagal++;
-                        console.error("Gagal mengunduh gambar:", photo.url);
-                    }
+                    gagal++;
+                    console.error("Error pada file:", photo.url);
                 }
-                loadingDesc.innerHTML = `Memproses foto: ${berhasil} / ${photosToDownload.length}`;
-            });
+            }
 
-            await Promise.all(promises);
-            loadingTitle.innerText = "Membungkus .ZIP";
-            loadingDesc.innerHTML = "Sedang menyatukan gambar...<br>Proses ini memakan waktu sesaat.";
+            // Setelah semua foto diunduh ke memori, saatnya membungkusnya jadi .zip
+            loadingTitle.innerText = "Membungkus ke ZIP";
+            loadingDesc.innerHTML = "Menyatukan semua foto menjadi satu file...<br>Proses ini selesai dalam beberapa detik.";
 
             try {
                 const zipContent = await zip.generateAsync({ type: "blob" });
@@ -314,7 +301,7 @@
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    if(gagal > 0) alert(`Selesai! Namun ada ${gagal} foto yang gagal diunduh akibat pembatasan keamanan browser.`);
+                    if(gagal > 0) alert(`Selesai! Namun ada ${gagal} foto yang gagal diunduh akibat koneksi yang terputus.`);
                     selectedPhotoIds.clear();
                     renderGaleri();
                 }, 1500);
