@@ -58,7 +58,7 @@
 </head>
 <body>
 
-    <!-- LAYAR LOADING AWAL (Dan saat proses ZIP) -->
+    <!-- LAYAR LOADING AWAL -->
     <div id="loadingOverlay">
         <div class="spinner" id="spinnerIcon"></div>
         <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 10px;" id="loadingTitle">Memuat Album...</h3>
@@ -67,7 +67,6 @@
 
     <!-- KONTEN UTAMA ALBUM -->
     <div class="app-container" id="mainContent">
-        <!-- HEADER ALBUM PEMILIK -->
         <div class="header-panel">
             <div>
                 <p style="font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 5px;">Album Foto</p>
@@ -79,7 +78,6 @@
             </div>
         </div>
 
-        <!-- GRID FOTO -->
         <div class="gallery-grid" id="albumGallery"></div>
     </div>
 
@@ -105,9 +103,9 @@
         let allPhotosData = [];
         let selectedPhotoIds = new Set();
         let currentEventId = "";
-        let eventNameGlobal = "Album_TLC"; // Nama default untuk file ZIP
+        let eventNameGlobal = "Album_TLC";
 
-        // MENGAMBIL PARAMETER DARI URL (album.html?event=ID_NYA)
+        // MENGAMBIL PARAMETER URL (album.html?event=ID)
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const idDariUrl = urlParams.get('event');
@@ -121,29 +119,23 @@
             }
         };
 
-        // FUNGSI MEMUAT DATA FOTO DARI DATABASE
         async function muatAlbum(eventId) {
             currentEventId = eventId;
             const galleryDiv = document.getElementById('albumGallery');
             const overlay = document.getElementById('loadingOverlay');
             
             try {
-                // 1. Ambil nama acara untuk dijadikan Nama File ZIP
                 const evtDoc = await db.collection("events").doc(eventId).get();
                 if(evtDoc.exists) {
-                    const evtData = evtDoc.data();
-                    // Jadikan Nama Acara (Contoh: "Wedding Budi")
-                    eventNameGlobal = evtData.eventName || "Album_TLC"; 
+                    eventNameGlobal = evtDoc.data().eventName || "Album_TLC"; 
                     document.getElementById('eventTitle').innerText = eventNameGlobal;
-                    document.title = `${eventNameGlobal} • Album`; // Ubah Tab Browser
+                    document.title = `${eventNameGlobal} • Album`;
                 } else {
                     throw new Error("Acara tidak ditemukan");
                 }
 
-                // 2. Ambil semua foto dari acara ini
                 const snapshot = await db.collection("photos").where("eventId", "==", eventId).get();
                 
-                // 3. Sembunyikan Loading, Tampilkan Konten
                 overlay.style.display = 'none';
                 document.getElementById('mainContent').style.display = 'block';
 
@@ -153,7 +145,6 @@
                     return;
                 }
 
-                // Masukkan data ke array
                 allPhotosData = [];
                 snapshot.forEach(doc => { 
                     let data = doc.data(); 
@@ -161,7 +152,6 @@
                     allPhotosData.push(data); 
                 });
                 
-                // Urutkan dari yang terbaru
                 allPhotosData.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
                 
                 document.getElementById('totalPhotosText').innerText = `${allPhotosData.length} Foto Diambil`;
@@ -170,14 +160,12 @@
                 renderGaleri();
 
             } catch(e) {
-                console.error(e);
                 document.getElementById('spinnerIcon').style.display = 'none';
                 document.getElementById('loadingTitle').innerText = "Gagal Memuat";
                 document.getElementById('loadingDesc').innerText = "Acara tidak ditemukan atau terhapus.";
             }
         }
 
-        // FUNGSI MENAMPILKAN FOTO KE HTML
         function renderGaleri() {
             const galleryDiv = document.getElementById('albumGallery');
             galleryDiv.innerHTML = '';
@@ -200,7 +188,6 @@
             updateFloatingBar();
         }
 
-        // FUNGSI KLIK FOTO (SELECT / DESELECT)
         function togglePilihFoto(id, element) {
             if (selectedPhotoIds.has(id)) {
                 selectedPhotoIds.delete(id);
@@ -212,7 +199,6 @@
             updateFloatingBar();
         }
 
-        // FUNGSI KLIK TOMBOL "PILIH SEMUA"
         function togglePilihSemua() {
             const btn = document.getElementById('btnPilihSemua');
             if (selectedPhotoIds.size === allPhotosData.length) {
@@ -225,7 +211,6 @@
             renderGaleri();
         }
 
-        // FUNGSI UPDATE BAR MENGAMBANG DI BAWAH
         function updateFloatingBar() {
             const bar = document.getElementById('floatingBar');
             const countText = document.getElementById('selectedCount');
@@ -246,7 +231,6 @@
             }
         }
 
-        // FUNGSI INTI: UNDUH FOTO YANG DIPILIH MENJADI .ZIP
         async function unduhZipPilihan() {
             if(selectedPhotoIds.size === 0) return;
             
@@ -254,15 +238,12 @@
             const loadingTitle = document.getElementById('loadingTitle');
             const loadingDesc = document.getElementById('loadingDesc');
             
-            // Tampilkan kembali layar hitam
             document.getElementById('spinnerIcon').style.display = 'block';
             loadingTitle.innerText = "Sedang Mengunduh...";
-            overlay.style.background = 'rgba(0,0,0,0.9)'; // Buat transparan
+            overlay.style.background = 'rgba(0,0,0,0.9)';
             overlay.style.display = 'flex';
             
             const zip = new JSZip();
-            
-            // Nama Folder dan Nama File ZIP sesuai dengan NAMA ACARA dari Database
             const cleanEventName = eventNameGlobal.replace(/[^a-zA-Z0-9]/g, '_');
             const folder = zip.folder(`Album_${cleanEventName}`);
             
@@ -271,10 +252,8 @@
 
             const photosToDownload = allPhotosData.filter(p => selectedPhotoIds.has(p.id));
 
-            // Mengunduh satu per satu
             const promises = photosToDownload.map(async (photo, index) => {
                 const guestClean = photo.guestName ? photo.guestName.replace(/[^a-zA-Z0-9]/g, '_') : 'Tamu';
-                // Penamaan File di dalam ZIP: "01_Budi.jpg"
                 const namaFile = `${String(index + 1).padStart(2, '0')}_${guestClean}.jpg`;
                 
                 try {
@@ -285,7 +264,6 @@
                     berhasil++;
                     loadingDesc.innerHTML = `Memproses: ${berhasil} / ${photosToDownload.length}`;
                 } catch(e) {
-                    console.error("Gagal mendownload:", photo.url);
                     gagal++;
                 }
             });
@@ -295,27 +273,22 @@
             loadingDesc.innerHTML = "Sedang menyatukan gambar...<br>Proses ini memakan waktu sesaat.";
 
             try {
-                // Hasilkan file ZIP
                 const zipContent = await zip.generateAsync({ type: "blob" });
                 const zipUrl = window.URL.createObjectURL(zipContent);
                 
-                // Memicu pengunduhan paksa ke perangkat dengan Nama Acara
                 const a = document.createElement('a');
                 a.style.display = 'none';
                 a.href = zipUrl;
-                a.download = `Album_${cleanEventName}.zip`; // NAMA FILE ZIP SESUAI ACARA
+                a.download = `Album_${cleanEventName}.zip`;
                 document.body.appendChild(a);
                 a.click();
                 
                 window.URL.revokeObjectURL(zipUrl);
                 document.body.removeChild(a);
                 
-                // Selesai
                 setTimeout(() => {
                     overlay.style.display = 'none';
                     if(gagal > 0) alert(`Selesai! Ada ${gagal} foto yang gagal diunduh akibat koneksi internet.`);
-                    
-                    // Reset pilihan dan bar
                     selectedPhotoIds.clear();
                     renderGaleri();
                 }, 1500);
