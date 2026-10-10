@@ -158,7 +158,7 @@
             }
         }
 
-        // PERBAIKAN: Menghapus crossorigin dari img display dan menambahkan 2 Tombol
+        // PERBAIKAN: Menggunakan CDN Proxy wsrv.nl untuk bypass pemblokiran Safari
         function renderGaleri() {
             const galleryDiv = document.getElementById('albumGallery');
             galleryDiv.innerHTML = '';
@@ -169,17 +169,21 @@
                 item.id = `item_${photo.id}`;
                 if(selectedPhotoIds.has(photo.id)) item.classList.add('selected');
                 
+                // Proxy URL untuk mem-bypass ITP Apple/Safari
+                // Untuk thumbnail kita request resolusi lebih kecil agar loading cepat
+                const thumbnailProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}&w=400`;
+                // Untuk lightbox kita pakai resolusi penuh
+                const fullProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
+
                 item.innerHTML = `
                     <div class="check-circle"></div>
-                    <!-- Gambar Normal Tanpa Pembatasan -->
-                    <img src="${photo.url}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
+                    <img src="${thumbnailProxyUrl}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/333/fff?text=No+Image'">
                     
                     <div class="action-bar">
-                        <button class="btn-action lihat" onclick="event.stopPropagation(); bukaLightbox('${photo.url}')">Lihat</button>
+                        <button class="btn-action lihat" onclick="event.stopPropagation(); bukaLightbox('${fullProxyUrl}')">Lihat</button>
                         <button class="btn-action pilih" onclick="event.stopPropagation(); togglePilihFoto('${photo.id}')">Pilih</button>
                     </div>
                 `;
-                // Jika area foto (selain tombol) diklik, juga berfungsi memilih
                 item.onclick = () => togglePilihFoto(photo.id);
                 galleryDiv.appendChild(item);
             });
@@ -187,7 +191,9 @@
         }
 
         function bukaLightbox(url) {
-            document.getElementById('lightboxImg').src = url;
+            const imgEl = document.getElementById('lightboxImg');
+            imgEl.src = ""; // Reset gambar sebelumnya
+            imgEl.src = url;
             document.getElementById('lightbox').style.display = 'flex';
         }
 
@@ -228,13 +234,17 @@
             else bar.classList.remove('show');
         }
 
+        // FUNGSI UNDUH ZIP (Cepat dan Terlihat Progress-nya)
         async function unduhZipPilihan() {
+            if(selectedPhotoIds.size === 0) return;
+
             const overlay = document.getElementById('loadingOverlay');
             const loadingTitle = document.getElementById('loadingTitle');
             const loadingDesc = document.getElementById('loadingDesc');
             
             document.getElementById('spinnerIcon').style.display = 'block';
             loadingTitle.innerText = "Mengunduh Foto...";
+            loadingDesc.innerHTML = `Mempersiapkan unduhan 0 / ${selectedPhotoIds.size} foto...`;
             overlay.style.background = 'rgba(0,0,0,0.95)';
             overlay.style.display = 'flex';
             
@@ -243,6 +253,7 @@
             const folder = zip.folder(`Album_${cleanEventName}`);
             
             let berhasil = 0;
+            let gagal = 0;
             const photosToDownload = allPhotosData.filter(p => selectedPhotoIds.has(p.id));
 
             for (let i = 0; i < photosToDownload.length; i++) {
@@ -251,7 +262,6 @@
                 const namaFile = `${String(i + 1).padStart(2, '0')}_${guestClean}.jpg`;
                 
                 try {
-                    // Proxy CDN untuk Bypass Safari saat Download
                     const fastProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
                     const response = await fetch(fastProxyUrl);
                     if(response.ok) {
@@ -259,12 +269,17 @@
                         folder.file(namaFile, blob);
                         berhasil++;
                         loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berhasil} / ${photosToDownload.length}</span><br>Foto sedang ditarik...`;
+                    } else {
+                        gagal++;
                     }
-                } catch(e) { console.error("Error file:", photo.url); }
+                } catch(e) { 
+                    gagal++;
+                    console.error("Error file:", photo.url); 
+                }
             }
 
             loadingTitle.innerText = "Membungkus ke ZIP";
-            loadingDesc.innerHTML = "Menyatukan foto menjadi satu file...<br>Mohon tunggu.";
+            loadingDesc.innerHTML = "Menyatukan foto menjadi satu file...<br>Proses ini selesai dalam beberapa detik.";
 
             try {
                 const zipContent = await zip.generateAsync({ type: "blob" });
@@ -280,6 +295,7 @@
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
+                    if(gagal > 0) alert(`Selesai! Namun ada ${gagal} foto yang gagal diunduh akibat koneksi yang terputus.`);
                     selectedPhotoIds.clear();
                     renderGaleri();
                 }, 1000);
