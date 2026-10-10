@@ -105,7 +105,7 @@
         let currentEventId = "";
         let eventNameGlobal = "Album_TLC";
 
-        // MENGAMBIL PARAMETER URL (album.html?event=ID)
+        // MENGAMBIL PARAMETER URL
         window.onload = () => {
             const urlParams = new URLSearchParams(window.location.search);
             const idDariUrl = urlParams.get('event');
@@ -179,7 +179,7 @@
                 
                 item.innerHTML = `
                     <div class="check-circle"></div>
-                    <img src="${photo.url}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
+                    <img src="${photo.url}" loading="lazy" crossorigin="anonymous" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
                 `;
                 
                 item.onclick = () => togglePilihFoto(photo.id, item);
@@ -231,6 +231,7 @@
             }
         }
 
+        // FUNGSI UNDUH ZIP DENGAN SOLUSI ANTI-CORS SAFARI
         async function unduhZipPilihan() {
             if(selectedPhotoIds.size === 0) return;
             
@@ -257,15 +258,40 @@
                 const namaFile = `${String(index + 1).padStart(2, '0')}_${guestClean}.jpg`;
                 
                 try {
+                    // Percobaan 1: Menggunakan fetch standar
                     const response = await fetch(photo.url);
-                    if(!response.ok) throw new Error("Gagal fetch");
+                    if(!response.ok) throw new Error("CORS Blocked");
                     const blob = await response.blob();
                     folder.file(namaFile, blob);
                     berhasil++;
-                    loadingDesc.innerHTML = `Memproses: ${berhasil} / ${photosToDownload.length}`;
                 } catch(e) {
-                    gagal++;
+                    try {
+                        // Percobaan 2 (Solusi Safari/iOS): Memaksa load lewat Image Canvas
+                        const img = new Image();
+                        img.crossOrigin = "Anonymous";
+                        img.src = photo.url;
+                        
+                        await new Promise((resolve, reject) => {
+                            img.onload = () => {
+                                const canvas = document.createElement('canvas');
+                                canvas.width = img.width;
+                                canvas.height = img.height;
+                                const ctx = canvas.getContext('2d');
+                                ctx.drawImage(img, 0, 0);
+                                canvas.toBlob((blob) => {
+                                    folder.file(namaFile, blob);
+                                    berhasil++;
+                                    resolve();
+                                }, 'image/jpeg', 0.95);
+                            };
+                            img.onerror = reject;
+                        });
+                    } catch(err2) {
+                        gagal++;
+                        console.error("Gagal mengunduh gambar:", photo.url);
+                    }
                 }
+                loadingDesc.innerHTML = `Memproses foto: ${berhasil} / ${photosToDownload.length}`;
             });
 
             await Promise.all(promises);
@@ -288,7 +314,7 @@
                 
                 setTimeout(() => {
                     overlay.style.display = 'none';
-                    if(gagal > 0) alert(`Selesai! Ada ${gagal} foto yang gagal diunduh akibat koneksi internet.`);
+                    if(gagal > 0) alert(`Selesai! Namun ada ${gagal} foto yang gagal diunduh akibat pembatasan keamanan browser.`);
                     selectedPhotoIds.clear();
                     renderGaleri();
                 }, 1500);
