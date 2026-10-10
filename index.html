@@ -24,6 +24,8 @@
         .btn-outline:hover { background: rgba(255,255,255,0.05); }
         .btn-primary { background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
+        .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-wa:hover { background: #20ba59; }
 
         /* Sections */
         .section { display: none; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
@@ -38,6 +40,7 @@
         .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
         .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
 
         /* Formulir */
         .form-group { margin-bottom: 20px; }
@@ -58,6 +61,11 @@
         @media(min-width: 768px) { .admin-panel { grid-template-columns: 1fr 1fr; } }
         .dash-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; }
         .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
+        
+        /* Bank Info Box */
+        .bank-info { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
+        .bank-name { font-weight: 700; font-size: 1rem; color: #fff;}
+        .bank-acc { font-family: monospace; font-size: 1.2rem; color: var(--accent); margin: 4px 0;}
     </style>
 </head>
 <body>
@@ -154,7 +162,7 @@
                 </label>
             </div>
 
-            <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px;">Buat & Proses Pembayaran</button>
+            <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px;">Lanjutkan</button>
         </form>
     </div>
 
@@ -202,7 +210,7 @@
                             <option value="100|250000">+ 100 Orang (Rp 250.000)</option>
                             <option value="9999|800000">Jadi Tak Terbatas (Rp 800.000)</option>
                         </select>
-                        <button class="btn-outline" onclick="prosesUpgrade()" style="border-color: var(--accent); color: var(--accent); font-weight: bold;">Upgrade</button>
+                        <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold;">Upgrade</button>
                     </div>
                 </div>
 
@@ -225,11 +233,59 @@
                             </select>
                         </div>
 
-                        <button type="submit" id="btnUpdateEvent" class="btn-primary" style="width: 100%; padding: 10px;">Simpan Pengaturan</button>
+                        <button type="submit" id="btnUpdateEvent" class="btn-outline" style="width: 100%; padding: 10px;">Simpan Pengaturan</button>
                     </form>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- 5. HALAMAN PEMBAYARAN MANUAL (TAMPIL SETELAH BUAT ACARA/UPGRADE) -->
+    <div id="paymentSection" class="section" style="max-width: 600px; text-align: center;">
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;">Selesaikan Pembayaran</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Silakan lakukan transfer sesuai nominal di bawah ini untuk mengaktifkan pesanan Anda.</p>
+
+        <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Total Tagihan</p>
+            <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.8rem; margin: 10px 0;">Rp 0</h1>
+            <p id="paymentDesc" style="font-size: 0.9rem;"></p>
+        </div>
+
+        <div style="text-align: left; margin-bottom: 30px;">
+            <h3 style="margin-bottom: 15px; font-size: 1rem; color: var(--text-muted);">Transfer ke salah satu rekening berikut:</h3>
+            
+            <div class="bank-info">
+                <div>
+                    <div class="bank-name">Bank BCA</div>
+                    <div class="bank-acc">7890747692</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">a.n Admin The Last Call</div>
+                </div>
+            </div>
+
+            <div class="bank-info">
+                <div>
+                    <div class="bank-name">Bank Mandiri</div>
+                    <div class="bank-acc">174 0011158037</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">a.n Admin The Last Call</div>
+                </div>
+            </div>
+
+            <div class="bank-info">
+                <div>
+                    <div class="bank-name">Bank Sinarmas</div>
+                    <div class="bank-acc">0056299033</div>
+                    <div style="font-size: 0.8rem; color: var(--text-muted);">a.n Admin The Last Call</div>
+                </div>
+            </div>
+        </div>
+
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Sudah melakukan transfer? Konfirmasi dengan Admin agar QR langsung aktif.</p>
+        
+        <button class="btn-wa" id="btnConfirmWA" style="width: 100%;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12.031 0C5.385 0 0 5.387 0 12.034c0 2.124.553 4.195 1.603 6.015L.232 23.992l6.09-1.597A11.96 11.96 0 0 0 12.031 24c6.643 0 12.03-5.387 12.03-12.034C24.062 5.387 18.674 0 12.031 0zm3.626 17.206c-.154.432-.901.849-1.285.89-.35.037-.803.111-2.457-.534-1.996-.777-3.267-2.809-3.364-2.938-.097-.128-.803-1.07-.803-2.043 0-.973.504-1.455.681-1.644.177-.189.385-.236.514-.236.128 0 .257 0 .367.005.116.005.271-.044.423.323.154.37.527 1.285.574 1.38.046.094.077.203.015.328-.061.124-.093.203-.185.311-.092.109-.195.236-.277.319-.088.088-.179.184-.078.358.102.174.453.747.973 1.211.671.599 1.233.784 1.408.877.174.093.277.078.381-.04.103-.118.448-.521.566-.7.118-.179.236-.151.396-.093.16.059 1.012.477 1.186.564.174.088.291.132.333.206.043.074.043.431-.11.863z"/></svg>
+            Konfirmasi Pembayaran via WhatsApp
+        </button>
+        <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;">Nanti Saja (Cek Dasbor)</button>
     </div>
 
     <script>
@@ -246,9 +302,12 @@
         const db = firebase.firestore();
 
         let currentUser = null;
-        let daftarAcaraGlobal = []; // Menyimpan data acara sementara agar mudah dipanggil
+        let daftarAcaraGlobal = []; 
+        const ADMIN_WA = "6285111246036";
 
-        // FUNGSI NAVIGASI TAMPILAN
+        // Variabel untuk menyimpan info tagihan sementara sebelum di-WA-kan
+        let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
+
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active-section'));
             document.getElementById(sectionId).classList.add('active-section');
@@ -257,78 +316,70 @@
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         function bukaForm() { showSection('createEventForm'); document.getElementById('eventForm').reset(); document.getElementById('fileName').innerText = "Klik untuk unggah gambar dari perangkat"; }
         
-        // MEMBUKA HALAMAN KELOLA ACARA (QR CODE & UPGRADE)
         function bukaPengaturan(eventId) {
-            // Cari data acara dari array global
             const event = daftarAcaraGlobal.find(e => e.id === eventId);
             if(!event) return;
 
             document.getElementById('manageEventTitle').innerText = event.eventName;
-            
-            // Set Nilai Form Setting
             document.getElementById('editEventId').value = eventId;
             document.getElementById('editGuestPhotoLimit').value = event.guestPhotoLimit || 15;
             document.getElementById('editPrivacy').value = event.privacy || 'visible';
-
-            // Set Data Info Upgrade
             document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? 'Tak Terbatas' : `${event.quota} Orang`;
 
-            // Membuat URL QR Code Spesifik untuk Acara Ini
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
             const linkKamera = `${domainAnda}/camera.html?event=${eventId}`;
             
             document.getElementById('cameraLinkInput').value = linkKamera;
-            // Generate QR Menggunakan API QRServer
             document.getElementById('qrCodeImageManage').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(linkKamera)}&margin=10`;
 
             showSection('manageEventSection');
         }
 
-        // FUNGSI COPY LINK & BUKA KAMERA
-        function salinLink() {
-            const copyText = document.getElementById("cameraLinkInput");
-            copyText.select();
-            copyText.setSelectionRange(0, 99999); // Untuk perangkat mobile
-            navigator.clipboard.writeText(copyText.value);
-            alert("Tautan kamera berhasil disalin!");
-        }
-        function bukaKamera() {
-            const url = document.getElementById("cameraLinkInput").value;
-            window.open(url, '_blank');
+        // FUNGSI TAMPILKAN HALAMAN PEMBAYARAN
+        function tampilkanHalamanPembayaran() {
+            document.getElementById('paymentTotal').innerText = `Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
+            document.getElementById('paymentDesc').innerText = `${pendingPaymentInfo.type} - ${pendingPaymentInfo.name} (${pendingPaymentInfo.package})`;
+            showSection('paymentSection');
         }
 
+        // FUNGSI KONFIRMASI WA (Di halaman pembayaran)
+        document.getElementById('btnConfirmWA').addEventListener('click', () => {
+            const pesan = `Halo admin The Last Call! 📸%0A%0ASaya sudah melakukan transfer untuk pembayaran:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}%0A%0ABerikut saya lampirkan bukti transfernya. Tolong segera diaktifkan ya!`;
+            window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
+        });
+
         // FUNGSI UPGRADE KUOTA
-        async function prosesUpgrade() {
+        function prosesUpgrade() {
             const val = document.getElementById('upgradePackage').value;
             if(!val) return alert('Silakan pilih paket tambahan terlebih dahulu!');
             
             const parts = val.split('|');
             const tambahanKuota = parseInt(parts[0]);
             const harga = parseInt(parts[1]);
-            const eventId = document.getElementById('editEventId').value;
+            const eventName = document.getElementById('manageEventTitle').innerText;
+            const teksTambahan = tambahanKuota === 9999 ? 'Tak Terbatas' : `+ ${tambahanKuota} Orang`;
 
-            // Karena sistem payment gateway belum disambungkan, kita simulasikan
-            if(confirm(`Anda akan menambah kuota. Total tagihan: Rp ${harga.toLocaleString('id-ID')}.\n\n(Simulasi: Klik OK untuk pura-pura mengonfirmasi pembayaran dan otomatis mengupdate kuota).`)) {
-                try {
-                    const eventRef = db.collection('events').doc(eventId);
-                    const doc = await eventRef.get();
-                    const currentData = doc.data();
-                    
-                    let newQuota = currentData.quota + tambahanKuota;
-                    if(tambahanKuota === 9999 || currentData.quota === 9999) newQuota = 9999;
+            // Set info pembayaran dan arahkan ke Halaman Pembayaran
+            pendingPaymentInfo = {
+                type: 'Upgrade Kuota',
+                name: eventName,
+                package: teksTambahan,
+                price: harga
+            };
+            
+            tampilkanHalamanPembayaran();
+        }
 
-                    await eventRef.update({
-                        quota: newQuota,
-                        remainingQuota: (currentData.remainingQuota || 0) + tambahanKuota
-                    });
-
-                    alert('Upgrade berhasil! Kuota acara Anda telah bertambah.');
-                    bukaDasbor(); // Refresh data
-                } catch (error) {
-                    console.error(error);
-                    alert("Gagal melakukan upgrade.");
-                }
-            }
+        function salinLink() {
+            const copyText = document.getElementById("cameraLinkInput");
+            copyText.select();
+            copyText.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(copyText.value);
+            alert("Tautan kamera berhasil disalin!");
+        }
+        function bukaKamera() {
+            const url = document.getElementById("cameraLinkInput").value;
+            window.open(url, '_blank');
         }
 
         function updatePlaceholder() {
@@ -394,7 +445,11 @@
 
                 listDiv.innerHTML = '';
                 daftarAcaraGlobal.forEach(data => {
-                    let statusBadge = data.status === 'Aktif' ? '<span class="badge" style="background:#6ee7b7;">Aktif</span>' : '<span class="badge" style="background:#fbbc05;">Menunggu Pembayaran</span>';
+                    let isPending = data.status === 'Pending';
+                    let statusBadge = isPending 
+                        ? `<span class="badge-pending" onclick="bayarUlang('${data.id}', '${data.eventName}', ${data.quota}, ${data.price})">Menunggu Pembayaran &rarr;</span>` 
+                        : `<span class="badge">Aktif</span>`;
+                        
                     let limitText = data.guestPhotoLimit ? data.guestPhotoLimit : 15;
                     
                     listDiv.innerHTML += `
@@ -417,7 +472,18 @@
             }
         }
 
-        // MENYIMPAN ACARA BARU
+        // FUNGSI BAYAR ULANG (Jika user keluar sblm bayar, bisa klik badge kuning)
+        function bayarUlang(id, nama, kuota, harga) {
+            pendingPaymentInfo = {
+                type: 'Aktivasi Acara Baru',
+                name: nama,
+                package: kuota === 9999 ? 'Tak Terbatas' : `${kuota} Orang`,
+                price: harga
+            };
+            tampilkanHalamanPembayaran();
+        }
+
+        // MENYIMPAN ACARA BARU (DENGAN TAMPILAN HALAMAN PEMBAYARAN MANUAL)
         document.getElementById('eventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
@@ -453,7 +519,7 @@
                     const result = await response.json();
                     if (result.success) wallpaperUrl = result.data.url;
                 } catch(err) {
-                    alert("Gagal mengunggah gambar. Pastikan gambar tidak terlalu besar.");
+                    alert("Gagal mengunggah gambar.");
                 }
             }
 
@@ -475,13 +541,25 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 
-                alert(harga === 0 ? "Acara berhasil dibuat secara gratis!" : `Pesanan Diterima! Silakan bayar sebesar Rp ${harga.toLocaleString('id-ID')} agar QR Code aktif.`);
-                bukaDasbor();
+                if (harga === 0) {
+                    alert("Acara berhasil dibuat secara gratis! QR Code sudah bisa digunakan.");
+                    bukaDasbor();
+                } else {
+                    // Tampilkan Halaman Pembayaran Manual
+                    pendingPaymentInfo = {
+                        type: 'Aktivasi Acara Baru',
+                        name: eventName,
+                        package: kuota === 9999 ? 'Tak Terbatas' : `${kuota} Orang`,
+                        price: harga
+                    };
+                    tampilkanHalamanPembayaran();
+                }
+
             } catch (error) {
                 console.error(error);
                 alert("Terjadi kesalahan saat menyimpan data.");
             } finally {
-                btn.innerText = "Buat & Proses Pembayaran";
+                btn.innerText = "Lanjutkan";
                 btn.disabled = false;
             }
         });
