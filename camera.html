@@ -263,12 +263,17 @@
 
                 sisaJepretan = eventData.guestPhotoLimit || 15;
                 
-                // CEK APAKAH TAMU SUDAH PERNAH MASUK SEBELUMNYA (Agar Refresh Tidak Kembali ke Depan)
+                // Pulihkan status halaman terakhir agar refresh tetap di tempatnya
                 let savedScreen = localStorage.getItem(`tlcf_screen_${eventId}`) || 'welcomeScreen';
+                
                 if(savedScreen !== 'welcomeScreen' && namaTamu !== "") {
                     document.getElementById('guestNameInput').value = namaTamu;
                     await muatDataAwal();
                     isDataLoaded = true;
+                    
+                    // LANGSUNG HILANGKAN LOADING SCREEN AGAR TIDAK TERTAHAN
+                    document.getElementById('loadingScreen').style.display = 'none';
+                    
                     tampilkanScreen(savedScreen);
                     if(savedScreen === 'cameraScreen') mulaiKamera();
                     else if(savedScreen === 'galleryScreen') bukaGaleriLangsung();
@@ -541,9 +546,9 @@
             const loadingDesc = document.getElementById('loadingSubText');
             
             document.getElementById('spinnerIcon').style.display = 'block';
-            loadingTitle.innerText = "Downloading..."; // Diperbarui sesuai permintaan
+            loadingTitle.innerText = "Downloading..."; 
             loadingDesc.style.display = 'block';
-            loadingDesc.innerHTML = `Please wait: 0 / ${selectedPhotoIds.size} files`; // Diperbarui sesuai permintaan
+            loadingDesc.innerHTML = `Please wait: 0 / ${selectedPhotoIds.size} files`; 
             overlay.style.display = 'flex';
             
             const zip = new JSZip();
@@ -564,7 +569,7 @@
                         const blob = await response.blob();
                         folder.file(namaFile, blob);
                         berjaya++;
-                        loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berjaya} / ${photosToDownload.length}</span><br>Please wait...`; // Diperbarui
+                        loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berjaya} / ${photosToDownload.length}</span><br>Please wait...`; 
                     } else {
                         gagal++;
                     }
@@ -574,7 +579,7 @@
             }
 
             loadingTitle.innerText = "Downloading...";
-            loadingDesc.innerHTML = "Please wait, preparing zip file..."; // Diperbarui
+            loadingDesc.innerHTML = "Please wait, preparing zip file..."; 
 
             try {
                 const zipContent = await zip.generateAsync({ type: "blob" });
