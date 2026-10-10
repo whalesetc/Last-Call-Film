@@ -163,7 +163,6 @@
                 </div>
             </div>
 
-            <!-- Bagian Desain Kartu Undangan (Mockup Preview) -->
             <div class="form-group">
                 <label style="font-size: 1.2rem; font-family: 'Playfair Display', serif;">Desain kartu undangan acara.</label>
                 <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Gambar sampul ini adalah hal pertama yang tamu lihat saat diundang ke acara.</p>
@@ -210,6 +209,14 @@
                     <button class="btn-primary" onclick="salinLink()" style="padding: 10px 15px; font-size: 0.85rem;">Salin</button>
                 </div>
                 <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;">Buka Kamera di Tab Baru &rarr;</button>
+
+                <!-- ============================================== -->
+                <!-- TOMBOL ALBUM BARU DITAMBAHKAN DI SINI -->
+                <!-- ============================================== -->
+                <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;">
+                    Buka Album & Unduh ZIP &darr;
+                </button>
+
             </div>
 
             <!-- KOLOM KANAN: UPGRADE & PENGATURAN -->
@@ -398,6 +405,15 @@
         }
         function bukaKamera() {
             window.open(document.getElementById("cameraLinkInput").value, '_blank');
+        }
+
+        // ==============================================
+        // FUNGSI BARU UNTUK BUKA ALBUM
+        // ==============================================
+        function bukaAlbum() {
+            const eventId = document.getElementById('editEventId').value; // Mengambil ID acara dari form setting
+            const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
+            window.open(`${domainAnda}/album.html?event=${eventId}`, '_blank');
         }
 
         // FUNGSI UPDATE TEKS MOCKUP SECARA REAL-TIME
