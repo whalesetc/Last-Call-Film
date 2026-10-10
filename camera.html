@@ -42,9 +42,6 @@
         .btn-outline { width: 100%; padding: 14px; background: rgba(0,0,0,0.5); color: #fff; border: 1px solid var(--border-color); border-radius: 12px; font-weight: 600; cursor: pointer; transition: 0.2s; backdrop-filter: blur(5px);}
         .btn-outline:active { transform: scale(0.97); }
 
-        .btn-danger { width: 100%; padding: 16px; background: rgba(255, 60, 60, 0.2); color: #ff6b6b; border: 1px solid rgba(255, 60, 60, 0.5); border-radius: 12px; font-weight: 700; font-size: 1rem; cursor: pointer; transition: 0.2s;}
-        .btn-danger:active { transform: scale(0.97); }
-
         /* 2. LAYAR DASBOR ALBUM TAMU */
         .album-header { margin-bottom: 25px; margin-top: 10px; text-align: center; }
         .album-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; font-weight: 600; margin-bottom: 8px; line-height: 1.2; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
@@ -58,20 +55,22 @@
         .camera-wrapper { background: rgba(255, 255, 255, 0.1); padding: 10px; border-radius: 20px; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5); margin-bottom: 20px; backdrop-filter: blur(10px); }
         .camera-box { position: relative; width: 100%; aspect-ratio: 3 / 4; background: #000; border-radius: 12px; overflow: hidden; }
         video, canvas { width: 100%; height: 100%; object-fit: cover; }
-        canvas { display: none; } /* Preview beku */
+        canvas { display: none; }
         
         .status-msg { text-align: center; font-size: 0.85rem; color: var(--text-light); font-weight: 500; margin-top: 15px; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
-        
-        /* Aksi Review Kamera (Retake & Save) */
-        #reviewActions { display: none; gap: 10px; margin-top: 15px; }
 
         /* Galeri Grid */
-        .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 0 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+        .gallery-section-title { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin: 30px 0 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
         .gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; padding-bottom: 40px; }
         .gallery-item { background: rgba(0, 0, 0, 0.6); padding: 10px; border-radius: 14px; border: 1px solid var(--border-color); text-align: center; display: flex; flex-direction: column; backdrop-filter: blur(10px); }
-        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; cursor: pointer; }
-        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 8px; color: #fff; }
-        .btn-action { display: block; width: 100%; padding: 8px; background-color: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.75rem; font-weight: 600; border-radius: 8px; margin-top: auto; cursor: pointer; }
+        .gallery-item img { width: 100%; aspect-ratio: 3/4; object-fit: cover; border-radius: 8px; margin-bottom: 8px; }
+        .guest-tag { font-family: 'Playfair Display', serif; font-style: italic; font-size: 0.85rem; margin-bottom: 10px; color: #fff; }
+        
+        /* Tombol Aksi di Galeri */
+        .action-group { display: flex; gap: 6px; margin-top: auto; }
+        .btn-action { flex: 1; padding: 8px 4px; background-color: rgba(255, 255, 255, 0.15); color: #fff; border: 1px solid rgba(255,255,255,0.2); font-size: 0.7rem; font-weight: 600; border-radius: 8px; cursor: pointer; transition: 0.2s;}
+        .btn-action:active { transform: scale(0.95); }
+        .btn-delete { background-color: rgba(255, 60, 60, 0.15); color: #ff6b6b; border-color: rgba(255, 60, 60, 0.3); }
 
         /* Lightbox */
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
@@ -106,7 +105,7 @@
         </div>
 
         <div class="dashboard-card">
-            <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Jatah Foto Anda</h3>
+            <h3 style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px;">Sisa Jatah Foto Anda</h3>
             <div style="font-size: 2.5rem; font-family: 'Playfair Display', serif; font-weight: 700; color: var(--accent); margin-bottom: 15px; line-height: 1;" id="dashSisaFoto">0</div>
             
             <button class="btn-primary" id="btnBukaKamera" onclick="bukaLayarKamera()">
@@ -116,9 +115,7 @@
         </div>
 
         <h3 class="gallery-section-title font-serif">Album <span id="privacyLabelText" style="font-size:0.8rem; font-family:'Inter', sans-serif; font-weight:normal; color:var(--text-muted); float:right; margin-top:5px;">(Memuat...)</span></h3>
-        <div class="gallery-grid" id="galleryGrid">
-            <!-- Galeri foto akan dimuat di sini -->
-        </div>
+        <div class="gallery-grid" id="albumGalleryGrid"></div>
     </div>
 
     <!-- 3. LAYAR KAMERA UTAMA -->
@@ -136,17 +133,12 @@
         </div>
 
         <div class="controls">
-            <!-- Tombol Jepret Utama -->
-            <button class="btn-primary" id="captureBtn" onclick="jepretFoto()">Jepret Momen</button>
-            
-            <!-- Tombol Review (Retake & Save) yang muncul setelah dijepret -->
-            <div id="reviewActions">
-                <button class="btn-danger" id="retakeBtn" onclick="ulangiFoto()">Ulangi (Retake)</button>
-                <button class="btn-primary" id="saveBtn" onclick="simpanKeAlbum()">Simpan ke Album</button>
-            </div>
-
-            <div id="status" class="status-msg">Pastikan gaya terbaik Anda!</div>
+            <button class="btn-primary" id="captureBtn" onclick="jepretFotoLaluSimpan()">Jepret & Simpan</button>
+            <div id="status" class="status-msg">Ketuk jepret, foto akan langsung tersimpan.</div>
         </div>
+
+        <h3 class="gallery-section-title font-serif" style="margin-top: 40px;">Riwayat Foto Anda</h3>
+        <div class="gallery-grid" id="cameraGalleryGrid"></div>
     </div>
 
     <div id="lightbox" onclick="tutupLightbox()">
@@ -176,11 +168,10 @@
         let namaTamuGlobal = "Tamu";
         
         let videoStream = null;
-        let capturedImageDataUrl = null; // Menyimpan data foto sementara sebelum disave
-
         const video = document.getElementById('video');
         const canvas = document.getElementById('canvas');
         const statusDiv = document.getElementById('status');
+        const captureBtn = document.getElementById('captureBtn');
 
         // 1. MEMUAT DATA ACARA
         async function loadEventData() {
@@ -193,7 +184,6 @@
 
                 if (eventData.status !== "Aktif") return tampilkanPesan("Kamera Terkunci", "Acara ini belum diaktifkan oleh pemilik.");
 
-                // Terapkan Wallpaper untuk semua halaman
                 if (eventData.wallpaperUrl) document.body.style.backgroundImage = `url(${eventData.wallpaperUrl})`;
 
                 let judul = eventData.eventName;
@@ -202,12 +192,9 @@
                 
                 document.getElementById('introEventTitle').innerHTML = judul;
                 document.getElementById('dashEventTitle').innerHTML = judul;
-                
-                // Label Privasi di Dasbor Album
                 document.getElementById('privacyLabelText').innerText = eventData.privacy === 'visible' ? "(Publik)" : "(Privat)";
                 maxShots = eventData.guestPhotoLimit || 15;
 
-                // Cek apakah HP ini sudah punya sesi
                 sessionId = localStorage.getItem('tlc_session_' + eventId);
                 if (sessionId) {
                     await lanjutkanSesi();
@@ -279,7 +266,7 @@
             }
         }
 
-        // 3. MELANJUTKAN SESI LAMA (REFRESH)
+        // 3. MELANJUTKAN SESI LAMA
         async function lanjutkanSesi() {
             try {
                 const sessionDoc = await db.collection("guest_sessions").doc(sessionId).get();
@@ -297,14 +284,14 @@
             }
         }
 
-        // 4. MEMBUKA DASBOR ALBUM UTAMA
+        // 4. MEMBUKA DASBOR ALBUM
         function bukaDasborAlbum() {
             sembunyikanSemuaLayar();
             document.getElementById('guestDashboardScreen').style.display = 'block';
             document.getElementById('dashGuestName').innerText = `Tamu: ${namaTamuGlobal}`;
             
             updateSisaUI();
-            muatGaleri();
+            muatGaleriUtama('albumGalleryGrid');
         }
 
         // 5. NAVIGASI KE KAMERA
@@ -314,13 +301,7 @@
             sembunyikanSemuaLayar();
             document.getElementById('cameraScreen').style.display = 'block';
             updateSisaUI();
-            
-            // Reset state kamera
-            document.getElementById('captureBtn').style.display = 'block';
-            document.getElementById('reviewActions').style.display = 'none';
-            video.style.display = 'block';
-            canvas.style.display = 'none';
-            statusDiv.innerText = "Pastikan gaya terbaik Anda!";
+            statusDiv.innerText = "Ketuk jepret, foto akan langsung tersimpan.";
 
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
@@ -328,12 +309,14 @@
             } catch (err) {
                 statusDiv.innerText = "Gagal mengakses kamera. Berikan izin di browser Anda.";
             }
+
+            // Muat galeri pribadi tamu di bawah kamera
+            muatGaleriPribadi('cameraGalleryGrid');
         }
 
-        // KEMBALI DARI KAMERA KE ALBUM
         function kembaliKeAlbum() {
             if (videoStream) {
-                videoStream.getTracks().forEach(track => track.stop()); // Matikan lampu kamera
+                videoStream.getTracks().forEach(track => track.stop());
             }
             bukaDasborAlbum();
         }
@@ -347,12 +330,28 @@
             if(sisa <= 0) {
                 btnDash.disabled = true;
                 btnDash.innerHTML = "Jatah Habis";
+                captureBtn.disabled = true;
+                captureBtn.innerText = "Jatah Habis";
+            } else {
+                btnDash.disabled = false;
+                btnDash.innerHTML = `<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style="margin-right:8px;"><path d="M4 4h3l2-2h6l2 2h3c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2zm8 3c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>Buka Kamera Saya`;
+                captureBtn.disabled = false;
+                captureBtn.innerText = "Jepret & Simpan";
             }
         }
 
-        // 6. ALUR JEPRET & RETAKE
-        function jepretFoto() {
-            // Membekukan gambar ke Canvas
+        // 6. ALUR JEPRET LANGSUNG SIMPAN
+        async function jepretFotoLaluSimpan() {
+            if ((maxShots - shotsTaken) <= 0) return;
+
+            // Efek Flash & Loading
+            video.style.opacity = '0';
+            setTimeout(() => { video.style.opacity = '1'; }, 150);
+            captureBtn.disabled = true;
+            captureBtn.innerText = "Menyimpan...";
+            statusDiv.innerText = "Sedang diproses ke album...";
+
+            // Ambil Frame Kamera
             const MAX_WIDTH = 600;
             const scale = MAX_WIDTH / video.videoWidth;
             canvas.width = MAX_WIDTH;
@@ -360,38 +359,7 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
             
-            capturedImageDataUrl = canvas.toDataURL('image/jpeg', 0.6); // Simpan sementara
-
-            // Ubah UI menjadi Mode Review
-            video.style.display = 'none';
-            canvas.style.display = 'block';
-            document.getElementById('captureBtn').style.display = 'none';
-            document.getElementById('reviewActions').style.display = 'flex';
-            statusDiv.innerText = "Suka dengan hasilnya? Jika tidak, tekan Ulangi.";
-        }
-
-        function ulangiFoto() {
-            // Buang foto sementara, kembali ke aliran video
-            capturedImageDataUrl = null;
-            video.style.display = 'block';
-            canvas.style.display = 'none';
-            document.getElementById('captureBtn').style.display = 'block';
-            document.getElementById('reviewActions').style.display = 'none';
-            statusDiv.innerText = "Pastikan gaya terbaik Anda!";
-        }
-
-        async function simpanKeAlbum() {
-            if(!capturedImageDataUrl) return;
-
-            // Kunci Tombol
-            const btnSave = document.getElementById('saveBtn');
-            const btnRetake = document.getElementById('retakeBtn');
-            btnSave.disabled = true;
-            btnRetake.disabled = true;
-            btnSave.innerText = "Menyimpan...";
-            statusDiv.innerText = "Mengunggah foto ke album acara...";
-
-            const base64Image = capturedImageDataUrl.split(',')[1];
+            const base64Image = canvas.toDataURL('image/jpeg', 0.6).split(',')[1];
 
             try {
                 // Upload ke ImgBB
@@ -404,7 +372,7 @@
 
                 if (result.success) {
                     // Simpan Firestore
-                    await db.collection("photos").add({
+                    const docRef = await db.collection("photos").add({
                         eventId: eventId,
                         url: result.data.url,
                         guestName: namaTamuGlobal,
@@ -412,16 +380,18 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                    // POTONG KUOTA ROL FILM SERVER & LOKAL HANYA SETELAH DISIMPAN
+                    // POTONG KUOTA LOKAL & SERVER
                     await db.collection("guest_sessions").doc(sessionId).update({
                         shotsTaken: firebase.firestore.FieldValue.increment(1)
                     });
                     shotsTaken++;
                     localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
+                    updateSisaUI();
 
-                    // Berhasil -> Kembali ke Dasbor Album
-                    alert("Foto berhasil disimpan ke Album!");
-                    kembaliKeAlbum();
+                    statusDiv.innerText = "Tersimpan! Silakan cek di bawah.";
+                    
+                    // Segarkan Galeri di Bawah Kamera
+                    muatGaleriPribadi('cameraGalleryGrid');
 
                 } else {
                     statusDiv.innerText = "Gagal upload gambar ke server.";
@@ -430,22 +400,53 @@
                 console.error(error);
                 statusDiv.innerText = "Koneksi terputus saat menyimpan.";
             } finally {
-                // Reset tombol untuk jaga-jaga
-                btnSave.disabled = false;
-                btnRetake.disabled = false;
-                btnSave.innerText = "Simpan ke Album";
+                if ((maxShots - shotsTaken) > 0) {
+                    captureBtn.disabled = false;
+                    captureBtn.innerText = "Jepret & Simpan";
+                }
             }
         }
 
-        // 7. MEMUAT RIWAYAT GALERI KE DASBOR (DENGAN ATURAN PRIVASI)
-        async function muatGaleri() {
-            const galleryDiv = document.getElementById('galleryGrid');
+        // 7. FUNGSI MENGHAPUS FOTO
+        async function hapusFoto(docId, btnElement) {
+            if(!confirm('Apakah Anda yakin ingin menghapus foto ini? Sisa jatah jepretan Anda akan dikembalikan 1.')) return;
+            
+            btnElement.disabled = true;
+            btnElement.innerText = "Hapus...";
+
+            try {
+                // Hapus dokumen foto dari Firestore
+                await db.collection("photos").doc(docId).delete();
+                
+                // Kembalikan Kuota di Server & Lokal
+                await db.collection("guest_sessions").doc(sessionId).update({
+                    shotsTaken: firebase.firestore.FieldValue.increment(-1)
+                });
+                shotsTaken--;
+                localStorage.setItem('tlc_shots_' + eventId, shotsTaken);
+                
+                // Update Layar
+                updateSisaUI();
+                btnElement.closest('.gallery-item').remove(); // Hapus kartu foto dari layar
+                statusDiv.innerText = "Foto dihapus. Jatah jepretan dikembalikan.";
+
+            } catch (error) {
+                console.error("Gagal menghapus", error);
+                alert("Gagal menghapus foto. Silakan periksa koneksi.");
+                btnElement.disabled = false;
+                btnElement.innerText = "Hapus";
+            }
+        }
+
+        // 8. MEMUAT GALERI (DENGAN TOMBOL AKSI VIEW/DOWNLOAD/DELETE)
+        
+        // A. Galeri Utama (Di Dasbor Album, mengikuti aturan Publik/Privat)
+        async function muatGaleriUtama(elementId) {
+            const galleryDiv = document.getElementById(elementId);
             galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Memuat album...</div>';
             
             try {
                 let query = db.collection("photos").where("eventId", "==", eventId);
-                
-                // ATURAN PRIVASI: Jika 'private', hanya tarik data yang ID Sesi-nya sama dengan HP ini
                 if (eventData.privacy === "private") {
                     query = query.where("sessionId", "==", sessionId);
                 }
@@ -457,7 +458,11 @@
                 }
 
                 let photos = [];
-                snapshot.forEach(doc => photos.push(doc.data()));
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    photos.push(data);
+                });
                 
                 photos.sort((a, b) => {
                     let timeA = a.timestamp ? a.timestamp.toMillis() : 0;
@@ -465,21 +470,78 @@
                     return timeB - timeA;
                 });
 
-                galleryDiv.innerHTML = '';
-                photos.forEach(photo => {
-                    const item = document.createElement('div');
-                    item.className = 'gallery-item';
-                    item.innerHTML = `
-                        <img src="${photo.url}" onclick="bukaLightbox('${photo.url}')">
-                        <div class="guest-tag">${photo.guestName}</div>
-                        <button class="btn-action" onclick="unduhFoto('${photo.url}', 'TLC_${photo.guestName}.jpg')">Unduh</button>
-                    `;
-                    galleryDiv.appendChild(item);
-                });
+                renderGaleriHTML(photos, galleryDiv);
             } catch(e) {
-                console.log("Gagal memuat galeri", e);
                 galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat foto.</div>';
             }
+        }
+
+        // B. Galeri Pribadi (Di Layar Kamera, hanya menampilkan foto milik tamu sendiri)
+        async function muatGaleriPribadi(elementId) {
+            const galleryDiv = document.getElementById(elementId);
+            galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem;">Memuat riwayat Anda...</div>';
+            
+            try {
+                // Selalu hanya tarik yang "sessionId" nya sama untuk di bawah kamera
+                let query = db.collection("photos")
+                            .where("eventId", "==", eventId)
+                            .where("sessionId", "==", sessionId);
+
+                const snapshot = await query.get();
+                if(snapshot.empty) {
+                    galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); font-size:0.8rem; padding:20px;">Belum ada jepretan Anda di sesi ini.</div>';
+                    return;
+                }
+
+                let photos = [];
+                snapshot.forEach(doc => {
+                    let data = doc.data();
+                    data.id = doc.id;
+                    photos.push(data);
+                });
+                
+                photos.sort((a, b) => {
+                    let timeA = a.timestamp ? a.timestamp.toMillis() : 0;
+                    let timeB = b.timestamp ? b.timestamp.toMillis() : 0;
+                    return timeB - timeA;
+                });
+
+                renderGaleriHTML(photos, galleryDiv);
+            } catch(e) {
+                galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:red;">Gagal memuat riwayat.</div>';
+            }
+        }
+
+        // C. Fungsi Bantuan untuk Melukis HTML Galeri
+        function renderGaleriHTML(photos, galleryDiv) {
+            galleryDiv.innerHTML = '';
+            photos.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                
+                // Cek apakah tamu ini pemilik foto tersebut (Boleh menghapus)
+                const isOwner = photo.sessionId === sessionId;
+                const fileName = `TLC_${photo.guestName.replace(/\s+/g, '_')}.jpg`;
+
+                let actionButtons = `
+                    <button class="btn-action" onclick="bukaLightbox('${photo.url}')">Lihat</button>
+                    <button class="btn-action" onclick="unduhFoto('${photo.url}', '${fileName}')">Unduh</button>
+                `;
+
+                // Jika dia pemiliknya, tambahkan tombol hapus
+                if(isOwner) {
+                    actionButtons += `<button class="btn-action btn-delete" onclick="hapusFoto('${photo.id}', this)">Hapus</button>`;
+                }
+
+                item.innerHTML = `
+                    <img src="${photo.url}" onclick="bukaLightbox('${photo.url}')">
+                    <div class="guest-tag">${photo.guestName}</div>
+                    <div class="action-group">
+                        ${actionButtons}
+                    </div>
+                `;
+                galleryDiv.appendChild(item);
+            });
         }
 
         // Lightbox Functions
