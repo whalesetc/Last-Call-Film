@@ -1,1 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>The Last Call Film • Album Pemilik</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+    
+    <!-- JSZIP SDK UNTUK DOWNLOAD MASAL -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
+    <style>
+        :root { --bg-app: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.7); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        
+        body { background-color: var(--bg-app); color: var(--text-light); line-height: 1.6; padding: 20px; padding-bottom: 100px; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 800px; margin: 0 auto; position: relative; z-index: 1; display: none; }
+        
+        .header-panel { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; }
+        .header-title { font-family: 'Playfair Display', serif; font-size: 2.5rem; line-height: 1.2; }
+        
+        .btn-text { background: none; border: none; color: var(--accent); font-size: 0.9rem; font-weight: 600; cursor: pointer; padding: 5px 10px; }
+        .btn-text:active { opacity: 0.7; }
+        
+        /* Grid Galeri */
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
+        
+        /* Desain Item Foto Interaktif (Bisa di-Select) */
+        .gallery-item { position: relative; cursor: pointer; border-radius: 12px; overflow: hidden; background: #222; transition: 0.2s; aspect-ratio: 3/4; }
+        .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: 0.2s; display: block; }
+        
+        /* Indikator Centang (Checkbox) */
+        .check-circle { position: absolute; top: 8px; right: 8px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid rgba(255,255,255,0.7); background: rgba(0,0,0,0.3); display: flex; justify-content: center; align-items: center; transition: 0.2s; pointer-events: none; z-index: 2; }
+        .check-circle::after { content: ''; width: 10px; height: 5px; border-left: 2px solid #000; border-bottom: 2px solid #000; transform: rotate(-45deg); opacity: 0; margin-top: -2px; }
+        
+        /* Efek Saat Foto Terpilih (Selected) */
+        .gallery-item.selected img { transform: scale(0.85); border-radius: 8px; opacity: 0.8; }
+        .gallery-item.selected { background: var(--accent); }
+        .gallery-item.selected .check-circle { background: #fff; border-color: #fff; }
+        .gallery-item.selected .check-circle::after { opacity: 1; }
+        
+        /* Floating Action Bar (Bar Unduh di Bawah) */
+        .floating-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 100px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; }
+        .floating-bar.show { transform: translateX(-50%) translateY(0); }
+        .floating-text { font-weight: 600; font-size: 0.95rem; }
+        .btn-download-float { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+        .btn-download-float:active { transform: scale(0.95); }
+        
+        /* Loading Screen */
+        #loadingOverlay { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-app); z-index: 9999; justify-content: center; align-items: center; flex-direction: column; text-align: center; padding: 20px;}
+        .spinner { border: 4px solid rgba(255,255,255,0.2); border-top: 4px solid var(--accent); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+    <!-- LAYAR LOADING AWAL (Dan saat proses ZIP) -->
+    <div id="loadingOverlay">
+        <div class="spinner" id="spinnerIcon"></div>
+        <h3 style="font-family: 'Playfair Display', serif; margin-bottom: 10px;" id="loadingTitle">Memuat Album...</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;" id="loadingDesc">Mencari data acara ke dalam server.</p>
+    </div>
+
+    <!-- KONTEN UTAMA ALBUM -->
+    <div class="app-container" id="mainContent">
+        <!-- HEADER ALBUM PEMILIK -->
+        <div class="header-panel">
+            <div>
+                <p style="font-size: 0.75rem; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; margin-bottom: 5px;">Album Foto</p>
+                <h1 class="header-title" id="eventTitle">Nama Acara</h1>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 5px;" id="totalPhotosText">- Foto</p>
+            </div>
+            <div>
+                <button class="btn-text" id="btnPilihSemua" onclick="togglePilihSemua()" style="display: none;">Pilih Semua</button>
+            </div>
+        </div>
+
+        <!-- GRID FOTO -->
+        <div class="gallery-grid" id="albumGallery"></div>
+    </div>
+
+    <!-- FLOATING ACTION BAR -->
+    <div class="floating-bar" id="floatingBar">
+        <div class="floating-text"><span id="selectedCount">0</span> Terpilih</div>
+        <button class="btn-download-float" onclick="unduhZipPilihan()">Unduh (.zip)</button>
+    </div>
+
+    <script>
+        // KONFIGURASI FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
+            authDomain: "the-last-call-film.firebaseapp.com",
+            projectId: "the-last-call-film",
+            storageBucket: "the-last-call-film.firebasestorage.app",
+            messagingSenderId: "665352445108",
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        let allPhotosData = [];
+        let selectedPhotoIds = new Set();
+        let currentEventId = "";
+        let eventNameGlobal = "Album_TLC"; // Nama default untuk file ZIP
+
+        // MENGAMBIL PARAMETER DARI URL (album.html?event=ID_NYA)
+        window.onload = () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const idDariUrl = urlParams.get('event');
+            
+            if(idDariUrl) {
+                muatAlbum(idDariUrl);
+            } else {
+                document.getElementById('spinnerIcon').style.display = 'none';
+                document.getElementById('loadingTitle').innerText = "Tautan Tidak Valid";
+                document.getElementById('loadingDesc').innerText = "Silakan buka album melalui dasbor Anda.";
+            }
+        };
+
+        // FUNGSI MEMUAT DATA FOTO DARI DATABASE
+        async function muatAlbum(eventId) {
+            currentEventId = eventId;
+            const galleryDiv = document.getElementById('albumGallery');
+            const overlay = document.getElementById('loadingOverlay');
+            
+            try {
+                // 1. Ambil nama acara untuk dijadikan Nama File ZIP
+                const evtDoc = await db.collection("events").doc(eventId).get();
+                if(evtDoc.exists) {
+                    const evtData = evtDoc.data();
+                    // Jadikan Nama Acara (Contoh: "Wedding Budi")
+                    eventNameGlobal = evtData.eventName || "Album_TLC"; 
+                    document.getElementById('eventTitle').innerText = eventNameGlobal;
+                    document.title = `${eventNameGlobal} • Album`; // Ubah Tab Browser
+                } else {
+                    throw new Error("Acara tidak ditemukan");
+                }
+
+                // 2. Ambil semua foto dari acara ini
+                const snapshot = await db.collection("photos").where("eventId", "==", eventId).get();
+                
+                // 3. Sembunyikan Loading, Tampilkan Konten
+                overlay.style.display = 'none';
+                document.getElementById('mainContent').style.display = 'block';
+
+                if(snapshot.empty) {
+                    document.getElementById('totalPhotosText').innerText = "0 Foto Diambil";
+                    galleryDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:var(--text-muted); padding: 40px 0;">Belum ada foto yang diambil tamu Anda.</div>';
+                    return;
+                }
+
+                // Masukkan data ke array
+                allPhotosData = [];
+                snapshot.forEach(doc => { 
+                    let data = doc.data(); 
+                    data.id = doc.id; 
+                    allPhotosData.push(data); 
+                });
+                
+                // Urutkan dari yang terbaru
+                allPhotosData.sort((a, b) => (b.timestamp ? b.timestamp.toMillis() : 0) - (a.timestamp ? a.timestamp.toMillis() : 0));
+                
+                document.getElementById('totalPhotosText').innerText = `${allPhotosData.length} Foto Diambil`;
+                document.getElementById('btnPilihSemua').style.display = 'block';
+                
+                renderGaleri();
+
+            } catch(e) {
+                console.error(e);
+                document.getElementById('spinnerIcon').style.display = 'none';
+                document.getElementById('loadingTitle').innerText = "Gagal Memuat";
+                document.getElementById('loadingDesc').innerText = "Acara tidak ditemukan atau terhapus.";
+            }
+        }
+
+        // FUNGSI MENAMPILKAN FOTO KE HTML
+        function renderGaleri() {
+            const galleryDiv = document.getElementById('albumGallery');
+            galleryDiv.innerHTML = '';
+            
+            allPhotosData.forEach(photo => {
+                const item = document.createElement('div');
+                item.className = 'gallery-item';
+                item.id = `item_${photo.id}`;
+                
+                if(selectedPhotoIds.has(photo.id)) item.classList.add('selected');
+                
+                item.innerHTML = `
+                    <div class="check-circle"></div>
+                    <img src="${photo.url}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x400/222/fff?text=Error'">
+                `;
+                
+                item.onclick = () => togglePilihFoto(photo.id, item);
+                galleryDiv.appendChild(item);
+            });
+            updateFloatingBar();
+        }
+
+        // FUNGSI KLIK FOTO (SELECT / DESELECT)
+        function togglePilihFoto(id, element) {
+            if (selectedPhotoIds.has(id)) {
+                selectedPhotoIds.delete(id);
+                element.classList.remove('selected');
+            } else {
+                selectedPhotoIds.add(id);
+                element.classList.add('selected');
+            }
+            updateFloatingBar();
+        }
+
+        // FUNGSI KLIK TOMBOL "PILIH SEMUA"
+        function togglePilihSemua() {
+            const btn = document.getElementById('btnPilihSemua');
+            if (selectedPhotoIds.size === allPhotosData.length) {
+                selectedPhotoIds.clear();
+                btn.innerText = "Pilih Semua";
+            } else {
+                allPhotosData.forEach(p => selectedPhotoIds.add(p.id));
+                btn.innerText = "Batalkan Pilihan";
+            }
+            renderGaleri();
+        }
+
+        // FUNGSI UPDATE BAR MENGAMBANG DI BAWAH
+        function updateFloatingBar() {
+            const bar = document.getElementById('floatingBar');
+            const countText = document.getElementById('selectedCount');
+            const btnSemua = document.getElementById('btnPilihSemua');
+            
+            countText.innerText = selectedPhotoIds.size;
+            
+            if (selectedPhotoIds.size > 0) {
+                bar.classList.add('show');
+            } else {
+                bar.classList.remove('show');
+            }
+
+            if(selectedPhotoIds.size > 0 && selectedPhotoIds.size === allPhotosData.length) {
+                btnSemua.innerText = "Batalkan Pilihan";
+            } else {
+                btnSemua.innerText = "Pilih Semua";
+            }
+        }
+
+        // FUNGSI INTI: UNDUH FOTO YANG DIPILIH MENJADI .ZIP
+        async function unduhZipPilihan() {
+            if(selectedPhotoIds.size === 0) return;
+            
+            const overlay = document.getElementById('loadingOverlay');
+            const loadingTitle = document.getElementById('loadingTitle');
+            const loadingDesc = document.getElementById('loadingDesc');
+            
+            // Tampilkan kembali layar hitam
+            document.getElementById('spinnerIcon').style.display = 'block';
+            loadingTitle.innerText = "Sedang Mengunduh...";
+            overlay.style.background = 'rgba(0,0,0,0.9)'; // Buat transparan
+            overlay.style.display = 'flex';
+            
+            const zip = new JSZip();
+            
+            // Nama Folder dan Nama File ZIP sesuai dengan NAMA ACARA dari Database
+            const cleanEventName = eventNameGlobal.replace(/[^a-zA-Z0-9]/g, '_');
+            const folder = zip.folder(`Album_${cleanEventName}`);
+            
+            let berhasil = 0;
+            let gagal = 0;
+
+            const photosToDownload = allPhotosData.filter(p => selectedPhotoIds.has(p.id));
+
+            // Mengunduh satu per satu
+            const promises = photosToDownload.map(async (photo, index) => {
+                const guestClean = photo.guestName ? photo.guestName.replace(/[^a-zA-Z0-9]/g, '_') : 'Tamu';
+                // Penamaan File di dalam ZIP: "01_Budi.jpg"
+                const namaFile = `${String(index + 1).padStart(2, '0')}_${guestClean}.jpg`;
+                
+                try {
+                    const response = await fetch(photo.url);
+                    if(!response.ok) throw new Error("Gagal fetch");
+                    const blob = await response.blob();
+                    folder.file(namaFile, blob);
+                    berhasil++;
+                    loadingDesc.innerHTML = `Memproses: ${berhasil} / ${photosToDownload.length}`;
+                } catch(e) {
+                    console.error("Gagal mendownload:", photo.url);
+                    gagal++;
+                }
+            });
+
+            await Promise.all(promises);
+            loadingTitle.innerText = "Membungkus .ZIP";
+            loadingDesc.innerHTML = "Sedang menyatukan gambar...<br>Proses ini memakan waktu sesaat.";
+
+            try {
+                // Hasilkan file ZIP
+                const zipContent = await zip.generateAsync({ type: "blob" });
+                const zipUrl = window.URL.createObjectURL(zipContent);
+                
+                // Memicu pengunduhan paksa ke perangkat dengan Nama Acara
+                const a = document.createElement('a');
+                a.style.display = 'none';
+                a.href = zipUrl;
+                a.download = `Album_${cleanEventName}.zip`; // NAMA FILE ZIP SESUAI ACARA
+                document.body.appendChild(a);
+                a.click();
+                
+                window.URL.revokeObjectURL(zipUrl);
+                document.body.removeChild(a);
+                
+                // Selesai
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    if(gagal > 0) alert(`Selesai! Ada ${gagal} foto yang gagal diunduh akibat koneksi internet.`);
+                    
+                    // Reset pilihan dan bar
+                    selectedPhotoIds.clear();
+                    renderGaleri();
+                }, 1500);
+
+            } catch(e) {
+                overlay.style.display = 'none';
+                alert("Terjadi kesalahan saat menyusun file ZIP.");
+            }
+        }
+    </script>
+</body>
+</html>
