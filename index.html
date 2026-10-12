@@ -75,20 +75,42 @@
         .bank-info { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
         .bank-name { font-weight: 700; font-size: 1rem; color: #fff;}
         .bank-acc { font-family: monospace; font-size: 1.2rem; color: var(--accent); margin: 4px 0;}
+
+        /* Auth Modal Styling */
+        .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
+        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 400px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
+        .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
+        
+        .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
+        .auth-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 600; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .auth-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
+        
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem; }
+        .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 10px; font-size: 0.9rem; transition: 0.2s; }
+        .btn-google { background: #fff; color: #000; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 500; }
+        .btn-google img { width: 18px; }
+        
+        .auth-divider { text-align: center; margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; display: flex; align-items: center; }
+        .auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); margin: 0 10px; }
     </style>
 </head>
 <body>
 
     <nav>
         <div class="logo font-serif" onclick="location.reload()">✦ The Last Call</div>
-        <div id="navMenu"></div>
+        <div id="navMenu">
+            <button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>
+        </div>
     </nav>
 
     <!-- 1. HALAMAN LANDING -->
     <div id="landingPage" class="section active-section">
         <h1 class="hero-title font-serif">Abadikan Momen.<br>Tanpa Batas.</h1>
         <p style="color: var(--text-muted); margin-bottom: 30px;">Platform photobooth digital elegan untuk acaramu.</p>
-        <button class="btn-primary" onclick="loginGoogle()">Mulai Buat Acara</button>
+        <button class="btn-primary" onclick="bukaAuthModal()">Mulai Buat Acara</button>
     </div>
 
     <!-- 2. DASBOR CUSTOMER -->
@@ -210,19 +232,13 @@
                 </div>
                 <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;">Buka Kamera di Tab Baru &rarr;</button>
 
-                <!-- ============================================== -->
-                <!-- TOMBOL ALBUM BARU DITAMBAHKAN DI SINI -->
-                <!-- ============================================== -->
                 <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer; transition: 0.2s;">
                     Buka Album & Unduh ZIP &darr;
                 </button>
-
             </div>
 
             <!-- KOLOM KANAN: UPGRADE & PENGATURAN -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
-                
-                <!-- Kotak Upgrade Kuota -->
                 <div class="dash-card">
                     <h3>Kuota Tamu</h3>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
@@ -246,7 +262,6 @@
                     </div>
                 </div>
 
-                <!-- Kotak Pengaturan Privasi & Batas Foto -->
                 <div class="dash-card">
                     <h3>Pengaturan Fitur</h3>
                     <form id="editEventForm">
@@ -318,6 +333,45 @@
             Konfirmasi Pembayaran via WhatsApp
         </button>
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;">Nanti Saja (Cek Dasbor)</button>
+    </div>
+
+    <!-- MODAL POP-UP MASUK / DAFTAR -->
+    <div class="auth-modal" id="authModal">
+        <div class="auth-box">
+            <span class="auth-close" onclick="tutupAuthModal()">✖</span>
+            
+            <div class="auth-tabs">
+                <div class="auth-tab active" onclick="switchAuthTab('login')" id="tabLogin">Masuk</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')" id="tabRegister">Daftar</div>
+            </div>
+
+            <!-- FORM MASUK (LOGIN) -->
+            <div class="auth-form active" id="formLogin">
+                <button class="auth-btn btn-google" onclick="loginDenganGoogle()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> Masuk dengan Google
+                </button>
+                
+                <div class="auth-divider">ATAU EMAIL</div>
+
+                <input type="email" id="loginEmail" class="auth-input" placeholder="Alamat Email Terdaftar">
+                <input type="password" id="loginPass" class="auth-input" placeholder="Kata Sandi">
+                <button class="auth-btn btn-primary" onclick="loginDenganEmail()" style="width:100%;">Masuk Sekarang</button>
+            </div>
+
+            <!-- FORM DAFTAR (REGISTER) -->
+            <div class="auth-form" id="formRegister">
+                <button class="auth-btn btn-google" onclick="loginDenganGoogle()">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> Daftar dengan Google
+                </button>
+                
+                <div class="auth-divider">ATAU EMAIL</div>
+
+                <input type="text" id="regNama" class="auth-input" placeholder="Nama Lengkap">
+                <input type="email" id="regEmail" class="auth-input" placeholder="Alamat Email">
+                <input type="password" id="regPass" class="auth-input" placeholder="Kata Sandi (Min. 6 Karakter)">
+                <button class="auth-btn btn-primary" onclick="daftarDenganEmail()" style="width:100%;">Daftar Akun Baru</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -407,16 +461,12 @@
             window.open(document.getElementById("cameraLinkInput").value, '_blank');
         }
 
-        // ==============================================
-        // FUNGSI BARU UNTUK BUKA ALBUM
-        // ==============================================
         function bukaAlbum() {
-            const eventId = document.getElementById('editEventId').value; // Mengambil ID acara dari form setting
+            const eventId = document.getElementById('editEventId').value;
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
             window.open(`${domainAnda}/album.html?event=${eventId}`, '_blank');
         }
 
-        // FUNGSI UPDATE TEKS MOCKUP SECARA REAL-TIME
         function updateEventPreview() {
             const tipe = document.getElementById('eventType').value;
             const label = document.getElementById('labelEventName');
@@ -435,7 +485,6 @@
             }
         }
 
-        // FUNGSI PREVIEW GAMBAR MOCKUP (Membaca file lokal)
         function previewFile() {
             const file = document.getElementById('wallpaperFile').files[0];
             if(file) {
@@ -450,24 +499,112 @@
             }
         }
 
-        function loginGoogle() {
+        // ==========================================
+        // KONTROL MODAL & OTENTIKASI BARU
+        // ==========================================
+        function bukaAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
+        function tutupAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+
+        function switchAuthTab(tab) {
+            document.getElementById('formLogin').classList.remove('active');
+            document.getElementById('formRegister').classList.remove('active');
+            document.getElementById('tabLogin').classList.remove('active');
+            document.getElementById('tabRegister').classList.remove('active');
+
+            if(tab === 'login') {
+                document.getElementById('formLogin').classList.add('active');
+                document.getElementById('tabLogin').classList.add('active');
+            } else {
+                document.getElementById('formRegister').classList.add('active');
+                document.getElementById('tabRegister').classList.add('active');
+            }
+        }
+
+        // 1. Google Auth (Gmail)
+        function loginDenganGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider);
+            auth.signInWithPopup(provider).then((result) => {
+                simpanMemberKeFirestore(result.user, result.user.displayName);
+                tutupAuthModal();
+            }).catch((error) => {
+                alert("Gagal masuk dengan Google: " + error.message);
+            });
+        }
+
+        // 2. Login Email & Password
+        function loginDenganEmail() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            
+            if(!email || !pass) return alert("Harap isi email dan kata sandi!");
+
+            auth.signInWithEmailAndPassword(email, pass).then(() => {
+                tutupAuthModal();
+            }).catch((error) => {
+                alert("Gagal masuk: Periksa kembali email atau kata sandi Anda.");
+            });
+        }
+
+        // 3. Register Email & Password
+        function daftarDenganEmail() {
+            const nama = document.getElementById('regNama').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const pass = document.getElementById('regPass').value.trim();
+
+            if(!nama || !email || !pass) return alert("Harap lengkapi semua kolom pendaftaran!");
+            if(pass.length < 6) return alert("Kata sandi minimal harus 6 karakter!");
+
+            auth.createUserWithEmailAndPassword(email, pass).then((userCredential) => {
+                const user = userCredential.user;
+                user.updateProfile({ displayName: nama }).then(() => {
+                    simpanMemberKeFirestore(user, nama);
+                    alert("Pendaftaran berhasil!");
+                    tutupAuthModal();
+                });
+            }).catch((error) => {
+                alert("Gagal mendaftar: " + error.message);
+            });
+        }
+
+        // Simpan data otomatis ke koleksi 'members' untuk Super Admin & 'users'
+        function simpanMemberKeFirestore(user, nama) {
+            const displayName = nama || user.displayName || "Member";
+            
+            // Simpan ke collection users
+            db.collection('users').doc(user.uid).set({
+                name: displayName,
+                email: user.email,
+                lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+
+            // Simpan ke collection members agar terpantau di Super Admin
+            const memberRef = db.collection("members").doc(user.uid);
+            memberRef.get().then((doc) => {
+                if (!doc.exists) {
+                    memberRef.set({
+                        name: displayName,
+                        email: user.email,
+                        phone: "-",
+                        city: "-",
+                        isSuspended: false,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            });
         }
 
         auth.onAuthStateChanged(user => {
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
-                navMenu.innerHTML = `<button class="btn-outline" onclick="auth.signOut()" style="border:none;">Keluar Akun</button>`;
+                navMenu.innerHTML = `
+                    <span style="font-size: 0.85rem; margin-right: 15px; color: var(--accent);">${user.email}</span>
+                    <button class="btn-outline" onclick="auth.signOut()" style="border:none;">Keluar</button>
+                `;
                 bukaDasbor(); 
-                db.collection('users').doc(user.uid).set({
-                    name: user.displayName,
-                    email: user.email,
-                    lastLogin: firebase.firestore.FieldValue.serverTimestamp()
-                }, { merge: true });
+                simpanMemberKeFirestore(user, user.displayName);
             } else {
-                navMenu.innerHTML = `<button class="btn-primary" onclick="loginGoogle()">Masuk</button>`;
+                navMenu.innerHTML = `<button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>`;
                 showSection('landingPage');
             }
         });
@@ -475,7 +612,7 @@
         async function muatAcaraSaya() {
             if(!currentUser) return;
             const listDiv = document.getElementById('eventList');
-            listDiv.innerHTML = '<p style="text-align:center; color:#888;">Memuat data...</p>';
+            listDiv.innerHTML = '<p style="text-align:center; color:#888;">Memuat acara...</p>';
 
             try {
                 const snapshot = await db.collection("events").where("ownerId", "==", currentUser.uid).get();
