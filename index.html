@@ -544,14 +544,14 @@
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
                     alert("Akun belum terdaftar. Silakan daftar terlebih dahulu.");
                     switchAuthTab('register');
-                    document.getElementById('regEmail').value = email; // Otomatis mengisi email ke form daftar
+                    document.getElementById('regEmail').value = email;
                 } else {
                     alert("Gagal masuk: " + error.message);
                 }
             });
         }
 
-        // 3. Register Email & Password
+        // 3. Register Email & Password + Kirim Email Verifikasi Otomatis
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -562,11 +562,19 @@
 
             auth.createUserWithEmailAndPassword(email, pass).then((userCredential) => {
                 const user = userCredential.user;
-                user.updateProfile({ displayName: nama }).then(() => {
-                    simpanMemberKeFirestore(user, nama);
-                    alert("Pendaftaran berhasil!");
-                    tutupAuthModal();
+                
+                // Kirim email verifikasi otomatis secara gratis dari Firebase
+                user.sendEmailVerification().then(() => {
+                    user.updateProfile({ displayName: nama }).then(() => {
+                        simpanMemberKeFirestore(user, nama);
+                        alert("Pendaftaran berhasil! Tautan verifikasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.");
+                        tutupAuthModal();
+                        auth.signOut(); // Keluar sementara agar user melakukan verifikasi email terlebih dahulu
+                    });
+                }).catch((err) => {
+                    alert("Gagal mengirim email verifikasi: " + err.message);
                 });
+
             }).catch((error) => {
                 alert("Gagal mendaftar: " + error.message);
             });
