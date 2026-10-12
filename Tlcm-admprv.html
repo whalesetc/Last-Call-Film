@@ -73,7 +73,7 @@
         <div class="header">
             <div>
                 <h1 class="font-serif" style="font-size: 2rem;">Data Pesanan & Member</h1>
-                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, member (pembuat acara), dan status acara pelanggan.</p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, profil member (pembuat acara), dan status acara pelanggan.</p>
             </div>
             <div style="text-align: right;">
                 <p id="adminEmailText" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">thelastcallfilm.co@gmail.com</p>
@@ -95,7 +95,7 @@
                 <div class="val" style="color: var(--accent);" id="statIncome">Rp 0</div>
             </div>
             <div class="stat-card">
-                <h4>Total Member (Pembuat Acara)</h4>
+                <h4>Total Member Terdaftar</h4>
                 <div class="val" id="statTotalMembers">0</div>
             </div>
         </div>
@@ -131,17 +131,17 @@
         <!-- TAB 2: LIST MEMBER -->
         <div id="tabMember" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-serif">Daftar Member (Pembuat Acara)</h3>
+                <h3 class="font-serif">Daftar Member Terdaftar (Profil Pembuat Acara)</h3>
                 <button class="btn-act activate" onclick="bukaModalMember()" style="padding: 10px 16px;">+ Tambah Member Manual</button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>PEMBUAT ACARA / EMAIL</th>
-                            <th>TOTAL ACARA</th>
-                            <th>TOTAL TRANSAKSI</th>
-                            <th>STATUS ACARA TERAKHIR</th>
+                            <th>NAMA & EMAIL MEMBER</th>
+                            <th>NOMOR HP / WHATSAPP</th>
+                            <th>KOTA</th>
+                            <th>STATUS AKUN</th>
                             <th>AKSI</th>
                         </tr>
                     </thead>
@@ -236,6 +236,12 @@
             <label style="font-size: 0.8rem; color: #ccc;">Email Member</label>
             <input type="email" class="modal-input" id="mEmail" placeholder="budi@gmail.com">
 
+            <label style="font-size: 0.8rem; color: #ccc;">No. HP / WhatsApp</label>
+            <input type="tel" class="modal-input" id="mPhone" placeholder="081234567890">
+
+            <label style="font-size: 0.8rem; color: #ccc;">Kota</label>
+            <input type="text" class="modal-input" id="mCity" placeholder="Jakarta Selatan">
+
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                 <button class="btn-act" onclick="tutupModalMember()" style="background: rgba(255,255,255,0.1); color: #fff;">Batal</button>
                 <button class="btn-act activate" onclick="simpanMemberBaru()">Simpan Member</button>
@@ -256,7 +262,6 @@
         const db = firebase.firestore();
 
         let allEvents = [];
-        let manualMembers = [];
 
         window.onload = async () => {
             muatDataRealtime();
@@ -269,7 +274,6 @@
             btn.classList.add('active');
         }
 
-        // FUNGSI MEMBACA BADGE STATUS SECARA FLEKSIBEL
         function getStatusBadge(status) {
             if (!status) return `<span class="badge badge-pending">Menunggu</span>`;
             let s = status.toString().toLowerCase();
@@ -283,8 +287,8 @@
             }
         }
 
-        // AMBIL DATA DENGAN REALTIME LISTENER
         function muatDataRealtime() {
+            // Realtime Listener untuk Events
             db.collection("events").onSnapshot(snap => {
                 allEvents = [];
                 let totalPendapatan = 0;
@@ -307,20 +311,44 @@
                 document.getElementById('statIncome').innerText = "Rp " + totalPendapatan.toLocaleString('id-ID');
 
                 rendertabOrderan();
-                rendertabMembers();
                 rendertabAktif();
                 rendertabNonaktif();
                 rendertabSoon();
             });
 
+            // Realtime Listener untuk List Member
             db.collection("members").onSnapshot(snap => {
-                manualMembers = [];
+                const tbody = document.getElementById('tbodyMember');
+                tbody.innerHTML = '';
+                let count = 0;
+
                 snap.forEach(doc => {
-                    let d = doc.data();
-                    d.id = doc.id;
-                    manualMembers.push(d);
+                    let m = doc.data();
+                    count++;
+
+                    let nama = m.name || 'Member Tanpa Nama';
+                    let email = m.email || '-';
+                    let noHp = m.phone ? `<a href="https://wa.me/${m.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color:var(--accent); text-decoration:none;">${m.phone}</a>` : '-';
+                    let kota = m.city || '-';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b>${nama}</b><br><span style="color:#888;">${email}</span></td>
+                            <td>${noHp}</td>
+                            <td>${kota}</td>
+                            <td><span class="badge badge-active">Terdaftar</span></td>
+                            <td>
+                                <button class="btn-act delete" onclick="hapusMemberManual('${doc.id}')">Hapus Member</button>
+                            </td>
+                        </tr>
+                    `;
                 });
-                rendertabMembers();
+
+                document.getElementById('statTotalMembers').innerText = count;
+
+                if (count === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member yang terdaftar/login.</td></tr>';
+                }
             });
         }
 
@@ -352,65 +380,6 @@
                                 <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
                             </div>
                         </td>
-                    </tr>
-                `;
-            });
-        }
-
-        function rendertabMembers() {
-            const tbody = document.getElementById('tbodyMember');
-            tbody.innerHTML = '';
-
-            let memberMap = {};
-
-            allEvents.forEach(e => {
-                let email = e.userEmail || (e.eventName ? `${e.eventName.replace(/\s+/g, '').toLowerCase()}@custom.com` : 'Pembuat Acara');
-                if(!memberMap[email]) {
-                    memberMap[email] = {
-                        name: e.eventName || 'Pemesan',
-                        email: email,
-                        totalEvents: 0,
-                        totalSpent: 0,
-                        lastStatus: e.status
-                    };
-                }
-                memberMap[email].totalEvents += 1;
-                memberMap[email].totalSpent += (parseInt(e.price) || 0);
-                memberMap[email].lastStatus = e.status;
-            });
-
-            manualMembers.forEach(m => {
-                if(!memberMap[m.email]) {
-                    memberMap[m.email] = {
-                        name: m.name || 'Member',
-                        email: m.email,
-                        totalEvents: 0,
-                        totalSpent: 0,
-                        lastStatus: 'active',
-                        isManualId: m.id
-                    };
-                }
-            });
-
-            let memberList = Object.values(memberMap);
-            document.getElementById('statTotalMembers').innerText = memberList.length;
-
-            if(memberList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member/pembuat acara.</td></tr>';
-                return;
-            }
-
-            memberList.forEach(m => {
-                let statusBadge = getStatusBadge(m.lastStatus);
-                let btnHapus = m.isManualId ? `<button class="btn-act delete" onclick="hapusMemberManual('${m.isManualId}')">Hapus Member</button>` : `<span style="color:#666; font-size:0.75rem;">Pembuat Acara Aktif</span>`;
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td><b>${m.name}</b><br><span style="color:#888;">${m.email}</span></td>
-                        <td>${m.totalEvents} Acara</td>
-                        <td><b style="color:var(--accent);">Rp ${m.totalSpent.toLocaleString('id-ID')}</b></td>
-                        <td>${statusBadge}</td>
-                        <td>${btnHapus}</td>
                     </tr>
                 `;
             });
@@ -511,9 +480,7 @@
 
         async function ubahStatusOrder(id, statusBaru) {
             try {
-                await db.collection("events").doc(id).update({ 
-                    status: statusBaru 
-                });
+                await db.collection("events").doc(id).update({ status: statusBaru });
             } catch(e) {
                 console.error("Gagal ubah status:", e);
                 alert("Gagal memperbarui status. Pastikan koneksi aman.");
@@ -535,21 +502,28 @@
         async function simpanMemberBaru() {
             const nama = document.getElementById('mNama').value.trim();
             const email = document.getElementById('mEmail').value.trim();
+            const phone = document.getElementById('mPhone').value.trim();
+            const city = document.getElementById('mCity').value.trim();
+
             if(!nama || !email) return alert("Isi nama dan email member!");
 
             await db.collection("members").add({
                 name: nama,
                 email: email,
+                phone: phone,
+                city: city,
                 createdAt: firebase.firestore.FieldValue.serverTimestamp()
             });
 
             tutupModalMember();
             document.getElementById('mNama').value = '';
             document.getElementById('mEmail').value = '';
+            document.getElementById('mPhone').value = '';
+            document.getElementById('mCity').value = '';
         }
 
         async function hapusMemberManual(id) {
-            if(!confirm("Yakin ingin menghapus member manual ini?")) return;
+            if(!confirm("Yakin ingin menghapus member ini?")) return;
             await db.collection("members").doc(id).delete();
         }
 
