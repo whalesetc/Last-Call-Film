@@ -41,6 +41,10 @@
         th { background: rgba(255,255,255,0.05); padding: 15px; border-bottom: 1px solid var(--border); color: rgba(255,255,255,0.6); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
         td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; }
 
+        /* Interactive Event Title */
+        .clickable-title { color: #fff; text-decoration: none; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .clickable-title:hover { color: var(--accent); text-decoration: underline; }
+
         /* Status Badge */
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; display: inline-block; }
         .badge-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }
@@ -54,10 +58,13 @@
         .btn-act.cancel { background: var(--warning); color: #000; }
         .btn-act.delete { background: var(--danger); color: #fff; }
 
-        /* Modal */
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 999; justify-content: center; align-items: center; }
-        .modal-content { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 12px; width: 90%; max-width: 400px; padding: 25px; }
-        .modal-content input { width: 100%; padding: 12px; margin: 10px 0 15px 0; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; outline: none; }
+        /* Modal Details & Member */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
+        .modal-content { background: var(--bg-dark); border: 1px solid var(--border); border-radius: 16px; width: 100%; max-width: 480px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .modal-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 0.9rem; }
+        .modal-row span:first-child { color: rgba(255,255,255,0.6); }
+        .modal-row span:last-child { font-weight: 600; text-align: right; }
+        .modal-input { width: 100%; padding: 12px; margin: 10px 0 15px 0; border-radius: 8px; border: 1px solid var(--border); background: rgba(255,255,255,0.05); color: #fff; outline: none; }
     </style>
 </head>
 <body>
@@ -66,7 +73,7 @@
         <div class="header">
             <div>
                 <h1 class="font-serif" style="font-size: 2rem;">Data Pesanan & Member</h1>
-                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, member, dan status acara pelanggan.</p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, member (pembuat acara), dan status acara pelanggan.</p>
             </div>
             <div style="text-align: right;">
                 <p id="adminEmailText" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">thelastcallfilm.co@gmail.com</p>
@@ -88,7 +95,7 @@
                 <div class="val" style="color: var(--accent);" id="statIncome">Rp 0</div>
             </div>
             <div class="stat-card">
-                <h4>Total Member Terdaftar</h4>
+                <h4>Total Member (Pembuat Acara)</h4>
                 <div class="val" id="statTotalMembers">0</div>
             </div>
         </div>
@@ -109,7 +116,7 @@
                     <thead>
                         <tr>
                             <th>TGL PEMESANAN</th>
-                            <th>DETAIL ACARA</th>
+                            <th>DETAIL ACARA (KLIK UNTUK DETAIL)</th>
                             <th>PEMESAN (EMAIL)</th>
                             <th>TAGIHAN / PAKET</th>
                             <th>STATUS</th>
@@ -124,17 +131,17 @@
         <!-- TAB 2: LIST MEMBER -->
         <div id="tabMember" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-serif">Daftar Member Terdaftar</h3>
-                <button class="btn-act activate" onclick="bukaModalMember()" style="padding: 10px 16px;">+ Tambah Member</button>
+                <h3 class="font-serif">Daftar Member (Pembuat Acara)</h3>
+                <button class="btn-act activate" onclick="bukaModalMember()" style="padding: 10px 16px;">+ Tambah Member Manual</button>
             </div>
             <div class="table-container">
                 <table>
                     <thead>
                         <tr>
-                            <th>TANGGAL GABUNG</th>
-                            <th>NAMA MEMBER</th>
-                            <th>EMAIL</th>
+                            <th>PEMBUAT ACARA / EMAIL</th>
+                            <th>TOTAL ACARA</th>
                             <th>TOTAL TRANSAKSI</th>
+                            <th>STATUS ACARA TERAKHIR</th>
                             <th>AKSI</th>
                         </tr>
                     </thead>
@@ -196,15 +203,38 @@
         </div>
     </div>
 
-    <!-- MODAL TAMBAH MEMBER -->
+    <!-- MODAL RINCIAN PESANAN (RINCIAN ACARA) -->
+    <div class="modal" id="modalDetail">
+        <div class="modal-content">
+            <h3 class="font-serif" style="margin-bottom: 20px; font-size: 1.4rem;" id="detTitle">Rincian Pesanan</h3>
+            <div class="modal-row"><span>Nama Acara</span><span id="detEventName">-</span></div>
+            <div class="modal-row"><span>Tipe Acara</span><span id="detEventType">-</span></div>
+            <div class="modal-row"><span>Tanggal Acara</span><span id="detEventDate">-</span></div>
+            <div class="modal-row"><span>Email Pemesan</span><span id="detUserEmail">-</span></div>
+            <div class="modal-row"><span>Paket Foto</span><span id="detLimit">-</span></div>
+            <div class="modal-row"><span>Harga / Tagihan</span><span id="detPrice">-</span></div>
+            <div class="modal-row"><span>Status Pesanan</span><span id="detStatus">-</span></div>
+            <div class="modal-row"><span>Tanggal Order</span><span id="detCreatedAt">-</span></div>
+            <div class="modal-row" style="border-bottom: none; flex-direction: column; gap: 6px; margin-top: 10px;">
+                <span style="color:#ccc;">Link Kamera Tamu:</span>
+                <a id="detCameraUrl" href="#" target="_blank" style="color: var(--accent); font-size: 0.8rem; word-break: break-all;">-</a>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn-act" onclick="tutupModalDetail()" style="background: rgba(255,255,255,0.1); color: #fff; padding: 10px 20px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH MEMBER MANUAL -->
     <div class="modal" id="modalMember">
         <div class="modal-content">
             <h3 class="font-serif" style="margin-bottom: 15px;">Tambah Member Baru</h3>
-            <label style="font-size: 0.8rem; color: #ccc;">Nama Member</label>
-            <input type="text" id="mNama" placeholder="Contoh: Budi Santoso">
+            <label style="font-size: 0.8rem; color: #ccc;">Nama Member / Pemesan</label>
+            <input type="text" class="modal-input" id="mNama" placeholder="Contoh: Budi Santoso">
             
             <label style="font-size: 0.8rem; color: #ccc;">Email Member</label>
-            <input type="email" id="mEmail" placeholder="budi@gmail.com">
+            <input type="email" class="modal-input" id="mEmail" placeholder="budi@gmail.com">
 
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 10px;">
                 <button class="btn-act" onclick="tutupModalMember()" style="background: rgba(255,255,255,0.1); color: #fff;">Batal</button>
@@ -226,11 +256,10 @@
         const db = firebase.firestore();
 
         let allEvents = [];
-        let allMembers = [];
+        let manualMembers = [];
 
         window.onload = async () => {
-            muatDataEvents();
-            muatDataMembers();
+            muatDataRealtime();
         };
 
         function bukaTab(tabId, btn) {
@@ -240,9 +269,9 @@
             btn.classList.add('active');
         }
 
-        async function muatDataEvents() {
-            try {
-                const snap = await db.collection("events").get();
+        // AMBIL DATA DENGAN REALTIME LISTENER (Otomatis terupdate begitu ada order/member baru)
+        function muatDataRealtime() {
+            db.collection("events").onSnapshot(snap => {
                 allEvents = [];
                 let totalPendapatan = 0;
                 let pendingCount = 0;
@@ -263,12 +292,22 @@
                 document.getElementById('statIncome').innerText = "Rp " + totalPendapatan.toLocaleString('id-ID');
 
                 rendertabOrderan();
+                rendertabMembers();
                 rendertabAktif();
                 rendertabNonaktif();
                 rendertabSoon();
-            } catch(e) {
-                console.error("Gagal muat data events", e);
-            }
+            });
+
+            // Listener tambahan jika ada penambahan member manual
+            db.collection("members").onSnapshot(snap => {
+                manualMembers = [];
+                snap.forEach(doc => {
+                    let d = doc.data();
+                    d.id = doc.id;
+                    manualMembers.push(d);
+                });
+                rendertabMembers();
+            });
         }
 
         function rendertabOrderan() {
@@ -279,11 +318,15 @@
                 let statusBadge = getStatusBadge(e.status);
                 let priceText = (e.price && parseInt(e.price) > 0) ? `Rp ${parseInt(e.price).toLocaleString('id-ID')}` : 'Gratis';
                 let dateStr = e.createdAt ? new Date(e.createdAt.toMillis()).toLocaleString('id-ID') : '-';
+                let pemesanName = e.eventName || 'Pemesan';
 
                 tbody.innerHTML += `
                     <tr>
                         <td>${dateStr}</td>
-                        <td><b>${e.eventName || '-'}</b><br><span style="color:#888;">${e.eventType || ''} (Tgl: ${e.eventDate || '-'})</span></td>
+                        <td>
+                            <a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${pemesanName}</a><br>
+                            <span style="color:#888;">${e.eventType || ''} (Tgl: ${e.eventDate || '-'})</span>
+                        </td>
                         <td>${e.userEmail || '-'}</td>
                         <td><b>${priceText}</b><br><span style="color:#888;">Paket: ${e.guestPhotoLimit || 15} Foto</span></td>
                         <td>${statusBadge}</td>
@@ -299,6 +342,68 @@
             });
         }
 
+        // OTOMATIS MENAMPILKAN MEMBER DARI PEMBUAT ACARA (TANPA CAMPUR DATA TAMU)
+        function rendertabMembers() {
+            const tbody = document.getElementById('tbodyMember');
+            tbody.innerHTML = '';
+
+            let memberMap = {};
+
+            // 1. Ekstrak otomatis dari seluruh data pembuat acara
+            allEvents.forEach(e => {
+                let email = e.userEmail || (e.eventName ? `${e.eventName.replace(/\s+/g, '').toLowerCase()}@custom.com` : 'Pembuat Acara');
+                if(!memberMap[email]) {
+                    memberMap[email] = {
+                        name: e.eventName || 'Pemesan',
+                        email: email,
+                        totalEvents: 0,
+                        totalSpent: 0,
+                        lastStatus: e.status
+                    };
+                }
+                memberMap[email].totalEvents += 1;
+                memberMap[email].totalSpent += (parseInt(e.price) || 0);
+                memberMap[email].lastStatus = e.status;
+            });
+
+            // 2. Gabungkan dengan member manual jika ada
+            manualMembers.forEach(m => {
+                if(!memberMap[m.email]) {
+                    memberMap[m.email] = {
+                        name: m.name || 'Member',
+                        email: m.email,
+                        totalEvents: 0,
+                        totalSpent: 0,
+                        lastStatus: 'active',
+                        isManualId: m.id
+                    };
+                }
+            });
+
+            let memberList = Object.values(memberMap);
+            document.getElementById('statTotalMembers').innerText = memberList.length;
+
+            if(memberList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member/pembuat acara.</td></tr>';
+                return;
+            }
+
+            memberList.forEach(m => {
+                let statusBadge = getStatusBadge(m.lastStatus);
+                let btnHapus = m.isManualId ? `<button class="btn-act delete" onclick="hapusMemberManual('${m.isManualId}')">Hapus Member</button>` : `<span style="color:#666; font-size:0.75rem;">Pembuat Acara Aktif</span>`;
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${m.name}</b><br><span style="color:#888;">${m.email}</span></td>
+                        <td>${m.totalEvents} Acara</td>
+                        <td><b style="color:var(--accent);">Rp ${m.totalSpent.toLocaleString('id-ID')}</b></td>
+                        <td>${statusBadge}</td>
+                        <td>${btnHapus}</td>
+                    </tr>
+                `;
+            });
+        }
+
         function rendertabAktif() {
             const tbody = document.getElementById('tbodyAktif');
             tbody.innerHTML = '';
@@ -309,7 +414,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${e.eventDate || '-'}</td>
-                        <td><b>${e.eventName}</b></td>
+                        <td><a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${e.eventName}</a></td>
                         <td>${e.userEmail || '-'}</td>
                         <td><span class="badge badge-active">Aktif</span></td>
                     </tr>
@@ -327,7 +432,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${e.eventDate || '-'}</td>
-                        <td><b>${e.eventName}</b></td>
+                        <td><a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${e.eventName}</a></td>
                         <td>${e.userEmail || '-'}</td>
                         <td><span class="badge badge-inactive">Nonaktif</span></td>
                     </tr>
@@ -346,7 +451,7 @@
                 tbody.innerHTML += `
                     <tr>
                         <td>${e.eventDate || '-'}</td>
-                        <td><b>${e.eventName}</b></td>
+                        <td><a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${e.eventName}</a></td>
                         <td>${e.userEmail || '-'}</td>
                         <td>${priceText}</td>
                         <td>${getStatusBadge(e.status)}</td>
@@ -355,57 +460,46 @@
             });
         }
 
-        async function muatDataMembers() {
-            try {
-                const snap = await db.collection("members").get();
-                allMembers = [];
-                snap.forEach(doc => {
-                    let d = doc.data();
-                    d.id = doc.id;
-                    allMembers.push(d);
-                });
-
-                document.getElementById('statTotalMembers').innerText = allMembers.length;
-                const tbody = document.getElementById('tbodyMember');
-                tbody.innerHTML = '';
-
-                allMembers.forEach(m => {
-                    let totalPemasukanMember = allEvents.filter(e => e.userEmail === m.email).reduce((acc, curr) => acc + (parseInt(curr.price) || 0), 0);
-                    let joinDate = m.createdAt ? new Date(m.createdAt.toMillis()).toLocaleDateString('id-ID') : '-';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td>${joinDate}</td>
-                            <td><b>${m.name || 'Member'}</b></td>
-                            <td>${m.email}</td>
-                            <td><b style="color:var(--accent);">Rp ${totalPemasukanMember.toLocaleString('id-ID')}</b></td>
-                            <td>
-                                <button class="btn-act delete" onclick="hapusMember('${m.id}')">Hapus Member</button>
-                            </td>
-                        </tr>
-                    `;
-                });
-            } catch(e) {
-                console.error("Gagal muat members", e);
-            }
-        }
-
         function getStatusBadge(status) {
             if(status === 'active') return `<span class="badge badge-active">Aktif</span>`;
             if(status === 'inactive') return `<span class="badge badge-inactive">Nonaktif</span>`;
             return `<span class="badge badge-pending">Menunggu</span>`;
         }
 
+        // FUNGSI MEMBUKA MODAL RINCIAN PESANAN
+        function bukaModalDetail(id) {
+            const ev = allEvents.find(e => e.id === id);
+            if(!ev) return;
+
+            document.getElementById('detEventName').innerText = ev.eventName || '-';
+            document.getElementById('detEventType').innerText = ev.eventType || '-';
+            document.getElementById('detEventDate').innerText = ev.eventDate || '-';
+            document.getElementById('detUserEmail').innerText = ev.userEmail || '-';
+            document.getElementById('detLimit').innerText = (ev.guestPhotoLimit || 15) + " Foto / Tamu";
+            document.getElementById('detPrice').innerText = (ev.price && parseInt(ev.price) > 0) ? `Rp ${parseInt(ev.price).toLocaleString('id-ID')}` : 'Gratis';
+            document.getElementById('detStatus').innerHTML = getStatusBadge(ev.status);
+            document.getElementById('detCreatedAt').innerText = ev.createdAt ? new Date(ev.createdAt.toMillis()).toLocaleString('id-ID') : '-';
+            
+            const cameraUrl = `https://thelastcallfilm.my.id/camera.html?event=${ev.id}`;
+            const linkElem = document.getElementById('detCameraUrl');
+            linkElem.innerText = cameraUrl;
+            linkElem.href = cameraUrl;
+
+            document.getElementById('modalDetail').style.display = 'flex';
+        }
+
+        function tutupModalDetail() {
+            document.getElementById('modalDetail').style.display = 'none';
+        }
+
         async function ubahStatusOrder(id, statusBaru) {
             if(!confirm(`Ubah status pesanan ini menjadi ${statusBaru}?`)) return;
             await db.collection("events").doc(id).update({ status: statusBaru });
-            muatDataEvents();
         }
 
         async function hapusOrder(id) {
             if(!confirm("Yakin ingin menghapus pesanan ini secara permanen?")) return;
             await db.collection("events").doc(id).delete();
-            muatDataEvents();
         }
 
         function bukaModalMember() { document.getElementById('modalMember').style.display = 'flex'; }
@@ -425,13 +519,11 @@
             tutupModalMember();
             document.getElementById('mNama').value = '';
             document.getElementById('mEmail').value = '';
-            muatDataMembers();
         }
 
-        async function hapusMember(id) {
-            if(!confirm("Yakin ingin menghapus member ini?")) return;
+        async function hapusMemberManual(id) {
+            if(!confirm("Yakin ingin menghapus member manual ini?")) return;
             await db.collection("members").doc(id).delete();
-            muatDataMembers();
         }
 
         function keluarAdmin() {
