@@ -571,7 +571,7 @@
             });
         }
 
-        // 2. Login Email & Password (Wajib Verifikasi Email)
+        // 2. Login Email & Password (Wajib Verifikasi & Cek Suspend)
         function loginDenganEmail() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -580,13 +580,26 @@
 
             auth.signInWithEmailAndPassword(email, pass).then((userCredential) => {
                 const user = userCredential.user;
-                // Cek apakah email sudah diverifikasi
-                if (!user.emailVerified) {
-                    alert("Akun belum diverifikasi! Silakan cek kotak masuk email Anda dan klik tautan verifikasi terlebih dahulu.");
-                    auth.signOut();
-                    return;
-                }
-                tutupAuthModal();
+                
+                // Cek status suspend di collection members
+                db.collection('members').doc(user.uid).get().then(doc => {
+                    if (doc.exists && doc.data().isSuspended === true) {
+                        alert("Akun Anda telah ditangguhkan (suspend). Silakan hubungi admin.");
+                        auth.signOut();
+                        tutupAuthModal();
+                        return;
+                    }
+
+                    // Cek verifikasi email
+                    if (!user.emailVerified) {
+                        alert("Akun belum diverifikasi! Silakan cek kotak masuk email Anda dan klik tautan verifikasi terlebih dahulu.");
+                        auth.signOut();
+                        return;
+                    }
+
+                    tutupAuthModal();
+                });
+
             }).catch((error) => {
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
                     alert("Akun belum terdaftar. Silakan daftar terlebih dahulu.");
@@ -598,7 +611,7 @@
             });
         }
 
-        // 3. Register Email & Password + Kirim Verifikasi
+        // 3. Register Email & Password (Mulus menangani email yang sudah terdaftar di auth)
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -622,7 +635,13 @@
                 });
 
             }).catch((error) => {
-                alert("Gagal mendaftar: " + error.message);
+                if (error.code === 'auth/email-already-in-use') {
+                    alert("Email ini sudah terdaftar sebelumnya. Silakan masuk (login) menggunakan kata sandi Anda.");
+                    switchAuthTab('login');
+                    document.getElementById('loginEmail').value = email;
+                } else {
+                    alert("Gagal mendaftar: " + error.message);
+                }
             });
         }
 
@@ -683,16 +702,24 @@
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
-                // Tampilkan Ikon Profil di Kanan Atas
-                const initial = (user.displayName || user.email || "M").charAt(0).toUpperCase();
-                navMenu.innerHTML = `
-                    <div class="profile-btn" onclick="bukaProfileModal()">
-                        <div class="profile-icon">${initial}</div>
-                        <span style="font-size: 0.85rem; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.displayName || user.email}</span>
-                    </div>
-                `;
-                bukaDasbor(); 
-                simpanMemberKeFirestore(user, user.displayName);
+                // Cek status suspend secara realtime saat login
+                db.collection('members').doc(user.uid).get().then(doc => {
+                    if (doc.exists && doc.data().isSuspended === true) {
+                        alert("Akun Anda telah ditangguhkan (suspend).");
+                        auth.signOut();
+                        return;
+                    }
+
+                    const initial = (user.displayName || user.email || "M").charAt(0).toUpperCase();
+                    navMenu.innerHTML = `
+                        <div class="profile-btn" onclick="bukaProfileModal()">
+                            <div class="profile-icon">${initial}</div>
+                            <span style="font-size: 0.85rem; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.displayName || user.email}</span>
+                        </div>
+                    `;
+                    bukaDasbor(); 
+                    simpanMemberKeFirestore(user, user.displayName);
+                });
             } else {
                 navMenu.innerHTML = `<button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>`;
                 showSection('landingPage');
