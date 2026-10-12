@@ -531,7 +531,7 @@
             });
         }
 
-        // 2. Login Email & Password
+        // 2. Login Email & Password (Dengan deteksi akun belum terdaftar)
         function loginDenganEmail() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -541,7 +541,13 @@
             auth.signInWithEmailAndPassword(email, pass).then(() => {
                 tutupAuthModal();
             }).catch((error) => {
-                alert("Gagal masuk: Periksa kembali email atau kata sandi Anda.");
+                if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                    alert("Akun belum terdaftar. Silakan daftar terlebih dahulu.");
+                    switchAuthTab('register');
+                    document.getElementById('regEmail').value = email; // Otomatis mengisi email ke form daftar
+                } else {
+                    alert("Gagal masuk: " + error.message);
+                }
             });
         }
 
@@ -570,14 +576,12 @@
         function simpanMemberKeFirestore(user, nama) {
             const displayName = nama || user.displayName || "Member";
             
-            // Simpan ke collection users
             db.collection('users').doc(user.uid).set({
                 name: displayName,
                 email: user.email,
                 lastLogin: firebase.firestore.FieldValue.serverTimestamp()
             }, { merge: true });
 
-            // Simpan ke collection members agar terpantau di Super Admin
             const memberRef = db.collection("members").doc(user.uid);
             memberRef.get().then((doc) => {
                 if (!doc.exists) {
