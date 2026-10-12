@@ -269,7 +269,21 @@
             btn.classList.add('active');
         }
 
-        // AMBIL DATA DENGAN REALTIME LISTENER (Otomatis terupdate begitu ada order/member baru)
+        // FUNGSI MEMBACA BADGE STATUS SECARA FLEKSIBEL
+        function getStatusBadge(status) {
+            if (!status) return `<span class="badge badge-pending">Menunggu</span>`;
+            let s = status.toString().toLowerCase();
+            
+            if (s === 'active' || s === 'aktif') {
+                return `<span class="badge badge-active">Aktif</span>`;
+            } else if (s === 'inactive' || s === 'nonaktif' || s === 'batal') {
+                return `<span class="badge badge-inactive">Nonaktif</span>`;
+            } else {
+                return `<span class="badge badge-pending">Menunggu</span>`;
+            }
+        }
+
+        // AMBIL DATA DENGAN REALTIME LISTENER
         function muatDataRealtime() {
             db.collection("events").onSnapshot(snap => {
                 allEvents = [];
@@ -284,7 +298,8 @@
                     let harga = parseInt(d.price) || 0;
                     totalPendapatan += harga;
 
-                    if(d.status === 'pending' || d.status === 'Menunggu') pendingCount++;
+                    let st = (d.status || '').toString().toLowerCase();
+                    if(st === 'pending' || st === 'menunggu' || st === '') pendingCount++;
                 });
 
                 document.getElementById('statTotalEvents').innerText = allEvents.length;
@@ -298,7 +313,6 @@
                 rendertabSoon();
             });
 
-            // Listener tambahan jika ada penambahan member manual
             db.collection("members").onSnapshot(snap => {
                 manualMembers = [];
                 snap.forEach(doc => {
@@ -319,6 +333,7 @@
                 let priceText = (e.price && parseInt(e.price) > 0) ? `Rp ${parseInt(e.price).toLocaleString('id-ID')}` : 'Gratis';
                 let dateStr = e.createdAt ? new Date(e.createdAt.toMillis()).toLocaleString('id-ID') : '-';
                 let pemesanName = e.eventName || 'Pemesan';
+                let st = (e.status || '').toString().toLowerCase();
 
                 tbody.innerHTML += `
                     <tr>
@@ -332,8 +347,8 @@
                         <td>${statusBadge}</td>
                         <td>
                             <div class="btn-group">
-                                ${e.status !== 'active' ? `<button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan QR</button>` : ''}
-                                ${e.status !== 'inactive' ? `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Batalkan</button>` : ''}
+                                ${(st !== 'active' && st !== 'aktif') ? `<button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan QR</button>` : ''}
+                                ${(st !== 'inactive' && st !== 'nonaktif') ? `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Batalkan</button>` : ''}
                                 <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
                             </div>
                         </td>
@@ -342,14 +357,12 @@
             });
         }
 
-        // OTOMATIS MENAMPILKAN MEMBER DARI PEMBUAT ACARA (TANPA CAMPUR DATA TAMU)
         function rendertabMembers() {
             const tbody = document.getElementById('tbodyMember');
             tbody.innerHTML = '';
 
             let memberMap = {};
 
-            // 1. Ekstrak otomatis dari seluruh data pembuat acara
             allEvents.forEach(e => {
                 let email = e.userEmail || (e.eventName ? `${e.eventName.replace(/\s+/g, '').toLowerCase()}@custom.com` : 'Pembuat Acara');
                 if(!memberMap[email]) {
@@ -366,7 +379,6 @@
                 memberMap[email].lastStatus = e.status;
             });
 
-            // 2. Gabungkan dengan member manual jika ada
             manualMembers.forEach(m => {
                 if(!memberMap[m.email]) {
                     memberMap[m.email] = {
@@ -409,7 +421,11 @@
             tbody.innerHTML = '';
             const today = new Date().toISOString().split('T')[0];
 
-            let activeEvents = allEvents.filter(e => e.status === 'active' && (e.eventDate >= today || !e.eventDate));
+            let activeEvents = allEvents.filter(e => {
+                let st = (e.status || '').toString().toLowerCase();
+                return (st === 'active' || st === 'aktif') && (e.eventDate >= today || !e.eventDate);
+            });
+
             activeEvents.forEach(e => {
                 tbody.innerHTML += `
                     <tr>
@@ -427,7 +443,11 @@
             tbody.innerHTML = '';
             const today = new Date().toISOString().split('T')[0];
 
-            let inactiveEvents = allEvents.filter(e => e.status === 'inactive' || (e.eventDate < today && e.eventDate));
+            let inactiveEvents = allEvents.filter(e => {
+                let st = (e.status || '').toString().toLowerCase();
+                return (st === 'inactive' || st === 'nonaktif' || st === 'batal') || (e.eventDate < today && e.eventDate);
+            });
+
             inactiveEvents.forEach(e => {
                 tbody.innerHTML += `
                     <tr>
@@ -445,7 +465,11 @@
             tbody.innerHTML = '';
             const today = new Date().toISOString().split('T')[0];
 
-            let soonEvents = allEvents.filter(e => e.eventDate >= today && e.status !== 'inactive');
+            let soonEvents = allEvents.filter(e => {
+                let st = (e.status || '').toString().toLowerCase();
+                return e.eventDate >= today && st !== 'inactive' && st !== 'nonaktif';
+            });
+
             soonEvents.forEach(e => {
                 let priceText = (e.price && parseInt(e.price) > 0) ? `Rp ${parseInt(e.price).toLocaleString('id-ID')}` : 'Gratis';
                 tbody.innerHTML += `
@@ -460,13 +484,6 @@
             });
         }
 
-        function getStatusBadge(status) {
-            if(status === 'active') return `<span class="badge badge-active">Aktif</span>`;
-            if(status === 'inactive') return `<span class="badge badge-inactive">Nonaktif</span>`;
-            return `<span class="badge badge-pending">Menunggu</span>`;
-        }
-
-        // FUNGSI MEMBUKA MODAL RINCIAN PESANAN
         function bukaModalDetail(id) {
             const ev = allEvents.find(e => e.id === id);
             if(!ev) return;
@@ -493,13 +510,23 @@
         }
 
         async function ubahStatusOrder(id, statusBaru) {
-            if(!confirm(`Ubah status pesanan ini menjadi ${statusBaru}?`)) return;
-            await db.collection("events").doc(id).update({ status: statusBaru });
+            try {
+                await db.collection("events").doc(id).update({ 
+                    status: statusBaru 
+                });
+            } catch(e) {
+                console.error("Gagal ubah status:", e);
+                alert("Gagal memperbarui status. Pastikan koneksi aman.");
+            }
         }
 
         async function hapusOrder(id) {
             if(!confirm("Yakin ingin menghapus pesanan ini secara permanen?")) return;
-            await db.collection("events").doc(id).delete();
+            try {
+                await db.collection("events").doc(id).delete();
+            } catch(e) {
+                alert("Gagal menghapus pesanan.");
+            }
         }
 
         function bukaModalMember() { document.getElementById('modalMember').style.display = 'flex'; }
