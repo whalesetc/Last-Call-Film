@@ -27,6 +27,11 @@
         .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-wa:hover { background: #20ba59; }
 
+        /* Profile Nav Button */
+        .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #fff; transition: 0.2s; }
+        .profile-btn:hover { background: rgba(255,255,255,0.1); }
+        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+
         /* Sections */
         .section { display: none; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
         .active-section { display: block; }
@@ -76,7 +81,7 @@
         .bank-name { font-weight: 700; font-size: 1rem; color: #fff;}
         .bank-acc { font-family: monospace; font-size: 1.2rem; color: var(--accent); margin: 4px 0;}
 
-        /* Auth Modal Styling */
+        /* Auth Modal & Profile Modal Styling */
         .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 400px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
         .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
@@ -374,6 +379,29 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT PROFIL -->
+    <div class="auth-modal" id="profileModal">
+        <div class="auth-box">
+            <span class="auth-close" onclick="tutupProfileModal()">✖</span>
+            <h3 class="font-serif" style="font-size: 1.5rem; margin-bottom: 20px;">Edit Profil Saya</h3>
+            
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem;">Nama Lengkap</label>
+                <input type="text" id="profileName" class="auth-input">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="font-size: 0.85rem;">Nomor WhatsApp / HP</label>
+                <input type="text" id="profilePhone" class="auth-input" placeholder="Contoh: 08123456789">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="font-size: 0.85rem;">Kota Domisili</label>
+                <input type="text" id="profileCity" class="auth-input" placeholder="Contoh: Jakarta">
+            </div>
+            <button class="auth-btn btn-primary" onclick="simpanProfil()" style="width:100%;">Simpan Perubahan</button>
+            <button class="auth-btn" onclick="keluarAkun()" style="width:100%; background:rgba(239, 68, 68, 0.2); color:#ef4444; border:1px solid #ef4444; margin-top:10px;">Keluar Akun</button>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
@@ -500,10 +528,22 @@
         }
 
         // ==========================================
-        // KONTROL MODAL & OTENTIKASI BARU
+        // KONTROL MODAL & OTENTIKASI
         // ==========================================
         function bukaAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
         function tutupAuthModal() { document.getElementById('authModal').style.display = 'none'; }
+        function bukaProfileModal() { 
+            if(!currentUser) return;
+            document.getElementById('profileName').value = currentUser.displayName || "";
+            db.collection('members').doc(currentUser.uid).get().then(doc => {
+                if(doc.exists) {
+                    document.getElementById('profilePhone').value = doc.data().phone || "";
+                    document.getElementById('profileCity').value = doc.data().city || "";
+                }
+            });
+            document.getElementById('profileModal').style.display = 'flex'; 
+        }
+        function tutupProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
 
         function switchAuthTab(tab) {
             document.getElementById('formLogin').classList.remove('active');
@@ -531,14 +571,21 @@
             });
         }
 
-        // 2. Login Email & Password (Dengan deteksi akun belum terdaftar)
+        // 2. Login Email & Password (Wajib Verifikasi Email)
         function loginDenganEmail() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
             
             if(!email || !pass) return alert("Harap isi email dan kata sandi!");
 
-            auth.signInWithEmailAndPassword(email, pass).then(() => {
+            auth.signInWithEmailAndPassword(email, pass).then((userCredential) => {
+                const user = userCredential.user;
+                // Cek apakah email sudah diverifikasi
+                if (!user.emailVerified) {
+                    alert("Akun belum diverifikasi! Silakan cek kotak masuk email Anda dan klik tautan verifikasi terlebih dahulu.");
+                    auth.signOut();
+                    return;
+                }
                 tutupAuthModal();
             }).catch((error) => {
                 if (error.code === 'auth/user-not-found' || error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
@@ -551,7 +598,7 @@
             });
         }
 
-        // 3. Register Email & Password + Kirim Email Verifikasi Otomatis
+        // 3. Register Email & Password + Kirim Verifikasi
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -563,13 +610,12 @@
             auth.createUserWithEmailAndPassword(email, pass).then((userCredential) => {
                 const user = userCredential.user;
                 
-                // Kirim email verifikasi otomatis secara gratis dari Firebase
                 user.sendEmailVerification().then(() => {
                     user.updateProfile({ displayName: nama }).then(() => {
                         simpanMemberKeFirestore(user, nama);
-                        alert("Pendaftaran berhasil! Tautan verifikasi telah dikirim ke email Anda. Silakan cek kotak masuk atau folder spam.");
+                        alert("Pendaftaran berhasil! Tautan verifikasi telah dikirim ke email Anda. Silakan verifikasi email sebelum masuk.");
                         tutupAuthModal();
-                        auth.signOut(); // Keluar sementara agar user melakukan verifikasi email terlebih dahulu
+                        auth.signOut();
                     });
                 }).catch((err) => {
                     alert("Gagal mengirim email verifikasi: " + err.message);
@@ -580,7 +626,29 @@
             });
         }
 
-        // Simpan data otomatis ke koleksi 'members' untuk Super Admin & 'users'
+        // Simpan Data Profil
+        function simpanProfil() {
+            const newName = document.getElementById('profileName').value.trim();
+            const newPhone = document.getElementById('profilePhone').value.trim();
+            const newCity = document.getElementById('profileCity').value.trim();
+
+            if(!newName) return alert("Nama tidak boleh kosong!");
+
+            currentUser.updateProfile({ displayName: newName }).then(() => {
+                db.collection('members').doc(currentUser.uid).set({
+                    name: newName,
+                    phone: newPhone || "-",
+                    city: newCity || "-"
+                }, { merge: true }).then(() => {
+                    alert("Profil berhasil diperbarui!");
+                    tutupProfileModal();
+                    location.reload();
+                });
+            }).catch(err => {
+                alert("Gagal memperbarui profil: " + err.message);
+            });
+        }
+
         function simpanMemberKeFirestore(user, nama) {
             const displayName = nama || user.displayName || "Member";
             
@@ -605,13 +673,23 @@
             });
         }
 
+        function keluarAkun() {
+            auth.signOut().then(() => {
+                window.location.reload();
+            });
+        }
+
         auth.onAuthStateChanged(user => {
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
+                // Tampilkan Ikon Profil di Kanan Atas
+                const initial = (user.displayName || user.email || "M").charAt(0).toUpperCase();
                 navMenu.innerHTML = `
-                    <span style="font-size: 0.85rem; margin-right: 15px; color: var(--accent);">${user.email}</span>
-                    <button class="btn-outline" onclick="auth.signOut()" style="border:none;">Keluar</button>
+                    <div class="profile-btn" onclick="bukaProfileModal()">
+                        <div class="profile-icon">${initial}</div>
+                        <span style="font-size: 0.85rem; font-weight: 500; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${user.displayName || user.email}</span>
+                    </div>
                 `;
                 bukaDasbor(); 
                 simpanMemberKeFirestore(user, user.displayName);
