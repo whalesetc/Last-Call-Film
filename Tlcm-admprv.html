@@ -73,7 +73,7 @@
         <div class="header">
             <div>
                 <h1 class="font-serif" style="font-size: 2rem;">Data Pesanan & Member</h1>
-                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, profil member, status akun, dan blokir kecurangan device.</p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, profil member, status akun, dan kelola blokir kecurangan device.</p>
             </div>
             <div style="text-align: right;">
                 <p id="adminEmailText" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">thelastcallfilm.co@gmail.com</p>
@@ -262,6 +262,7 @@
         const db = firebase.firestore();
 
         let allEvents = [];
+        let manualMembers = [];
 
         window.onload = async () => {
             muatDataRealtime();
@@ -288,6 +289,7 @@
         }
 
         function muatDataRealtime() {
+            // Realtime Listener untuk Events
             db.collection("events").onSnapshot(snap => {
                 allEvents = [];
                 let totalPendapatan = 0;
@@ -310,57 +312,21 @@
                 document.getElementById('statIncome').innerText = "Rp " + totalPendapatan.toLocaleString('id-ID');
 
                 rendertabOrderan();
+                rendertabMembers();
                 rendertabAktif();
                 rendertabNonaktif();
                 rendertabSoon();
             });
 
-            // Realtime Member dengan fitur Suspend Status
+            // Realtime Listener untuk Members
             db.collection("members").onSnapshot(snap => {
-                const tbody = document.getElementById('tbodyMember');
-                tbody.innerHTML = '';
-                let count = 0;
-
+                manualMembers = [];
                 snap.forEach(doc => {
-                    let m = doc.data();
-                    count++;
-
-                    let nama = m.name || 'Member Tanpa Nama';
-                    let email = m.email || '-';
-                    let noHp = m.phone ? `<a href="https://wa.me/${m.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color:var(--accent); text-decoration:none;">${m.phone}</a>` : '-';
-                    let kota = m.city || '-';
-                    let deviceId = m.deviceId || 'Tidak terdeteksi';
-                    let isSuspended = m.isSuspended === true;
-
-                    let statusBadge = isSuspended 
-                        ? `<span class="badge badge-inactive">Di-Suspend</span>` 
-                        : `<span class="badge badge-active">Aktif</span>`;
-
-                    let btnSuspend = isSuspended 
-                        ? `<button class="btn-act activate" onclick="toggleSuspendMember('${doc.id}', false)">Buka Suspend</button>` 
-                        : `<button class="btn-act cancel" onclick="toggleSuspendMember('${doc.id}', true)">Suspend</button>`;
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><b>${nama}</b><br><span style="color:#888;">${email}</span></td>
-                            <td>${noHp}<br><span style="color:#888;">${kota}</span></td>
-                            <td><span style="font-family:monospace; font-size:0.75rem; color:#aaa;">${deviceId}</span></td>
-                            <td>${statusBadge}</td>
-                            <td>
-                                <div class="btn-group">
-                                    ${btnSuspend}
-                                    <button class="btn-act delete" onclick="hapusMemberManual('${doc.id}')">Hapus Member</button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
+                    let d = doc.data();
+                    d.id = doc.id;
+                    manualMembers.push(d);
                 });
-
-                document.getElementById('statTotalMembers').innerText = count;
-
-                if (count === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member terdaftar.</td></tr>';
-                }
+                rendertabMembers();
             });
         }
 
@@ -390,6 +356,92 @@
                                 ${(st !== 'active' && st !== 'aktif') ? `<button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan QR</button>` : ''}
                                 ${(st !== 'inactive' && st !== 'nonaktif') ? `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Batalkan</button>` : ''}
                                 <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // FUNGSI RENDER MEMBER GABUNGAN (ACARA LAMA + MEMBER BARU)
+        function rendertabMembers() {
+            const tbody = document.getElementById('tbodyMember');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            let memberMap = {};
+
+            // 1. Ambil pendaftar acara terdahulu dari allEvents
+            allEvents.forEach(e => {
+                let email = e.userEmail || (e.eventName ? `${e.eventName.replace(/\s+/g, '').toLowerCase()}@custom.com` : 'Pendaftar Lama');
+                if (!memberMap[email]) {
+                    memberMap[email] = {
+                        name: e.eventName || 'Pembuat Acara',
+                        email: email,
+                        phone: e.userPhone || '-',
+                        city: e.userCity || '-',
+                        deviceId: e.deviceId || 'Perangkat Lama',
+                        isSuspended: false,
+                        source: 'events'
+                    };
+                }
+            });
+
+            // 2. Gabungkan/Timpa dengan data resmi dari koleksi members
+            manualMembers.forEach(m => {
+                let emailKey = m.email || m.id;
+                memberMap[emailKey] = {
+                    id: m.id,
+                    name: m.name || memberMap[emailKey]?.name || 'Member',
+                    email: m.email || '-',
+                    phone: m.phone || memberMap[emailKey]?.phone || '-',
+                    city: m.city || memberMap[emailKey]?.city || '-',
+                    deviceId: m.deviceId || memberMap[emailKey]?.deviceId || 'Perangkat Baru',
+                    isSuspended: m.isSuspended === true,
+                    source: 'members'
+                };
+            });
+
+            let memberList = Object.values(memberMap);
+            document.getElementById('statTotalMembers').innerText = memberList.length;
+
+            if (memberList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member terdaftar.</td></tr>';
+                return;
+            }
+
+            memberList.forEach(m => {
+                let nama = m.name;
+                let email = m.email;
+                let noHp = (m.phone && m.phone !== '-') ? `<a href="https://wa.me/${m.phone.replace(/[^0-9]/g, '')}" target="_blank" style="color:var(--accent); text-decoration:none;">${m.phone}</a>` : '-';
+                let kota = m.city;
+                let deviceId = m.deviceId;
+                let isSuspended = m.isSuspended;
+
+                let statusBadge = isSuspended 
+                    ? `<span class="badge badge-inactive">Di-Suspend</span>` 
+                    : `<span class="badge badge-active">Aktif</span>`;
+
+                let btnSuspend = m.id 
+                    ? (isSuspended 
+                        ? `<button class="btn-act activate" onclick="toggleSuspendMember('${m.id}', false)">Buka Suspend</button>` 
+                        : `<button class="btn-act cancel" onclick="toggleSuspendMember('${m.id}', true)">Suspend</button>`)
+                    : `<span style="color:#666; font-size:0.75rem;">Acara Lama</span>`;
+
+                let btnHapus = m.id 
+                    ? `<button class="btn-act delete" onclick="hapusMemberManual('${m.id}')">Hapus</button>` 
+                    : '';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${nama}</b><br><span style="color:#888;">${email}</span></td>
+                        <td>${noHp}<br><span style="color:#888;">${kota}</span></td>
+                        <td><span style="font-family:monospace; font-size:0.75rem; color:#aaa;">${deviceId}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div class="btn-group">
+                                ${btnSuspend}
+                                ${btnHapus}
                             </div>
                         </td>
                     </tr>
@@ -506,10 +558,9 @@
             }
         }
 
-        // FUNGSI BLOKIR (SUSPEND) ATAU BUKA BLOKIR MEMBER & DEVICE
         async function toggleSuspendMember(id, suspendStatus) {
             const pesan = suspendStatus 
-                ? "Blokir (suspend) member dan perangkat (device) ini agar tidak dapat melakukan aktivitas di website?" 
+                ? "Blokir (suspend) member dan perangkat ini?" 
                 : "Buka kembali status suspend untuk member ini?";
             
             if (!confirm(pesan)) return;
