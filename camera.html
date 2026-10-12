@@ -78,7 +78,7 @@
         @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
 
         /* Layar Galeri */
-        #galleryScreen { padding: 20px; background: var(--bg-dark); padding-bottom: 100px; }
+        #galleryScreen { padding: 20px; background: var(--bg-dark); padding-bottom: 120px; }
         .gallery-header { display: flex; align-items: center; gap: 15px; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
         .grid-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; }
         
@@ -98,11 +98,13 @@
         .btn-action.pilih { background: #fff; color: #000; }
         .photo-item.selected .btn-action.pilih { background: var(--accent); }
 
-        /* Floating Bar Unduh */
-        .floating-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%); width: 90%; max-width: 400px; background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); padding: 15px 20px; border-radius: 100px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; }
+        /* Floating Bar Unduh ganda */
+        .floating-bar { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%) translateY(150%); width: 92%; max-width: 420px; background: rgba(20, 20, 20, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.2); padding: 12px 18px; border-radius: 100px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); z-index: 100; }
         .floating-bar.show { transform: translateX(-50%) translateY(0); }
-        .floating-text { font-weight: 600; font-size: 0.95rem; }
-        .btn-download-float { background: #fff; color: #000; border: none; padding: 10px 20px; border-radius: 50px; font-weight: 700; font-size: 0.9rem; cursor: pointer; transition: 0.2s; }
+        .floating-text { font-weight: 600; font-size: 0.85rem; color: #ccc; }
+        .btn-group-float { display: flex; gap: 8px; }
+        .btn-download-float { background: #fff; color: #000; border: none; padding: 8px 14px; border-radius: 50px; font-weight: 700; font-size: 0.8rem; cursor: pointer; transition: 0.2s; }
+        .btn-download-float.outline { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.4); }
 
         /* Lightbox */
         #lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 99999; justify-content: center; align-items: center; flex-direction: column; }
@@ -120,7 +122,7 @@
     <div id="lightbox">
         <button class="btn-close-lightbox" onclick="tutupLightbox()">&times;</button>
         <img id="lightboxImg" src="" alt="Pratinjau Foto">
-        <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 15px;">Tekan & Tahan gambar untuk menyimpan</p>
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.8rem; margin-top: 15px;">Tekan & Tahan gambar untuk menyimpan ke Galeri</p>
     </div>
 
     <!-- Tetingkap Pemuatan -->
@@ -188,10 +190,13 @@
         <div class="grid-gallery" id="guestGallery"></div>
     </div>
 
-    <!-- FLOATING ACTION BAR UNDUH -->
+    <!-- FLOATING ACTION BAR UNDUH DUA PILIHAN -->
     <div class="floating-bar" id="floatingBar">
-        <div class="floating-text"><span id="selectedCount">0</span> Terpilih</div>
-        <button class="btn-download-float" onclick="unduhZipTamu()">Unduh (.zip)</button>
+        <div class="floating-text"><span id="selectedCount">0</span> Foto</div>
+        <div class="btn-group-float">
+            <button class="btn-download-float outline" onclick="unduhLangsungGaleri()">Ke Galeri (JPG)</button>
+            <button class="btn-download-float" onclick="unduhZipTamu()">Unduh (.ZIP)</button>
+        </div>
     </div>
 
     <script>
@@ -535,6 +540,60 @@
         
         function sembunyikanFloatingBar() {
             document.getElementById('floatingBar').classList.remove('show');
+        }
+
+        // FUNGSI UNDUH PER FOTO DENGAN FORMAT NATIVE KE GALERI HP
+        async function unduhLangsungGaleri() {
+            if(selectedPhotoIds.size === 0) return;
+
+            const overlay = document.getElementById('loadingScreen');
+            const loadingTitle = document.getElementById('loadingText');
+            const loadingDesc = document.getElementById('loadingSubText');
+            
+            document.getElementById('spinnerIcon').style.display = 'block';
+            loadingTitle.innerText = "Downloading..."; 
+            loadingDesc.style.display = 'block';
+            loadingDesc.innerHTML = `Please wait: 0 / ${selectedPhotoIds.size} files`; 
+            overlay.style.display = 'flex';
+
+            const photosToDownload = allGalleryPhotos.filter(p => selectedPhotoIds.has(p.id));
+            let berjaya = 0;
+
+            for (let i = 0; i < photosToDownload.length; i++) {
+                const photo = photosToDownload[i];
+                const namaFile = `TLC_${namaTamu || 'Tamu'}_${i + 1}.jpg`;
+                
+                try {
+                    const fastProxyUrl = `https://wsrv.nl/?url=${encodeURIComponent(photo.url)}`;
+                    const response = await fetch(fastProxyUrl);
+                    const blob = await response.blob();
+                    
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = blobUrl;
+                    a.download = namaFile;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(blobUrl);
+                    document.body.removeChild(a);
+                    
+                    berjaya++;
+                    loadingDesc.innerHTML = `<span style="font-size: 1.5rem; color: var(--accent); font-weight: bold;">${berjaya} / ${photosToDownload.length}</span><br>Downloading to Gallery...`;
+                    
+                    // Jeda sebentar agar browser tidak memblokir muat turun berturut-turut
+                    await new Promise(resolve => setTimeout(resolve, 400));
+                } catch(e) {
+                    console.error("Gagal mengunduh foto:", e);
+                }
+            }
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                selectedPhotoIds.clear();
+                document.querySelectorAll('.photo-item').forEach(el => el.classList.remove('selected'));
+                kemasKiniFloatingBar();
+            }, 800);
         }
 
         async function unduhZipTamu() {
