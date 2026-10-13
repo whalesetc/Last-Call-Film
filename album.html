@@ -19,34 +19,31 @@
         .header { text-align: center; margin-bottom: 20px; padding-top: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; }
         .event-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 5px; }
         .photo-count { color: var(--text-muted); font-size: 0.9rem; }
-        .btn-back { position: absolute; top: 20px; left: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
-
-        /* Panel Kontrol Seleksi & Unduh */
-        .action-bar { max-width: 1000px; margin: 0 auto 20px auto; width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
-        .action-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        .btn-back { position: absolute; top: 20px; left: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem;}
         
-        .btn-action { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-primary-action { background: var(--accent); color: #000; border: none; }
-
+        /* Panel Kontrol Seleksi & Unduh */
+        .action-bar { max-width: 1000px; margin: 0 auto 20px auto; width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .btn-action { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; cursor: pointer; }
+        .btn-primary-action { background: var(--accent); color: #000; border: none; font-weight: bold; }
+        
         /* Grid Galeri */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; padding-bottom: 40px; }
-        
-        .photo-item { width: 100%; aspect-ratio: 3 / 4; background: #1a1917; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
+        .photo-item { width: 100%; aspect-ratio: 3 / 4; background: #1a1917; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid var(--border-color); }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
         
         /* Checkbox Seleksi */
         .photo-checkbox { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; z-index: 5; display: none; }
         .select-mode .photo-checkbox { display: block; }
         .photo-item.selected { border: 2px solid var(--accent); transform: scale(0.97); }
-
-        .empty-state { text-align: center; grid-column: 1 / -1; padding: 80px 20px; color: var(--text-muted); font-style: italic; font-size: 1rem; }
-
+        
+        .empty-state { text-align: center; grid-column: 1 / -1; padding: 80px 20px; color: var(--text-muted); font-style: italic; }
+        
         /* Modal Preview */
         #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         #previewImage { max-width: 100%; max-height: 75vh; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); object-fit: contain; }
         .preview-actions { display: flex; gap: 15px; width: 100%; max-width: 350px; }
-        .btn-close-modal { flex: 1; padding: 14px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
-        .btn-save-modal { flex: 2; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .btn-close-modal { flex: 1; padding: 14px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+        .btn-save-modal { flex: 2; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body id="bodyElement">
@@ -57,13 +54,14 @@
         <p class="photo-count" id="photoCountDisplay">0 Foto Diambil</p>
     </div>
 
+    <!-- Action Bar untuk Fitur Select & Download -->
     <div class="action-bar" id="actionBar" style="display: none;">
-        <div class="action-group">
+        <div>
             <button class="btn-action" id="btnToggleSelect" onclick="toggleSelectMode()">Pilih Foto</button>
             <button class="btn-action" id="btnSelectAll" onclick="selectAllPhotos()" style="display: none;">Pilih Semua</button>
         </div>
-        <div class="action-group" id="downloadGroup" style="display: none;">
-            <button class="btn-action btn-primary-action" onclick="downloadSelectedZip()">Unduh ZIP (.zip)</button>
+        <div id="downloadGroup" style="display: none;">
+            <button class="btn-primary-action btn-action" onclick="downloadSelectedZip()">Unduh ZIP</button>
         </div>
     </div>
 
@@ -71,6 +69,7 @@
         <div class="empty-state">Mencari rol film acara...</div>
     </div>
 
+    <!-- Modal Preview -->
     <div id="previewModal">
         <img id="previewImage" src="">
         <div class="preview-actions">
@@ -80,6 +79,7 @@
     </div>
 
     <script>
+        // Konfigurasi Firebase (Hanya butuh Firestore)
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -88,26 +88,18 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-
+        
         let eventId = new URLSearchParams(window.location.search).get('event');
         let currentDownloadUrl = "";
         let isSelectMode = false;
 
         if (!eventId) {
-            document.getElementById('eventNameDisplay').innerText = "Acara Tidak Ditemukan";
             document.getElementById('galleryContainer').innerHTML = "<div class='empty-state'>Tautan album tidak valid.</div>";
         } else {
-            muatDataAcara();
+            db.collection('events').doc(eventId).get().then(doc => { 
+                if (doc.exists) document.getElementById('eventNameDisplay').innerText = doc.data().eventName; 
+            });
             dengarkanFotoRealtime();
-        }
-
-        async function muatDataAcara() {
-            try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (doc.exists) document.getElementById('eventNameDisplay').innerText = doc.data().eventName;
-            } catch (error) {
-                console.error("Gagal memuat judul:", error);
-            }
         }
 
         function dengarkanFotoRealtime() {
@@ -119,145 +111,116 @@
                   const actionBar = document.getElementById('actionBar');
                   
                   if (snapshot.empty) {
-                      gallery.innerHTML = "<div class='empty-state'>Belum ada foto yang diambil.<br>Jadilah tamu pertama yang menjepret momen!</div>";
-                      countDisplay.innerText = "0 Foto Diambil";
-                      actionBar.style.display = 'none';
+                      gallery.innerHTML = "<div class='empty-state'>Belum ada foto yang diambil.</div>";
+                      countDisplay.innerText = "0 Foto Diambil"; 
+                      actionBar.style.display = 'none'; 
                       return;
                   }
-
-                  countDisplay.innerText = `${snapshot.size} Foto Diambil`;
-                  actionBar.style.display = 'flex';
+                  
+                  countDisplay.innerText = `${snapshot.size} Foto Diambil`; 
+                  actionBar.style.display = 'flex'; 
                   gallery.innerHTML = ""; 
-
+                  
                   snapshot.forEach((doc) => {
                       const data = doc.data();
                       const div = document.createElement('div');
                       div.className = 'photo-item';
-                      // CROSSORIGIN DIHAPUS AGAR GAMBAR TIDAK DIBLOKIR BROWSER
-                      div.innerHTML = `
-                          <input type="checkbox" class="photo-checkbox" value="${data.url}">
-                          <img src="${data.url}" alt="Jepretan Tamu" loading="lazy">
-                      `;
+                      div.innerHTML = `<input type="checkbox" class="photo-checkbox" value="${data.url}"><img src="${data.url}" loading="lazy">`;
                       
                       div.onclick = (e) => {
                           if (e.target.tagName === 'INPUT') return; 
                           const cb = div.querySelector('.photo-checkbox');
-                          if (isSelectMode) {
-                              cb.checked = !cb.checked;
-                              div.classList.toggle('selected', cb.checked);
+                          if (isSelectMode) { 
+                              cb.checked = !cb.checked; 
+                              div.classList.toggle('selected', cb.checked); 
                           } else {
                               bukaPreview(data.url);
                           }
                       };
-
+                      
                       div.querySelector('.photo-checkbox').onchange = (e) => {
                           div.classList.toggle('selected', e.target.checked);
                       };
-
+                      
                       gallery.appendChild(div);
                   });
-              }, (error) => {
-                  console.error("Error:", error);
-                  document.getElementById('galleryContainer').innerHTML = "<div class='empty-state' style='color:#ef4444;'>Gagal memuat foto.</div>";
               });
         }
 
         function toggleSelectMode() {
             isSelectMode = !isSelectMode;
-            const bodyEl = document.getElementById('bodyElement');
-            const btnToggle = document.getElementById('btnToggleSelect');
-            const btnSelectAll = document.getElementById('btnSelectAll');
-            const downloadGroup = document.getElementById('downloadGroup');
-
-            if (isSelectMode) {
-                bodyEl.classList.add('select-mode');
-                btnToggle.innerText = "Batal Pilih";
-                btnSelectAll.style.display = 'inline-block';
-                downloadGroup.style.display = 'block';
-            } else {
-                bodyEl.classList.remove('select-mode');
-                btnToggle.innerText = "Pilih Foto";
-                btnSelectAll.style.display = 'none';
-                downloadGroup.style.display = 'none';
-                document.querySelectorAll('.photo-checkbox').forEach(cb => cb.checked = false);
-                document.querySelectorAll('.photo-item').forEach(item => item.classList.remove('selected'));
+            document.getElementById('bodyElement').classList.toggle('select-mode', isSelectMode);
+            document.getElementById('btnToggleSelect').innerText = isSelectMode ? "Batal Pilih" : "Pilih Foto";
+            document.getElementById('btnSelectAll').style.display = isSelectMode ? 'inline-block' : 'none';
+            document.getElementById('downloadGroup').style.display = isSelectMode ? 'block' : 'none';
+            
+            if(!isSelectMode) {
+                document.querySelectorAll('.photo-checkbox').forEach(cb => { 
+                    cb.checked = false; 
+                    cb.parentElement.classList.remove('selected'); 
+                });
             }
         }
 
         function selectAllPhotos() {
             const checkboxes = document.querySelectorAll('.photo-checkbox');
-            const items = document.querySelectorAll('.photo-item');
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-            checkboxes.forEach((cb, idx) => {
-                cb.checked = !allChecked;
-                items[idx].classList.toggle('selected', !allChecked);
+            checkboxes.forEach((cb) => { 
+                cb.checked = !allChecked; 
+                cb.parentElement.classList.toggle('selected', !allChecked); 
             });
             document.getElementById('btnSelectAll').innerText = allChecked ? "Pilih Semua" : "Batalkan Semua";
         }
 
-        // MENGGUNAKAN PROXY AGAR IMGBB MENGIZINKAN DOWNLOAD ZIP
         async function downloadSelectedZip() {
             const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
             if (checkedBoxes.length === 0) return alert("Silakan pilih minimal satu foto!");
-
+            
             alert(`Memproses ${checkedBoxes.length} foto menjadi ZIP. Mohon tunggu sebentar...`);
-            const zip = new JSZip();
-            const folder = zip.folder("TheLastCall_Album");
-
+            const zip = new JSZip(), folder = zip.folder("TheLastCall_Album");
             let count = 0;
+            
             for (let cb of checkedBoxes) {
                 try {
-                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(cb.value);
-                    const response = await fetch(proxyUrl);
-                    const blob = await response.blob();
-                    folder.file(`foto_${++count}.jpg`, blob);
-                } catch (err) {
-                    console.error("Gagal mengambil gambar:", err);
+                    const res = await fetch(cb.value);
+                    folder.file(`foto_${++count}.jpg`, await res.blob());
+                } catch (err) { 
+                    console.error("Gagal memuat foto untuk ZIP:", err); 
                 }
             }
-
+            
             zip.generateAsync({ type: "blob" }).then((content) => {
-                const link = document.createElement('a');
+                const link = document.createElement('a'); 
                 link.href = URL.createObjectURL(content);
                 link.download = `TheLastCall_Album_${Date.now()}.zip`;
-                document.body.appendChild(link);
-                link.click();
+                document.body.appendChild(link); 
+                link.click(); 
                 document.body.removeChild(link);
             });
         }
 
-        function bukaPreview(url) {
-            currentDownloadUrl = url;
-            document.getElementById('previewImage').src = url;
-            document.getElementById('previewModal').style.display = 'flex';
+        function bukaPreview(url) { 
+            currentDownloadUrl = url; 
+            document.getElementById('previewImage').src = url; 
+            document.getElementById('previewModal').style.display = 'flex'; 
         }
 
-        function tutupPreview() {
-            document.getElementById('previewModal').style.display = 'none';
-            currentDownloadUrl = "";
+        function tutupPreview() { 
+            document.getElementById('previewModal').style.display = 'none'; 
+            currentDownloadUrl = ""; 
         }
 
         function unduhFotoSatuSatu() {
             if (!currentDownloadUrl) return;
-            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(currentDownloadUrl);
-            fetch(proxyUrl)
-                .then(response => response.blob())
-                .then(blob => {
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = `TheLastCall_${Date.now()}.jpg`;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(blobUrl);
-                    tutupPreview();
-                })
-                .catch(err => {
-                    // Fallback jika proxy sibuk, buka di tab baru
-                    window.open(currentDownloadUrl, '_blank');
-                });
+            fetch(currentDownloadUrl).then(res => res.blob()).then(blob => {
+                const link = document.createElement('a'); 
+                link.href = window.URL.createObjectURL(blob);
+                link.download = `TheLastCall_${Date.now()}.jpg`;
+                document.body.appendChild(link); 
+                link.click(); 
+                document.body.removeChild(link);
+                tutupPreview();
+            });
         }
     </script>
 </body>
