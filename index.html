@@ -93,7 +93,7 @@
         .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
         
         /* Dashboard Countdown */
-        .countdown-dashboard-card { background: rgba(110, 231, 183, 0.05); border: 1px solid rgba(110, 231, 183, 0.2); border-radius: 16px; padding: 20px; margin-top: 20px; text-align: center; }
+        .countdown-dashboard-card { background: rgba(110, 231, 183, 0.05); border: 1px solid rgba(110, 231, 183, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
         .countdown-dash-title { font-size: 0.85rem; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
         .countdown-dash-timer { display: flex; justify-content: center; gap: 10px; }
         .cd-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; min-width: 60px; }
@@ -208,7 +208,6 @@
                 <input type="text" id="eventName" class="form-control" oninput="updateEventPreview()" required>
             </div>
 
-            <!-- Penambahan Input Tanggal, Jam Mulai, Jam Selesai -->
             <div class="form-group">
                 <label>Tanggal Acara</label>
                 <input type="date" id="eventDate" class="form-control" required>
@@ -296,6 +295,16 @@
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" id="manageEventTitle">Kelola Acara</h2>
         <p style="color: var(--text-muted); margin-bottom: 30px;">Bagikan QR Code ini kepada tamu undangan Anda, atau kelola pengaturan batas foto.</p>
 
+        <!-- HITUNG MUNDUR (COUNTDOWN) DASBOR DITAMBAHKAN DI ATAS -->
+        <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
+            <div class="countdown-dash-title" id="dashCountdownStatus">Acara Akan Dimulai Dalam:</div>
+            <div class="countdown-dash-timer" id="dashCountdownTimer">
+                <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl">Jam</div></div>
+                <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl">Menit</div></div>
+                <div class="cd-box"><div class="cd-val" id="dashSeconds">00</div><div class="cd-lbl">Detik</div></div>
+            </div>
+        </div>
+
         <div class="admin-panel" style="align-items: start;">
             <!-- KOLOM KIRI: QR CODE & SHARE LINK -->
             <div class="dash-card" style="text-align: center;">
@@ -371,17 +380,6 @@
                         <button type="submit" id="btnUpdateEvent" class="btn-outline" style="width: 100%; padding: 10px;">Simpan Pengaturan</button>
                     </form>
                 </div>
-                
-                <!-- HITUNG MUNDUR (COUNTDOWN) DASBOR DITAMBAHKAN DI SINI -->
-                <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
-                    <div class="countdown-dash-title" id="dashCountdownStatus">Acara Akan Dimulai Dalam:</div>
-                    <div class="countdown-dash-timer" id="dashCountdownTimer">
-                        <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl">Jam</div></div>
-                        <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl">Menit</div></div>
-                        <div class="cd-box"><div class="cd-val" id="dashSeconds">00</div><div class="cd-lbl">Detik</div></div>
-                    </div>
-                </div>
-
             </div>
         </div>
     </div>
@@ -511,7 +509,7 @@
 
         let currentUser = null;
         let daftarAcaraGlobal = []; 
-        let dashboardCountdownInterval = null; // Tambahan untuk reset interval saat ganti event
+        let dashboardCountdownInterval = null; 
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
 
@@ -533,7 +531,6 @@
             updateEventPreview();
         }
         
-        // MENJALANKAN COUNTDOWN SAAT MEMBUKA PENGATURAN ACARA
         function bukaPengaturan(eventId) {
             const event = daftarAcaraGlobal.find(e => e.id === eventId);
             if(!event) return;
@@ -552,13 +549,11 @@
             document.getElementById('cameraLinkInput').value = linkKamera;
             document.getElementById('qrCodeImageManage').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(linkKamera)}&margin=10`;
 
-            // MULAI HITUNG MUNDUR DASBOR
             inisialisasiDashboardCountdown(event.date, event.startTime, event.endTime);
 
             showSection('manageEventSection');
         }
 
-        // FUNGSI UNTUK MENGHITUNG MUNDUR DI DASBOR
         function inisialisasiDashboardCountdown(eventDate, startTime, endTime) {
             const wrapper = document.getElementById('dashboardCountdownWrapper');
             const statusText = document.getElementById('dashCountdownStatus');
@@ -1017,7 +1012,6 @@
                 });
                 alert("Pengaturan acara berhasil diperbarui!");
                 
-                // Update data lokal dan restart countdown dengan jam baru
                 const event = daftarAcaraGlobal.find(ev => ev.id === eventId);
                 if(event) {
                     event.startTime = newStartTime;
