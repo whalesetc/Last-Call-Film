@@ -28,8 +28,9 @@
         /* Status Bar (Untuk Demo Mode) */
         #statusBar { background-color: #ef4444; color: #fff; text-align: center; padding: 8px; font-size: 0.8rem; font-weight: bold; display: none; width: 100%; position: absolute; top: 60px; z-index: 9; }
 
-        /* Viewfinder Kamera */
-        .camera-container { flex: 1; position: relative; overflow: hidden; background: #111; display: flex; align-items: center; justify-content: center;}
+        /* Pembungkus Kamera Potrait */
+        .camera-wrapper { flex: 1; display: flex; align-items: center; justify-content: center; padding: 80px 20px 20px; background: #111; }
+        .camera-container { width: 100%; max-width: 400px; aspect-ratio: 3 / 4; background: #000; position: relative; overflow: hidden; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
         video { width: 100%; height: 100%; object-fit: cover; }
         
         /* Efek Flash */
@@ -37,16 +38,20 @@
         .flash-active { opacity: 1 !important; }
 
         /* Kontrol Bawah */
-        .controls { padding: 30px 20px 40px; background: #000; display: flex; justify-content: space-between; align-items: center; }
+        .controls { padding: 20px; background: #000; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 15px; }
         
-        .thumbnail-btn { width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; }
+        /* Galeri Thumbnail Berjejer */
+        .thumbnail-gallery { display: flex; gap: 10px; overflow-x: auto; align-items: center; justify-self: start; width: 100%; max-width: 140px; padding-bottom: 5px; scroll-behavior: smooth; }
+        .thumbnail-gallery::-webkit-scrollbar { display: none; }
+        .thumbnail-btn { width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; flex-shrink: 0; transition: 0.2s; }
+        .thumbnail-btn:active { transform: scale(0.9); }
         
         .btn-capture { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; outline: none; transition: transform 0.1s; }
         .btn-capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.2s; }
         .btn-capture:active .btn-capture-inner { background: #ccc; transform: scale(0.9); }
         .btn-capture:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-switch { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; font-size: 1.2rem;}
+        .btn-switch { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; font-size: 1.2rem; justify-self: end; }
         
         /* Modal Preview */
         #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
@@ -80,23 +85,26 @@
 
     <div id="statusBar">🔴 MODE DEMO - Foto tidak masuk ke album pengantin</div>
 
-    <div class="camera-container">
-        <video id="cameraFeed" autoplay playsinline></video>
-        <div id="flashEffect"></div>
+    <!-- Viewfinder Kamera (Dibatasi Rasio 3:4) -->
+    <div class="camera-wrapper">
+        <div class="camera-container">
+            <video id="cameraFeed" autoplay playsinline></video>
+            <div id="flashEffect"></div>
+        </div>
     </div>
 
     <div class="controls">
-        <!-- Thumbnail Preview Kiri Bawah -->
-        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
-            <img id="lastPhotoThumb" class="thumbnail-btn" onclick="bukaPreview()" src="https://via.placeholder.com/50x50?text=+" alt="Preview">
+        <!-- Galeri Thumbnail (Kiri) -->
+        <div class="thumbnail-gallery" id="thumbnailGallery">
+            <!-- Hasil jepretan akan berjejer di sini -->
         </div>
         
-        <!-- Tombol Jepret Tengah -->
+        <!-- Tombol Jepret (Tengah) -->
         <button class="btn-capture" id="btnCapture" onclick="jepretFoto()">
             <div class="btn-capture-inner"></div>
         </button>
 
-        <!-- Switch Kamera Kanan Bawah -->
+        <!-- Switch Kamera (Kanan) -->
         <button class="btn-switch" onclick="tukarKamera()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.44-5.44"></path></svg>
         </button>
@@ -114,7 +122,6 @@
     <canvas id="photoCanvas"></canvas>
 
     <script>
-        // 1. Konfigurasi Firebase Anda
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -127,22 +134,21 @@
         const db = firebase.firestore();
         const storage = firebase.storage();
 
-        // 2. Variabel Kamera & Data Acara
         let eventId = null;
         let eventData = null;
         let isDemoMode = false;
         let maxPhotos = 15;
         let photosTaken = 0;
-        let currentPhotoDataUrl = null; // Menyimpan data foto sementara untuk preview
+        let currentPhotoDataUrl = null; 
         
         let videoStream = null;
-        let currentFacingMode = 'environment'; // 'environment' = belakang, 'user' = depan
+        let currentFacingMode = 'environment';
 
         const video = document.getElementById('cameraFeed');
         const canvas = document.getElementById('photoCanvas');
         const btnCapture = document.getElementById('btnCapture');
+        const thumbnailGallery = document.getElementById('thumbnailGallery');
 
-        // 3. Inisialisasi Halaman
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
             eventId = urlParams.get('event');
@@ -158,7 +164,6 @@
             await mulaiKamera();
         };
 
-        // 4. Muat Data Acara & Cek Mode Demo
         async function muatDataAcara() {
             try {
                 const doc = await db.collection('events').doc(eventId).get();
@@ -174,7 +179,6 @@
                 const storageKey = `lastcall_${eventId}_count`;
                 photosTaken = parseInt(localStorage.getItem(storageKey)) || 0;
                 
-                // === LOGIKA WAKTU / DEMO MODE ===
                 const waktuSekarang = new Date();
                 const startDateTime = new Date(`${eventData.date}T${eventData.startTime || '00:00'}:00`);
                 const endDateTime = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:59`);
@@ -192,7 +196,7 @@
                 setTimeout(() => { document.getElementById('loadingScreen').style.display = 'none'; }, 1000);
 
             } catch (error) {
-                console.error("Error memuat acara:", error);
+                console.error("Error:", error);
                 alert("Gagal memuat data acara. Pastikan koneksi internet stabil.");
             }
         }
@@ -207,22 +211,18 @@
             }
         }
 
-        // 5. Akses Kamera
         async function mulaiKamera() {
             if (videoStream) {
                 videoStream.getTracks().forEach(track => track.stop());
             }
-
             const constraints = {
                 video: { facingMode: currentFacingMode, width: { ideal: 1080 }, height: { ideal: 1920 } },
                 audio: false
             };
-
             try {
                 videoStream = await navigator.mediaDevices.getUserMedia(constraints);
                 video.srcObject = videoStream;
             } catch (error) {
-                console.error("Error akses kamera:", error);
                 alert("Gagal mengakses kamera. Harap izinkan akses kamera di pengaturan browser Anda.");
             }
         }
@@ -232,20 +232,36 @@
             mulaiKamera();
         }
 
-        // 6. Fungsi Menjepret Foto
         function jepretFoto() {
             if (!isDemoMode && photosTaken >= maxPhotos) {
                 alert("Roll film Anda telah habis!");
                 return;
             }
 
-            // Efek Flash Layar
+            // Efek flash
             const flash = document.getElementById('flashEffect');
             flash.classList.add('flash-active');
             setTimeout(() => { flash.classList.remove('flash-active'); }, 150);
 
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // Pemotongan (Crop) Gambar agar pas di rasio 3:4
+            const videoRatio = video.videoWidth / video.videoHeight;
+            const targetRatio = 3 / 4; 
+            
+            let drawWidth = video.videoWidth;
+            let drawHeight = video.videoHeight;
+            let offsetX = 0;
+            let offsetY = 0;
+
+            if (videoRatio > targetRatio) {
+                drawWidth = video.videoHeight * targetRatio;
+                offsetX = (video.videoWidth - drawWidth) / 2;
+            } else {
+                drawHeight = video.videoWidth / targetRatio;
+                offsetY = (video.videoHeight - drawHeight) / 2;
+            }
+
+            canvas.width = 1080;
+            canvas.height = 1440;
             const ctx = canvas.getContext('2d');
 
             if (currentFacingMode === 'user') {
@@ -253,16 +269,19 @@
                 ctx.scale(-1, 1);
             }
             
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
 
-            // Konversi menjadi URL base64
             const dataURL = canvas.toDataURL('image/jpeg', 0.9);
-            currentPhotoDataUrl = dataURL; // Simpan sementara untuk preview
 
-            // Ubah gambar thumbnail di pojok kiri bawah
-            document.getElementById('lastPhotoThumb').src = dataURL;
+            // Tambahkan ke Galeri Thumbnail Berjejer
+            const thumbImg = document.createElement('img');
+            thumbImg.className = 'thumbnail-btn';
+            thumbImg.src = dataURL;
+            thumbImg.onclick = () => bukaPreview(dataURL);
+            
+            thumbnailGallery.insertBefore(thumbImg, thumbnailGallery.firstChild);
+            thumbnailGallery.scrollLeft = 0; // Geser otomatis ke kiri
 
-            // Jika Mode Live, Upload ke Firebase di latar belakang
             if (!isDemoMode) {
                 photosTaken++;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
@@ -271,17 +290,15 @@
             }
         }
 
-        // 7. Kontrol Modal Preview & Simpan Manual
-        function bukaPreview() {
-            if (!currentPhotoDataUrl) {
-                return alert("Belum ada foto yang diambil.");
-            }
-            document.getElementById('previewImage').src = currentPhotoDataUrl;
+        function bukaPreview(dataURL) {
+            currentPhotoDataUrl = dataURL;
+            document.getElementById('previewImage').src = dataURL;
             document.getElementById('previewModal').style.display = 'flex';
         }
 
         function tutupPreview() {
             document.getElementById('previewModal').style.display = 'none';
+            currentPhotoDataUrl = null;
         }
 
         function simpanFotoManual() {
@@ -294,10 +311,8 @@
             document.body.removeChild(a);
             
             tutupPreview();
-            alert("Foto berhasil disimpan ke galeri Anda!");
         }
 
-        // 8. Upload Foto ke Firebase Storage & Firestore (Berjalan Otomatis di Latar Belakang)
         function uploadKeFirebase(dataURL) {
             const fileName = `foto_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
             const storageRef = storage.ref(`events/${eventId}/${fileName}`);
@@ -314,9 +329,7 @@
                     btnInner.style.background = '#fff';
                 });
             }).catch((error) => {
-                console.error("Gagal mengunggah:", error);
                 btnInner.style.background = '#fff';
-                
                 photosTaken--;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
                 perbaruiTampilanRoll();
