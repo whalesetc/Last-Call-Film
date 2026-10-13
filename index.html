@@ -92,6 +92,14 @@
         .dash-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; }
         .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
         
+        /* Dashboard Countdown */
+        .countdown-dashboard-card { background: rgba(110, 231, 183, 0.05); border: 1px solid rgba(110, 231, 183, 0.2); border-radius: 16px; padding: 20px; margin-top: 20px; text-align: center; }
+        .countdown-dash-title { font-size: 0.85rem; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
+        .countdown-dash-timer { display: flex; justify-content: center; gap: 10px; }
+        .cd-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; min-width: 60px; }
+        .cd-val { font-size: 1.4rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+        .cd-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
+
         /* Bank Info Box */
         .bank-info { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
         .bank-name { font-weight: 700; font-size: 1rem; color: #fff;}
@@ -180,7 +188,7 @@
         </div>
     </div>
 
-    <!-- 3. FORMULIR PEMBUATAN ACARA BARU (DENGAN JAM MULAI/SELESAI) -->
+    <!-- 3. FORMULIR PEMBUATAN ACARA BARU -->
     <div id="createEventForm" class="section" style="max-width: 700px;">
         <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Batal</button>
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Detail Acara Baru</h2>
@@ -216,7 +224,7 @@
                     <input type="time" id="eventEndTime" class="form-control" required>
                 </div>
             </div>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:-15px; margin-bottom:25px;">Kamera hanya akan menyimpan foto ke album saat jam acara berlangsung. Sebelum jam ini, tamu hanya dapat mencoba mode Demo.</p>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:-15px; margin-bottom:25px;">Kamera hanya akan menyimpan foto ke album saat jam acara berlangsung. Sebelum jam ini, tamu akan melihat layar hitung mundur (countdown).</p>
 
             <div class="form-group">
                 <label>Batas Maksimal Foto per Tamu (Kapasitas Roll Film)</label>
@@ -363,6 +371,17 @@
                         <button type="submit" id="btnUpdateEvent" class="btn-outline" style="width: 100%; padding: 10px;">Simpan Pengaturan</button>
                     </form>
                 </div>
+                
+                <!-- HITUNG MUNDUR (COUNTDOWN) DASBOR DITAMBAHKAN DI SINI -->
+                <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
+                    <div class="countdown-dash-title" id="dashCountdownStatus">Acara Akan Dimulai Dalam:</div>
+                    <div class="countdown-dash-timer" id="dashCountdownTimer">
+                        <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl">Jam</div></div>
+                        <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl">Menit</div></div>
+                        <div class="cd-box"><div class="cd-val" id="dashSeconds">00</div><div class="cd-lbl">Detik</div></div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </div>
@@ -492,15 +511,20 @@
 
         let currentUser = null;
         let daftarAcaraGlobal = []; 
+        let dashboardCountdownInterval = null; // Tambahan untuk reset interval saat ganti event
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
 
         function showSection(sectionId) {
             document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active-section'));
             document.getElementById(sectionId).classList.add('active-section');
+            if (dashboardCountdownInterval && sectionId !== 'manageEventSection') {
+                clearInterval(dashboardCountdownInterval);
+            }
         }
 
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
+        
         function bukaForm() { 
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
@@ -509,6 +533,7 @@
             updateEventPreview();
         }
         
+        // MENJALANKAN COUNTDOWN SAAT MEMBUKA PENGATURAN ACARA
         function bukaPengaturan(eventId) {
             const event = daftarAcaraGlobal.find(e => e.id === eventId);
             if(!event) return;
@@ -527,7 +552,54 @@
             document.getElementById('cameraLinkInput').value = linkKamera;
             document.getElementById('qrCodeImageManage').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(linkKamera)}&margin=10`;
 
+            // MULAI HITUNG MUNDUR DASBOR
+            inisialisasiDashboardCountdown(event.date, event.startTime, event.endTime);
+
             showSection('manageEventSection');
+        }
+
+        // FUNGSI UNTUK MENGHITUNG MUNDUR DI DASBOR
+        function inisialisasiDashboardCountdown(eventDate, startTime, endTime) {
+            const wrapper = document.getElementById('dashboardCountdownWrapper');
+            const statusText = document.getElementById('dashCountdownStatus');
+            const timerContainer = document.getElementById('dashCountdownTimer');
+            
+            if (dashboardCountdownInterval) clearInterval(dashboardCountdownInterval);
+            if (!eventDate || !startTime) {
+                wrapper.style.display = 'none';
+                return;
+            }
+            
+            wrapper.style.display = 'block';
+
+            dashboardCountdownInterval = setInterval(() => {
+                const sekarang = new Date();
+                const start = new Date(`${eventDate}T${startTime}:00`);
+                const end = new Date(`${eventDate}T${endTime || '23:59'}:00`);
+                const selisih = start - sekarang;
+
+                if (selisih > 0) {
+                    statusText.innerText = "Acara Akan Dimulai Dalam:";
+                    statusText.style.color = "#6ee7b7";
+                    timerContainer.style.display = 'flex';
+                    
+                    const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                    const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+
+                    document.getElementById('dashHours').innerText = String(jam).padStart(2, '0');
+                    document.getElementById('dashMinutes').innerText = String(menit).padStart(2, '0');
+                    document.getElementById('dashSeconds').innerText = String(detik).padStart(2, '0');
+                } else if (sekarang >= start && sekarang <= end) {
+                    statusText.innerText = "🔴 Acara Sedang Berlangsung (Kamera Terbuka)";
+                    statusText.style.color = "#ef4444";
+                    timerContainer.style.display = 'none';
+                } else {
+                    statusText.innerText = "Acara Telah Berakhir";
+                    statusText.style.color = "#888";
+                    timerContainer.style.display = 'none';
+                }
+            }, 1000);
         }
 
         function tampilkanHalamanPembayaran() {
@@ -895,8 +967,8 @@
                     eventType: eventType,
                     eventName: eventName,
                     date: eventDate,
-                    startTime: eventStartTime, // JAM MULAI
-                    endTime: eventEndTime, // JAM SELESAI
+                    startTime: eventStartTime,
+                    endTime: eventEndTime,
                     privacy: privacy,
                     guestPhotoLimit: guestPhotoLimit,
                     quota: kuota,
@@ -944,7 +1016,15 @@
                     privacy: newPrivacy 
                 });
                 alert("Pengaturan acara berhasil diperbarui!");
-                bukaDasbor();
+                
+                // Update data lokal dan restart countdown dengan jam baru
+                const event = daftarAcaraGlobal.find(ev => ev.id === eventId);
+                if(event) {
+                    event.startTime = newStartTime;
+                    event.endTime = newEndTime;
+                    inisialisasiDashboardCountdown(event.date, newStartTime, newEndTime);
+                }
+                
             } catch (error) {
                 console.error(error);
                 alert("Gagal mengupdate acara: " + error.message);
