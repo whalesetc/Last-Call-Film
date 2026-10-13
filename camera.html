@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>The Last Call Film • Kamera Tamu</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
+    <!-- Tambahan Font Aesthetic (Dancing Script) -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
@@ -15,18 +16,23 @@
         #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #loadingText { margin-top: 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem; }
 
-        /* Tampilan Layar Tunggu (Countdown Screen) */
-        #waitingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #12110f; z-index: 8888; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
-        .waiting-card { max-width: 400px; width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .waiting-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 10px; color: #fff; }
-        .waiting-subtitle { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 30px; }
-        .countdown-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
-        .countdown-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 15px; border-radius: 10px; min-width: 65px; }
-        .countdown-num { font-size: 1.5rem; font-weight: 700; color: #6ee7b7; font-variant-numeric: tabular-nums; }
-        .countdown-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
-        .btn-to-album-waiting { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-block; transition: 0.2s; width: 100%; }
+        /* --- TAMPILAN LAYAR TUNGGU (AESTHETIC WALLPAPER) --- */
+        #waitingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #12110f; background-size: cover; background-position: center; z-index: 8888; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 25px; text-align: center; }
+        #waitingOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(5px); z-index: -1; }
+        .waiting-card { max-width: 400px; width: 100%; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 20px; padding: 40px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(12px); position: relative; z-index: 1;}
+        
+        .waiting-custom-text { font-family: 'Dancing Script', cursive; font-size: 3.2rem; color: #6ee7b7; margin-bottom: 5px; text-shadow: 2px 2px 6px rgba(0,0,0,0.8); line-height: 1.2; }
+        .waiting-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 25px; color: #fff; letter-spacing: 1px; text-transform: uppercase; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .waiting-subtitle { color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 30px; line-height: 1.5; }
+        
+        .countdown-grid { display: flex; justify-content: center; gap: 12px; margin-bottom: 30px; }
+        .countdown-box { background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 12px 15px; border-radius: 12px; min-width: 70px; box-shadow: inset 0 2px 10px rgba(0,0,0,0.5); }
+        .countdown-num { font-size: 1.8rem; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; line-height: 1; }
+        .countdown-label { font-size: 0.65rem; color: #6ee7b7; text-transform: uppercase; margin-top: 6px; font-weight: 600; letter-spacing: 1px; }
+        .btn-to-album-waiting { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.3); padding: 14px 20px; border-radius: 12px; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-block; transition: 0.2s; width: 100%; backdrop-filter: blur(5px); }
+        .btn-to-album-waiting:active { transform: scale(0.97); }
 
-        /* Header & Kamera */
+        /* --- Header & Kamera --- */
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;}
         .film-counter { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; font-variant-numeric: tabular-nums; }
@@ -66,16 +72,18 @@
 <body>
 
     <div id="loadingScreen">
-        <div id="loadingText">Memeriksa Jadwal Acara...</div>
+        <div id="loadingText">Memeriksa Jadwal...</div>
     </div>
 
-    <!-- TAMPILAN LAYAR TUNGGU / COUNTDOWN UNTUK TAMU -->
+    <!-- TAMPILAN LAYAR TUNGGU / COUNTDOWN UNTUK TAMU (AESTHETIC) -->
     <div id="waitingScreen">
+        <div id="waitingOverlay"></div>
         <div class="waiting-card">
+            <div class="waiting-custom-text" id="waitingCustomText">The Wedding Of</div>
             <div class="waiting-title" id="waitingEventName">Acara Belum Dimulai</div>
-            <div class="waiting-subtitle">Kamera rol film akan terbuka secara otomatis saat acara dimulai pada zona waktu setempat.</div>
+            <div class="waiting-subtitle" id="waitingSubtitle">Kamera rol film akan terbuka secara otomatis saat jam acara dimulai pada zona waktu setempat.</div>
             
-            <div class="countdown-grid">
+            <div class="countdown-grid" id="waitingCountdownGrid">
                 <div class="countdown-box">
                     <div class="countdown-num" id="cdHours">00</div>
                     <div class="countdown-label">Jam</div>
@@ -90,7 +98,7 @@
                 </div>
             </div>
 
-            <a href="#" id="waitingBtnAlbum" class="btn-to-album-waiting">Lihat Album Acara</a>
+            <a href="#" id="waitingBtnAlbum" class="btn-to-album-waiting">Lihat Album Acara &rarr;</a>
         </div>
     </div>
 
@@ -156,7 +164,15 @@
                 
                 eventData = doc.data();
                 document.getElementById('displayEventName').innerText = eventData.eventName;
+                
+                // MENGATUR TAMPILAN AESTHETIC LAYAR TUNGGU
                 document.getElementById('waitingEventName').innerText = eventData.eventName;
+                document.getElementById('waitingCustomText').innerText = eventData.waitingText || "The Wedding Of";
+                
+                if (eventData.wallpaperUrl) {
+                    document.getElementById('waitingScreen').style.backgroundImage = `url(${eventData.wallpaperUrl})`;
+                }
+                
                 maxPhotos = eventData.guestPhotoLimit || 15;
                 photosTaken = parseInt(localStorage.getItem(`lastcall_${eventId}_count`)) || 0;
                 
@@ -166,21 +182,21 @@
         }
 
         function periksaStatusWaktu() {
-            // Menggunakan waktu lokal perangkat pengguna secara otomatis (mengikuti wilayah masing-masing)
             const sekarang = new Date();
             const startDateTime = new Date(`${eventData.date}T${eventData.startTime || '00:00'}:00`);
             const endDateTime = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:59`);
 
             if (sekarang < startDateTime) {
-                // Acara belum mulai -> Tampilkan layar countdown
+                // Acara belum mulai -> Tampilkan layar countdown aesthetic
                 document.getElementById('waitingScreen').style.display = 'flex';
                 mulaiCountdown(startDateTime);
             } else if (sekarang > endDateTime) {
                 // Acara sudah selesai
                 document.getElementById('waitingScreen').style.display = 'flex';
-                document.querySelector('.waiting-title').innerText = "Acara Telah Berakhir";
-                document.querySelector('.waiting-subtitle').innerText = "Terima kasih telah berpartisipasi. Anda masih dapat melihat kenangan foto di album.";
-                document.querySelector('.countdown-grid').style.display = 'none';
+                document.getElementById('waitingEventName').innerText = "Acara Telah Berakhir";
+                document.getElementById('waitingSubtitle').innerText = "Terima kasih telah berpartisipasi. Anda masih dapat melihat kenangan foto di album utama.";
+                document.getElementById('waitingCountdownGrid').style.display = 'none';
+                document.getElementById('waitingCustomText').innerText = "Thank You";
             } else {
                 // Acara sedang berlangsung -> Buka kamera
                 document.getElementById('waitingScreen').style.display = 'none';
