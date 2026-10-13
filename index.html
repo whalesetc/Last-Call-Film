@@ -62,7 +62,6 @@
         .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(110, 231, 183, 0.1); }
         .price-tag { font-weight: 700; color: var(--accent); display: block; margin-top: 5px; }
 
-        /* Pilihan AI / Preset Wallpaper Grid */
         .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
         .preset-card { border: 2px solid var(--border-color); border-radius: 10px; overflow: hidden; cursor: pointer; height: 110px; position: relative; transition: 0.2s; background-size: cover; background-position: center; }
         .preset-card:hover { transform: scale(1.02); }
@@ -585,9 +584,16 @@
             const listDiv = document.getElementById('eventList');
             const snapshot = await db.collection("events").where("ownerId", "==", currentUser.uid).get();
             if (snapshot.empty) { listDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Belum ada acara.</div>'; return; }
-            listDiv.innerHTML = '';
+            
+            daftarAcaraGlobal = [];
             snapshot.forEach(doc => {
-                let d = doc.data();
+                let eventData = doc.data();
+                eventData.id = doc.id;
+                daftarAcaraGlobal.push(eventData);
+            });
+
+            listDiv.innerHTML = '';
+            daftarAcaraGlobal.forEach(d => {
                 listDiv.innerHTML += `
                     <div class="event-card">
                         <div class="event-info">
@@ -595,7 +601,7 @@
                             <p>Tgl: ${d.date} • Kuota: ${d.quota===9999?'Unlimited':d.quota}</p>
                             <p>${d.status==='Pending'?'<span class="badge-pending">Pending</span>':'<span class="badge">Aktif</span>'}</p>
                         </div>
-                        <button class="btn-outline" onclick="bukaPengaturan('${doc.id}')">Kelola</button>
+                        <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">Kelola</button>
                     </div>`;
             });
         }
