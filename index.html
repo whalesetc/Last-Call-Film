@@ -18,10 +18,12 @@
         .font-serif { font-family: 'Playfair Display', serif; }
 
         /* Navbar */
-        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; }
-        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; }
+        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
+        .logo:hover { opacity: 0.8; }
+        
         .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center;}
-        .btn-outline:hover { background: rgba(255,255,255,0.05); }
+        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
         .btn-primary { background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
         .btn-primary:active { transform: scale(0.98); }
         .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
@@ -36,10 +38,21 @@
         .section { display: none; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
         .active-section { display: block; }
 
-        /* Landing Page */
-        #landingPage { text-align: center; padding-top: 100px; }
-        .hero-title { font-size: 3rem; margin-bottom: 15px; line-height: 1.2; }
+        /* --- REDESAIN HALAMAN LANDING --- */
+        #landingPage { text-align: center; padding-top: 80px; position: relative; overflow: hidden; }
+        #landingPage::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(circle, rgba(110, 231, 183, 0.08) 0%, rgba(0,0,0,0) 60%); z-index: -1; pointer-events: none;}
         
+        .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 25px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase;}
+        .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 20px; line-height: 1.15; text-shadow: 0 4px 20px rgba(0,0,0,0.5);}
+        .text-accent { color: var(--accent); font-style: italic; }
+        .hero-subtitle { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 40px auto; line-height: 1.7; }
+        
+        .hero-features { display: flex; justify-content: center; gap: 40px; margin-top: 60px; flex-wrap: wrap; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 50px;}
+        .feature-item { text-align: center; max-width: 220px; }
+        .feature-icon { font-size: 1.8rem; margin-bottom: 10px; opacity: 0.8;}
+        .feature-item h4 { font-size: 1rem; margin-bottom: 8px; font-family: 'Playfair Display', serif; }
+        .feature-item p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5;}
+
         /* Dasbor Customer */
         .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
         .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
@@ -105,17 +118,53 @@
 <body>
 
     <nav>
-        <div class="logo font-serif" onclick="location.reload()">✦ The Last Call</div>
+        <!-- LOGO DENGAN IKON ROLL FILM -->
+        <div class="logo font-serif" onclick="location.reload()">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                <line x1="7" y1="2" x2="7" y2="22"></line>
+                <line x1="17" y1="2" x2="17" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+                <line x1="2" y1="7" x2="7" y2="7"></line>
+                <line x1="2" y1="17" x2="7" y2="17"></line>
+                <line x1="17" y1="17" x2="22" y2="17"></line>
+                <line x1="17" y1="7" x2="22" y2="7"></line>
+            </svg>
+            The Last Call Film
+        </div>
         <div id="navMenu">
             <button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>
         </div>
     </nav>
 
-    <!-- 1. HALAMAN LANDING -->
+    <!-- 1. HALAMAN LANDING BARU (TEMA DIGITAL DISPOSABLE CAMERA) -->
     <div id="landingPage" class="section active-section">
-        <h1 class="hero-title font-serif">Abadikan Momen.<br>Tanpa Batas.</h1>
-        <p style="color: var(--text-muted); margin-bottom: 30px;">Platform photobooth digital elegan untuk acaramu.</p>
-        <button class="btn-primary" onclick="bukaAuthModal()">Mulai Buat Acara</button>
+        <div class="hero-badge">✧ Digital Disposable Camera untuk Acaramu</div>
+        <h1 class="hero-title font-serif">Kamera di Tangan Tamu.<br><span class="text-accent">Nostalgia di Setiap Jepretan.</span></h1>
+        <p class="hero-subtitle">Hadirkan pengalaman memotret ala <em>disposable camera</em> jadul langsung di ponsel tamu undangan Anda. Cukup scan QR, habiskan batas jepretan, dan ciptakan galeri kenangan autentik tanpa perlu mengunduh aplikasi apa pun.</p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; margin-top: 10px;">
+            <button class="btn-primary" onclick="bukaAuthModal()" style="font-size: 1rem; padding: 16px 32px;">Buat Acara Sekarang</button>
+            <button class="btn-outline" onclick="alert('Setiap tamu hanya bisa menjepret sesuai kuota yang Anda tentukan (misal: 15 foto/tamu), layaknya memakai roll film sungguhan!')" style="font-size: 1rem; padding: 16px 32px;">Cara Kerja</button>
+        </div>
+
+        <div class="hero-features">
+            <div class="feature-item">
+                <div class="feature-icon">📷</div>
+                <h4>Pengalaman Analog Bebas Ribet</h4>
+                <p>Nikmati sensasi kamera sekali pakai tanpa perlu repot mencetak atau mengumpulkan fisik kamera di akhir acara.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">⚡</div>
+                <h4>Scan & Langsung Jepret</h4>
+                <p>Tamu tidak perlu mengunduh aplikasi. Pindai QR di meja, dan kamera dengan batas "roll film" siap digunakan.</p>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">🎞️</div>
+                <h4>Roll Film Digital</h4>
+                <p>Semua hasil foto autentik dari para tamu akan otomatis terkumpul di satu galeri online layaknya film yang baru dicuci.</p>
+            </div>
+        </div>
     </div>
 
     <!-- 2. DASBOR CUSTOMER -->
@@ -155,9 +204,9 @@
             </div>
 
             <div class="form-group">
-                <label>Batas Maksimal Foto per Tamu</label>
+                <label>Batas Maksimal Foto per Tamu (Kapasitas Roll Film)</label>
                 <input type="number" id="guestPhotoLimit" class="form-control" min="1" max="36" value="15" required>
-                <span style="font-size:0.75rem; color:var(--text-muted)">Berapa kali maksimal 1 orang tamu boleh menjepret? (Maks: 36)</span>
+                <span style="font-size:0.75rem; color:var(--text-muted)">Berapa kali maksimal 1 orang tamu boleh menjepret? (Maks: 36, layaknya roll film jadul)</span>
             </div>
 
             <div class="form-group">
@@ -166,12 +215,12 @@
                     <label class="radio-card">
                         <input type="radio" name="privacy" value="visible" checked>
                         <strong>Publik (Visible)</strong>
-                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Semua tamu bisa melihat galeri</span>
+                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Semua tamu bisa melihat galeri utama</span>
                     </label>
                     <label class="radio-card">
                         <input type="radio" name="privacy" value="private">
                         <strong>Privat (Private)</strong>
-                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Tamu hanya melihat fotonya sendiri</span>
+                        <span style="display:block; font-size:0.75rem; color:var(--text-muted)">Tamu hanya melihat hasil fotonya sendiri</span>
                     </label>
                 </div>
             </div>
@@ -191,8 +240,8 @@
             </div>
 
             <div class="form-group">
-                <label style="font-size: 1.2rem; font-family: 'Playfair Display', serif;">Desain kartu undangan acara.</label>
-                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Gambar sampul ini adalah hal pertama yang tamu lihat saat diundang ke acara.</p>
+                <label style="font-size: 1.2rem; font-family: 'Playfair Display', serif;">Desain sampul kamera tamu.</label>
+                <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:15px;">Gambar sampul ini adalah hal pertama yang tamu lihat saat "kamera" terbuka.</p>
                 
                 <div class="mockup-container">
                     <div class="phone-mockup" id="phonePreviewBox">
@@ -273,7 +322,7 @@
                         <input type="hidden" id="editEventId">
                         
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Batas Jepret per Tamu (Maks 36)</label>
+                            <label style="font-size: 0.85rem;">Batas Jepret per Tamu (Kapasitas Roll)</label>
                             <input type="number" id="editGuestPhotoLimit" class="form-control" min="1" max="36" style="padding: 10px;" required>
                         </div>
 
@@ -527,9 +576,6 @@
             }
         }
 
-        // ==========================================
-        // KONTROL MODAL & OTENTIKASI
-        // ==========================================
         function bukaAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
         function tutupAuthModal() { document.getElementById('authModal').style.display = 'none'; }
         function bukaProfileModal() { 
@@ -560,7 +606,6 @@
             }
         }
 
-        // 1. Google Auth (Gmail)
         function loginDenganGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithPopup(provider).then((result) => {
@@ -571,7 +616,6 @@
             });
         }
 
-        // 2. Login Email & Password (Wajib Verifikasi & Cek Suspend)
         function loginDenganEmail() {
             const email = document.getElementById('loginEmail').value.trim();
             const pass = document.getElementById('loginPass').value.trim();
@@ -581,7 +625,6 @@
             auth.signInWithEmailAndPassword(email, pass).then((userCredential) => {
                 const user = userCredential.user;
                 
-                // Cek status suspend di collection members
                 db.collection('members').doc(user.uid).get().then(doc => {
                     if (doc.exists && doc.data().isSuspended === true) {
                         alert("Akun Anda telah ditangguhkan (suspend). Silakan hubungi admin.");
@@ -590,7 +633,6 @@
                         return;
                     }
 
-                    // Cek verifikasi email
                     if (!user.emailVerified) {
                         alert("Akun belum diverifikasi! Silakan cek kotak masuk email Anda dan klik tautan verifikasi terlebih dahulu.");
                         auth.signOut();
@@ -611,7 +653,6 @@
             });
         }
 
-        // 3. Register Email & Password (Mulus menangani email yang sudah terdaftar di auth)
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value.trim();
             const email = document.getElementById('regEmail').value.trim();
@@ -645,7 +686,6 @@
             });
         }
 
-        // Simpan Data Profil
         function simpanProfil() {
             const newName = document.getElementById('profileName').value.trim();
             const newPhone = document.getElementById('profilePhone').value.trim();
@@ -702,7 +742,6 @@
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
-                // Cek status suspend secara realtime saat login
                 db.collection('members').doc(user.uid).get().then(doc => {
                     if (doc.exists && doc.data().isSuspended === true) {
                         alert("Akun Anda telah ditangguhkan (suspend).");
