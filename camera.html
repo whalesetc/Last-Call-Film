@@ -11,48 +11,94 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: #000; color: #fff; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+        
         #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #loadingText { margin-top: 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+
+        /* Tampilan Layar Tunggu (Countdown Screen) */
+        #waitingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #12110f; z-index: 8888; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+        .waiting-card { max-width: 400px; width: 100%; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .waiting-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 10px; color: #fff; }
+        .waiting-subtitle { color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-bottom: 30px; }
+        .countdown-grid { display: flex; justify-content: center; gap: 15px; margin-bottom: 30px; }
+        .countdown-box { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 15px; border-radius: 10px; min-width: 65px; }
+        .countdown-num { font-size: 1.5rem; font-weight: 700; color: #6ee7b7; font-variant-numeric: tabular-nums; }
+        .countdown-label { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
+        .btn-to-album-waiting { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 12px 20px; border-radius: 10px; text-decoration: none; font-size: 0.9rem; font-weight: 600; display: inline-block; transition: 0.2s; width: 100%; }
+
+        /* Header & Kamera */
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;}
         .film-counter { background: rgba(255,255,255,0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; font-variant-numeric: tabular-nums; }
         .btn-album { background: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px;}
-        #statusBar { background-color: #ef4444; color: #fff; text-align: center; padding: 8px; font-size: 0.8rem; font-weight: bold; display: none; width: 100%; z-index: 9; }
+
         .camera-wrapper { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 15px 20px; background: #111; }
         .camera-container { height: 100%; max-width: 100%; aspect-ratio: 3 / 4; background: #000; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); }
         video { width: 100%; height: 100%; object-fit: cover; }
+        
         .viewfinder-frame { position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%; border: 1px solid rgba(255,255,255,0.25); pointer-events: none; z-index: 5; border-radius: 8px; }
         .viewfinder-crosshair { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 24px; height: 24px; pointer-events: none; z-index: 5; }
         .viewfinder-crosshair::before { content:''; position:absolute; top:11px; left:0; width:24px; height:2px; background:rgba(255,255,255,0.6); }
         .viewfinder-crosshair::after { content:''; position:absolute; top:0; left:11px; width:2px; height:24px; background:rgba(255,255,255,0.6); }
+
         #flashEffect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; transition: opacity 0.1s ease-out; z-index: 20; }
         .flash-active { opacity: 1 !important; }
+
         .bottom-area { background: #000; display: flex; flex-direction: column; padding: 15px 20px 25px; gap: 15px; border-top: 1px solid rgba(255,255,255,0.05); }
         .main-controls { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; }
+
         .btn-capture { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; outline: none; transition: transform 0.1s; }
         .btn-capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.2s; }
         .btn-capture:active .btn-capture-inner { background: #ccc; transform: scale(0.9); }
-        .btn-capture:disabled { opacity: 0.5; cursor: not-allowed; border-color: rgba(255,255,255,0.5); }
-        .btn-capture:disabled .btn-capture-inner { background: rgba(255,255,255,0.5); }
+        
         .btn-switch { position: absolute; right: 0; width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; font-size: 1.2rem; }
         .thumbnail-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; width: 100%; }
-        .thumbnail-btn { width: 42px; height: 42px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; transition: 0.2s; }
+        .thumbnail-btn { width: 42px; height: 42px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; }
+
         #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         #previewImage { max-width: 100%; max-height: 70vh; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); object-fit: contain; }
         .preview-actions { display: flex; gap: 15px; width: 100%; max-width: 350px; }
-        .btn-close-modal { flex: 1; padding: 14px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
-        .btn-save-modal { flex: 2; padding: 14px; background: #6ee7b7; color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .btn-close-modal { flex: 1; padding: 14px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+        .btn-save-modal { flex: 2; padding: 14px; background: #6ee7b7; color: #000; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; }
         canvas { display: none; }
     </style>
 </head>
 <body>
-    <div id="loadingScreen"><div id="loadingText">Menyiapkan Kamera...</div></div>
+
+    <div id="loadingScreen">
+        <div id="loadingText">Memeriksa Jadwal Acara...</div>
+    </div>
+
+    <!-- TAMPILAN LAYAR TUNGGU / COUNTDOWN UNTUK TAMU -->
+    <div id="waitingScreen">
+        <div class="waiting-card">
+            <div class="waiting-title" id="waitingEventName">Acara Belum Dimulai</div>
+            <div class="waiting-subtitle">Kamera rol film akan terbuka secara otomatis saat acara dimulai pada zona waktu setempat.</div>
+            
+            <div class="countdown-grid">
+                <div class="countdown-box">
+                    <div class="countdown-num" id="cdHours">00</div>
+                    <div class="countdown-label">Jam</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-num" id="cdMinutes">00</div>
+                    <div class="countdown-label">Menit</div>
+                </div>
+                <div class="countdown-box">
+                    <div class="countdown-num" id="cdSeconds">00</div>
+                    <div class="countdown-label">Detik</div>
+                </div>
+            </div>
+
+            <a href="#" id="waitingBtnAlbum" class="btn-to-album-waiting">Lihat Album Acara</a>
+        </div>
+    </div>
+
     <div class="header">
         <a href="#" id="btnToAlbum" class="btn-album">Lihat Album</a>
         <div class="event-name" id="displayEventName">Memuat...</div>
         <div class="film-counter" id="displayFilmCounter">-- / --</div>
     </div>
-    <div id="statusBar">🔴 MODE DEMO - Foto tidak masuk ke album</div>
 
     <div class="camera-wrapper">
         <div class="camera-container">
@@ -91,42 +137,82 @@
         const db = firebase.firestore();
 
         let eventId = new URLSearchParams(window.location.search).get('event');
-        let isDemoMode = false, maxPhotos = 15, photosTaken = 0, currentPhotoDataUrl = null; 
+        let eventData = null;
+        let maxPhotos = 15, photosTaken = 0, currentPhotoDataUrl = null; 
         let videoStream = null, currentFacingMode = 'environment';
+        let countdownInterval = null;
 
         window.onload = async () => {
-            if (!eventId) return alert("Tautan tidak valid.");
+            if (!eventId) { alert("Tautan tidak valid."); return; }
             document.getElementById('btnToAlbum').href = `album.html?event=${eventId}`;
-            await muatDataAcara();
-            await mulaiKamera();
+            document.getElementById('waitingBtnAlbum').href = `album.html?event=${eventId}`;
+            await muatDataAcaraDanCekWaktu();
         };
 
-        async function muatDataAcara() {
+        async function muatDataAcaraDanCekWaktu() {
             try {
                 const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) return;
-                const eventData = doc.data();
+                if (!doc.exists) { alert("Acara tidak ditemukan!"); return; }
+                
+                eventData = doc.data();
                 document.getElementById('displayEventName').innerText = eventData.eventName;
+                document.getElementById('waitingEventName').innerText = eventData.eventName;
                 maxPhotos = eventData.guestPhotoLimit || 15;
                 photosTaken = parseInt(localStorage.getItem(`lastcall_${eventId}_count`)) || 0;
                 
-                const now = new Date();
-                const start = new Date(`${eventData.date}T${eventData.startTime || '00:00'}:00`);
-                const end = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:59`);
-
-                isDemoMode = (now < start || now > end);
-                if (isDemoMode) {
-                    document.getElementById('statusBar').style.display = 'block';
-                    document.getElementById('displayFilmCounter').innerText = `DEMO`;
-                } else {
-                    perbaruiTampilanRoll();
-                }
+                periksaStatusWaktu();
                 document.getElementById('loadingScreen').style.display = 'none';
             } catch (error) { console.error("Error:", error); }
         }
 
+        function periksaStatusWaktu() {
+            // Menggunakan waktu lokal perangkat pengguna secara otomatis (mengikuti wilayah masing-masing)
+            const sekarang = new Date();
+            const startDateTime = new Date(`${eventData.date}T${eventData.startTime || '00:00'}:00`);
+            const endDateTime = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:59`);
+
+            if (sekarang < startDateTime) {
+                // Acara belum mulai -> Tampilkan layar countdown
+                document.getElementById('waitingScreen').style.display = 'flex';
+                mulaiCountdown(startDateTime);
+            } else if (sekarang > endDateTime) {
+                // Acara sudah selesai
+                document.getElementById('waitingScreen').style.display = 'flex';
+                document.querySelector('.waiting-title').innerText = "Acara Telah Berakhir";
+                document.querySelector('.waiting-subtitle').innerText = "Terima kasih telah berpartisipasi. Anda masih dapat melihat kenangan foto di album.";
+                document.querySelector('.countdown-grid').style.display = 'none';
+            } else {
+                // Acara sedang berlangsung -> Buka kamera
+                document.getElementById('waitingScreen').style.display = 'none';
+                perbaruiTampilanRoll();
+                mulaiKamera();
+            }
+        }
+
+        function mulaiCountdown(targetDate) {
+            if (countdownInterval) clearInterval(countdownInterval);
+            
+            countdownInterval = setInterval(() => {
+                const sekarang = new Date();
+                const selisih = targetDate - sekarang;
+
+                if (selisih <= 0) {
+                    clearInterval(countdownInterval);
+                    location.reload(); // Refresh otomatis saat waktu mulai tiba
+                    return;
+                }
+
+                const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+
+                document.getElementById('cdHours').innerText = String(jam).padStart(2, '0');
+                document.getElementById('cdMinutes').innerText = String(menit).padStart(2, '0');
+                document.getElementById('cdSeconds').innerText = String(detik).padStart(2, '0');
+            }, 1000);
+        }
+
         function perbaruiTampilanRoll() {
-            if (isDemoMode) return;
             document.getElementById('displayFilmCounter').innerText = `${maxPhotos - photosTaken} / ${maxPhotos}`;
             if (photosTaken >= maxPhotos) document.getElementById('btnCapture').disabled = true;
         }
@@ -145,7 +231,7 @@
         }
 
         function jepretFoto() {
-            if (!isDemoMode && photosTaken >= maxPhotos) return alert("Jatah foto habis!");
+            if (photosTaken >= maxPhotos) return alert("Jatah foto habis!");
             
             const flash = document.getElementById('flashEffect');
             flash.classList.add('flash-active');
@@ -153,10 +239,7 @@
 
             const video = document.getElementById('cameraFeed');
             const canvas = document.getElementById('photoCanvas');
-            
-            // RESOLUSI DIKECILKAN AGAR PENGIRIMAN INSTAN 
-            canvas.width = 720; 
-            canvas.height = 960;
+            canvas.width = 720; canvas.height = 960;
             const ctx = canvas.getContext('2d');
 
             const videoRatio = video.videoWidth / video.videoHeight;
@@ -173,26 +256,21 @@
             if (currentFacingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
             ctx.drawImage(video, offsetX, offsetY, drawWidth, drawHeight, 0, 0, canvas.width, canvas.height);
 
-            // Kompresi 60% agar file sangat ringan & instan masuk database
             const dataURL = canvas.toDataURL('image/jpeg', 0.6);
-
             const thumbImg = document.createElement('img');
             thumbImg.className = 'thumbnail-btn';
             thumbImg.src = dataURL;
             thumbImg.onclick = () => bukaPreview(dataURL);
             document.getElementById('thumbnailGallery').prepend(thumbImg);
 
-            if (!isDemoMode) {
-                photosTaken++;
-                localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
-                perbaruiTampilanRoll();
-                
-                // SIMPAN INSTAN LANGSUNG KE FIRESTORE (TANPA IMGBB)
-                db.collection('events').doc(eventId).collection('photos').add({
-                    url: dataURL,
-                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
-                }).catch(err => console.error("Gagal simpan:", err));
-            }
+            photosTaken++;
+            localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
+            perbaruiTampilanRoll();
+            
+            db.collection('events').doc(eventId).collection('photos').add({
+                url: dataURL,
+                uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => console.error("Gagal simpan:", err));
         }
 
         function bukaPreview(url) {
@@ -208,9 +286,7 @@
             const a = document.createElement('a');
             a.href = currentPhotoDataUrl;
             a.download = `TheLastCall_${Date.now()}.jpg`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            document.body.appendChild(a); a.click(); document.body.removeChild(a);
             tutupPreview();
         }
     </script>
