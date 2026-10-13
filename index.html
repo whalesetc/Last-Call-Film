@@ -62,11 +62,12 @@
         .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(110, 231, 183, 0.1); }
         .price-tag { font-weight: 700; color: var(--accent); display: block; margin-top: 5px; }
 
-        .preset-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px; }
-        .preset-card { border: 2px solid var(--border-color); border-radius: 10px; overflow: hidden; cursor: pointer; height: 110px; position: relative; transition: 0.2s; background-size: cover; background-position: center; }
+        .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
+        @media(min-width: 600px) { .preset-grid { grid-template-columns: repeat(4, 1fr); } }
+        .preset-card { border: 2px solid var(--border-color); border-radius: 10px; overflow: hidden; cursor: pointer; height: 100px; position: relative; transition: 0.2s; background-size: cover; background-position: center; }
         .preset-card:hover { transform: scale(1.02); }
         .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(110, 231, 183, 0.4); }
-        .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.7); font-size: 0.7rem; padding: 4px; text-align: center; color: #fff; }
+        .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.65rem; padding: 4px; text-align: center; color: #fff; }
 
         .mockup-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
         .phone-mockup { width: 220px; height: 450px; border: 12px solid #222; border-radius: 35px; position: relative; overflow: hidden; background: #111; box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: block; }
@@ -175,22 +176,22 @@
                 <input type="text" id="waitingText" class="form-control" value="The Wedding Of" required>
             </div>
 
-            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA -->
+            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA (DIHAPDAT KE HALAMAN ORDERAN) -->
             <div class="form-group">
-                <label>Pilih Orientasi & Wallpaper Standar (AI) atau Unggah Sendiri</label>
+                <label>Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                 
-                <div style="display: flex; gap: 15px; margin-bottom: 12px;">
-                    <label class="radio-card" style="flex:1;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong>Portrait (Ponsel)</strong></label>
-                    <label class="radio-card" style="flex:1;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong>Landscape (Umum)</strong></label>
+                <div style="display: flex; gap: 10px; margin-bottom: 12px;">
+                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong>Portrait</strong></label>
+                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong>Landscape</strong></label>
                 </div>
 
                 <div class="preset-grid" id="presetWallpaperContainer">
-                    <!-- Diisi dinamis via JS sesuai jenis acara & orientasi -->
+                    <!-- Diisi dinamis via JS -->
                 </div>
                 
                 <div class="mockup-container">
                     <div class="phone-mockup" id="phonePreviewBox">
-                        <div class="phone-screen" id="phoneScreen" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80');">
+                        <div class="phone-screen" id="phoneScreen" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80');">
                             <div class="phone-overlay">
                                 <h4 id="previewEventTitle" class="mockup-title">Nama Acara</h4>
                                 <div class="mockup-btn">Lihat Album &rarr;</div>
@@ -315,7 +316,6 @@
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
                         </div>
 
-                        <!-- Pilihan Wallpaper Standar / Upload di Menu Kelola -->
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-size: 0.85rem;">Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                             
@@ -418,42 +418,48 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
         
-        // DATABASE WALLPAPER PRESET STANDAR (AI / AESTHETIC)
+        // DATABASE WALLPAPER PRESET (DISESUAIKAN DENGAN TEMA PERNIKAHAN, BUNGA, CINCIN & POLOS HITAM)
         const wallpaperDatabase = {
             Wedding: {
                 portrait: [
-                    { name: "Classic Rose", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Romantic Gold", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Minimalist Floral", url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=400&q=80" }
+                    { name: "Cincin Nikah", url: "https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Bunga Pernikahan", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Vibes Romantis", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ],
                 landscape: [
-                    { name: "Grand Venue", url: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Sunset Reception", url: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Boho Wedding", url: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80" }
+                    { name: "Cincin Nikah", url: "https://images.unsplash.com/photo-1605100804763-247f67b3557e?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Bunga Pernikahan", url: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Vibes Romantis", url: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ]
             },
             Birthday: {
                 portrait: [
-                    { name: "Confetti Neon", url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Gold Balloon", url: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Party Lights", url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=400&q=80" }
+                    { name: "Confetti Pesta", url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Balon Emas", url: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Lampu Pesta", url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ],
                 landscape: [
-                    { name: "Celebration Wide", url: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Cake & Sparkles", url: "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Night Party", url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80" }
+                    { name: "Perayaan Luas", url: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Kue & Lilin", url: "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Pesta Malam", url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ]
             },
             Event: {
                 portrait: [
-                    { name: "Modern Dark", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Abstract Glow", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80" },
-                    { name: "Minimalist Dark", url: "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=400&q=80" }
+                    { name: "Modern Gelap", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Abstrak Elegan", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Minimalis Mewah", url: "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ],
                 landscape: [
-                    { name: "Stage Lights", url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Corporate Abstract", url: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80" },
-                    { name: "Night City Lights", url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80" }
+                    { name: "Panggung Acara", url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Korporat Luas", url: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Lampu Malam", url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Polos Hitam", url: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=" }
                 ]
             }
         };
@@ -470,7 +476,7 @@
             
             listPreset.forEach((item, index) => {
                 const isSelected = index === 0 ? 'selected' : '';
-                if(index === 0) selectedWallpaperUrl = item.url; // Default pilihan pertama
+                if(index === 0) selectedWallpaperUrl = item.url;
                 
                 container.innerHTML += `
                     <div class="preset-card ${isSelected}" style="background-image: url('${item.url}');" onclick="pilihPresetWallpaper('${item.url}', this)">
@@ -509,9 +515,8 @@
             const orientasi = document.querySelector('input[name="editOrientation"]:checked').value;
             const container = document.getElementById('editPresetContainer');
             
-            // Menggunakan kategori Event umum atau Wedding sebagai default jika edit
             container.innerHTML = '';
-            const listPreset = wallpaperDatabase['Event'][orientasi];
+            const listPreset = wallpaperDatabase['Wedding'][orientasi];
             
             listPreset.forEach((item, index) => {
                 const isSelected = index === 0 ? 'selected' : '';
@@ -529,7 +534,7 @@
             selectedEditWallpaperUrl = url;
             document.querySelectorAll('#editPresetContainer .preset-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
-            document.getElementById('editWallpaperFile').value = ""; // Reset file upload
+            document.getElementById('editWallpaperFile').value = ""; 
             document.getElementById('editFileName').innerText = "✏️ Atau Unggah File Sendiri";
         }
 
