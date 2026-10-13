@@ -6,27 +6,41 @@
     <title>The Last Call Film • Album Acara</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- FIREBASE SDK (Firestore) -->
+    <!-- FIREBASE & JSZIP SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.2/jszip.min.js"></script>
 
     <style>
         :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-light); padding: 20px; min-height: 100vh; display: flex; flex-direction: column; }
         
-        .header { text-align: center; margin-bottom: 30px; padding-top: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; }
+        .header { text-align: center; margin-bottom: 20px; padding-top: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; position: relative; }
         .event-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 5px; }
         .photo-count { color: var(--text-muted); font-size: 0.9rem; }
         .btn-back { position: absolute; top: 20px; left: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
         .btn-back:hover { background: rgba(255,255,255,0.1); }
 
+        /* Panel Kontrol Seleksi & Unduh */
+        .action-bar { max-width: 1000px; margin: 0 auto 20px auto; width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .action-group { display: flex; gap: 10px; flex-wrap: wrap; }
+        
+        .btn-action { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-action:hover { background: rgba(255,255,255,0.2); }
+        .btn-primary-action { background: var(--accent); color: #000; border: none; }
+        .btn-primary-action:hover { opacity: 0.9; }
+
         /* Grid Galeri */
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; padding-bottom: 40px; }
         
         .photo-item { width: 100%; aspect-ratio: 3 / 4; background: #1a1917; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
-        .photo-item:hover { transform: scale(0.98); opacity: 0.85; }
-        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        
+        /* Checkbox Seleksi */
+        .photo-checkbox { position: absolute; top: 10px; right: 10px; width: 22px; height: 22px; accent-color: var(--accent); cursor: pointer; z-index: 5; display: none; }
+        .select-mode .photo-checkbox { display: block; }
+        .photo-item.selected { border: 2px solid var(--accent); transform: scale(0.97); }
 
         .empty-state { text-align: center; grid-column: 1 / -1; padding: 80px 20px; color: var(--text-muted); font-style: italic; font-size: 1rem; }
 
@@ -38,7 +52,7 @@
         .btn-save-modal { flex: 2; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
     </style>
 </head>
-<body>
+<body id="bodyElement">
 
     <div class="header">
         <a href="javascript:history.back()" class="btn-back">&larr; Kembali</a>
@@ -46,21 +60,31 @@
         <p class="photo-count" id="photoCountDisplay">0 Foto Diambil</p>
     </div>
 
+    <!-- Action Bar untuk Fitur Select & Download -->
+    <div class="action-bar" id="actionBar" style="display: none;">
+        <div class="action-group">
+            <button class="btn-action" id="btnToggleSelect" onclick="toggleSelectMode()">Pilih Foto</button>
+            <button class="btn-action" id="btnSelectAll" onclick="selectAllPhotos()" style="display: none;">Pilih Semua</button>
+        </div>
+        <div class="action-group" id="downloadGroup" style="display: none;">
+            <button class="btn-action btn-primary-action" onclick="downloadSelectedZip()">Unduh ZIP (.zip)</button>
+        </div>
+    </div>
+
     <div class="gallery-grid" id="galleryContainer">
         <div class="empty-state">Mencari rol film acara...</div>
     </div>
 
-    <!-- Modal Pop-Up Preview Foto -->
+    <!-- Modal Preview -->
     <div id="previewModal">
         <img id="previewImage" src="">
         <div class="preview-actions">
             <button class="btn-close-modal" onclick="tutupPreview()">Tutup</button>
-            <button class="btn-save-modal" onclick="unduhFoto()">Simpan Foto</button>
+            <button class="btn-save-modal" onclick="unduhFotoSatuSatu()">Simpan ke Galeri</button>
         </div>
     </div>
 
     <script>
-        // Konfigurasi Firebase (Hanya Firestore)
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -70,13 +94,14 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Mengambil Parameter ID Event dari URL (Contoh: album.html?event=XYZ)
         let eventId = new URLSearchParams(window.location.search).get('event');
         let currentDownloadUrl = "";
+        let fotoDataList = [];
+        let isSelectMode = false;
 
         if (!eventId) {
             document.getElementById('eventNameDisplay').innerText = "Acara Tidak Ditemukan";
-            document.getElementById('galleryContainer').innerHTML = "<div class='empty-state'>Tautan album tidak valid atau parameter acara hilang.</div>";
+            document.getElementById('galleryContainer').innerHTML = "<div class='empty-state'>Tautan album tidak valid.</div>";
         } else {
             muatDataAcara();
             dengarkanFotoRealtime();
@@ -87,44 +112,134 @@
                 const doc = await db.collection('events').doc(eventId).get();
                 if (doc.exists) {
                     document.getElementById('eventNameDisplay').innerText = doc.data().eventName;
-                } else {
-                    document.getElementById('eventNameDisplay').innerText = "Album Tidak Ditemukan";
                 }
             } catch (error) {
                 console.error("Gagal memuat judul:", error);
-                document.getElementById('eventNameDisplay').innerText = "Kesalahan Sistem";
             }
         }
 
-        // Sinkronisasi Real-Time Foto Tamu Menggunakan onSnapshot
         function dengarkanFotoRealtime() {
             db.collection('events').doc(eventId).collection('photos')
               .orderBy('uploadedAt', 'desc')
               .onSnapshot((snapshot) => {
                   const gallery = document.getElementById('galleryContainer');
                   const countDisplay = document.getElementById('photoCountDisplay');
+                  const actionBar = document.getElementById('actionBar');
                   
                   if (snapshot.empty) {
                       gallery.innerHTML = "<div class='empty-state'>Belum ada foto yang diambil.<br>Jadilah tamu pertama yang menjepret momen!</div>";
                       countDisplay.innerText = "0 Foto Diambil";
+                      actionBar.style.display = 'none';
                       return;
                   }
 
                   countDisplay.innerText = `${snapshot.size} Foto Diambil`;
+                  actionBar.style.display = 'flex';
                   gallery.innerHTML = ""; 
+                  fotoDataList = [];
 
                   snapshot.forEach((doc) => {
                       const data = doc.data();
+                      fotoDataList.push(data.url);
+
                       const div = document.createElement('div');
                       div.className = 'photo-item';
-                      div.innerHTML = `<img src="${data.url}" alt="Jepretan Tamu" loading="lazy">`;
-                      div.onclick = () => bukaPreview(data.url);
+                      div.innerHTML = `
+                          <input type="checkbox" class="photo-checkbox" value="${data.url}">
+                          <img src="${data.url}" alt="Jepretan Tamu" crossorigin="anonymous" referrerpolicy="no-referrer">
+                      `;
+                      
+                      // Logika klik: Jika mode select aktif, centang checkbox. Jika tidak, buka preview.
+                      div.onclick = (e) => {
+                          if (e.target.tagName === 'INPUT') return; // Biarkan checkbox bekerja sendiri
+                          const cb = div.querySelector('.photo-checkbox');
+                          if (isSelectMode) {
+                              cb.checked = !cb.checked;
+                              div.classList.toggle('selected', cb.checked);
+                          } else {
+                              bukaPreview(data.url);
+                          }
+                      };
+
+                      div.querySelector('.photo-checkbox').onchange = (e) => {
+                          div.classList.toggle('selected', e.target.checked);
+                      };
+
                       gallery.appendChild(div);
                   });
               }, (error) => {
-                  console.error("Error mengambil foto:", error);
-                  document.getElementById('galleryContainer').innerHTML = "<div class='empty-state' style='color:#ef4444;'>Gagal memuat foto. Periksa kembali aturan (Rules) Firestore Anda.</div>";
+                  console.error("Error:", error);
+                  document.getElementById('galleryContainer').innerHTML = "<div class='empty-state' style='color:#ef4444;'>Gagal memuat foto.</div>";
               });
+        }
+
+        // Fitur Tombol Pilih (Select Mode)
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            const bodyEl = document.getElementById('bodyElement');
+            const btnToggle = document.getElementById('btnToggleSelect');
+            const btnSelectAll = document.getElementById('btnSelectAll');
+            const downloadGroup = document.getElementById('downloadGroup');
+
+            if (isSelectMode) {
+                bodyEl.classList.add('select-mode');
+                btnToggle.innerText = "Batal Pilih";
+                btnSelectAll.style.display = 'inline-block';
+                downloadGroup.style.display = 'block';
+            } else {
+                bodyEl.classList.remove('select-mode');
+                btnToggle.innerText = "Pilih Foto";
+                btnSelectAll.style.display = 'none';
+                downloadGroup.style.display = 'none';
+                // Bersihkan centangan
+                document.querySelectorAll('.photo-checkbox').forEach(cb => cb.checked = false);
+                document.querySelectorAll('.photo-item').forEach(item => item.classList.remove('selected'));
+            }
+        }
+
+        // Pilih Semua Foto
+        function selectAllPhotos() {
+            const checkboxes = document.querySelectorAll('.photo-checkbox');
+            const items = document.querySelectorAll('.photo-item');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+
+            checkboxes.forEach((cb, idx) => {
+                cb.checked = !allChecked;
+                items[idx].classList.toggle('selected', !allChecked);
+            });
+            document.getElementById('btnSelectAll').innerText = allChecked ? "Pilih Semua" : "Batalkan Semua";
+        }
+
+        // Unduh Terpilih sebagai ZIP
+        async function downloadSelectedZip() {
+            const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                return alert("Silakan pilih minimal satu foto yang ingin diunduh!");
+            }
+
+            alert(`Memproses ${checkedBoxes.length} foto menjadi file ZIP. Mohon tunggu sebentar...`);
+            const zip = new JSZip();
+            const folder = zip.folder("TheLastCall_Album");
+
+            let count = 0;
+            for (let cb of checkedBoxes) {
+                try {
+                    const response = await fetch(cb.value);
+                    const blob = await response.blob();
+                    folder.file(`foto_${++count}.jpg`, blob);
+                } catch (err) {
+                    console.error("Gagal mengambil gambar untuk zip:", err);
+                }
+            }
+
+            zip.generateAsync({ type: "blob" }).then((content) => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(content);
+                link.download = `TheLastCall_Selected_${Date.now()}.zip`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
         }
 
         function bukaPreview(url) {
@@ -138,7 +253,8 @@
             currentDownloadUrl = "";
         }
 
-        function unduhFoto() {
+        // Unduh Satuan ke Galeri / Perangkat
+        function unduhFotoSatuSatu() {
             if (!currentDownloadUrl) return;
             fetch(currentDownloadUrl)
                 .then(response => response.blob())
