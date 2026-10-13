@@ -158,10 +158,10 @@
         <form id="eventForm">
             <div class="form-group">
                 <label>Jenis Acara</label>
-                <select id="eventType" class="form-control" onchange="updateEventPreview()">
+                <select id="eventType" class="form-control" onchange="gantiJenisAcaraForm()">
                     <option value="Wedding">Wedding (Pernikahan)</option>
                     <option value="Birthday">Birthday (Ulang Tahun)</option>
-                    <option value="Event">Event Lainnya</option>
+                    <option value="Event">Event Lainnya (Umum)</option>
                 </select>
             </div>
             
@@ -175,19 +175,17 @@
                 <input type="text" id="waitingText" class="form-control" value="The Wedding Of" required>
             </div>
 
-            <!-- PILIHAN WALLPAPER PRESET AI / AESTHETIC -->
+            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA -->
             <div class="form-group">
-                <label>Pilih Wallpaper Bawaan (AI Aesthetic) atau Unggah Sendiri</label>
-                <div class="preset-grid">
-                    <div class="preset-card selected" style="background-image: url('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80');" onclick="pilihPresetWallpaper('https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80', this)">
-                        <div class="preset-label">Classic Rose</div>
-                    </div>
-                    <div class="preset-card" style="background-image: url('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80');" onclick="pilihPresetWallpaper('https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80', this)">
-                        <div class="preset-label">Romantic Gold</div>
-                    </div>
-                    <div class="preset-card" style="background-image: url('https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=400&q=80');" onclick="pilihPresetWallpaper('https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=400&q=80', this)">
-                        <div class="preset-label">Minimalist Warm</div>
-                    </div>
+                <label>Pilih Orientasi & Wallpaper Standar (AI) atau Unggah Sendiri</label>
+                
+                <div style="display: flex; gap: 15px; margin-bottom: 12px;">
+                    <label class="radio-card" style="flex:1;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong>Portrait (Ponsel)</strong></label>
+                    <label class="radio-card" style="flex:1;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong>Landscape (Umum)</strong></label>
+                </div>
+
+                <div class="preset-grid" id="presetWallpaperContainer">
+                    <!-- Diisi dinamis via JS sesuai jenis acara & orientasi -->
                 </div>
                 
                 <div class="mockup-container">
@@ -306,6 +304,7 @@
                     </div>
                 </div>
 
+                <!-- PENGATURAN WAKTU & WALLPAPER DI MENU KELOLA -->
                 <div class="dash-card">
                     <h3>Pengaturan Waktu & Wallpaper</h3>
                     <form id="editEventForm">
@@ -315,9 +314,24 @@
                             <label style="font-size: 0.85rem;">Teks Sambutan Aesthetic Wallpaper</label>
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
                         </div>
+
+                        <!-- Pilihan Wallpaper Standar / Upload di Menu Kelola -->
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Ganti Wallpaper (Unggah File Baru)</label>
-                            <input type="file" id="editWallpaperFile" accept="image/*" class="form-control" style="padding: 10px; background: rgba(255,255,255,0.02);">
+                            <label style="font-size: 0.85rem;">Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
+                            
+                            <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="portrait" checked onclick="perbaruiPresetEditOtomatis()"><strong>Portrait</strong></label>
+                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="landscape" onclick="perbaruiPresetEditOtomatis()"><strong>Landscape</strong></label>
+                            </div>
+
+                            <div class="preset-grid" id="editPresetContainer">
+                                <!-- Diisi dinamis via JS -->
+                            </div>
+
+                            <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3); text-align: center; display: block; margin-top: 10px;">
+                                <input type="file" id="editWallpaperFile" accept="image/*" style="display:none;" onchange="previewFileEditCustom()">
+                                <span id="editFileName">✏️ Atau Unggah File Sendiri</span>
+                            </label>
                         </div>
 
                         <div class="time-group" style="margin-bottom: 15px;">
@@ -404,7 +418,68 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
         
-        let selectedWallpaperUrl = 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80';
+        // DATABASE WALLPAPER PRESET STANDAR (AI / AESTHETIC)
+        const wallpaperDatabase = {
+            Wedding: {
+                portrait: [
+                    { name: "Classic Rose", url: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Romantic Gold", url: "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Minimalist Floral", url: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?auto=format&fit=crop&w=400&q=80" }
+                ],
+                landscape: [
+                    { name: "Grand Venue", url: "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Sunset Reception", url: "https://images.unsplash.com/photo-1469371670807-013ccf25f16a?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Boho Wedding", url: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?auto=format&fit=crop&w=600&q=80" }
+                ]
+            },
+            Birthday: {
+                portrait: [
+                    { name: "Confetti Neon", url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Gold Balloon", url: "https://images.unsplash.com/photo-1513151233558-d860c5398176?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Party Lights", url: "https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&w=400&q=80" }
+                ],
+                landscape: [
+                    { name: "Celebration Wide", url: "https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Cake & Sparkles", url: "https://images.unsplash.com/photo-1531306728370-e2ebd9d7bb99?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Night Party", url: "https://images.unsplash.com/photo-1505373877841-8d25f7d46678?auto=format&fit=crop&w=600&q=80" }
+                ]
+            },
+            Event: {
+                portrait: [
+                    { name: "Modern Dark", url: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Abstract Glow", url: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80" },
+                    { name: "Minimalist Dark", url: "https://images.unsplash.com/photo-1557683316-973673baf926?auto=format&fit=crop&w=400&q=80" }
+                ],
+                landscape: [
+                    { name: "Stage Lights", url: "https://images.unsplash.com/photo-1540575467063-178a50c2df87?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Corporate Abstract", url: "https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=600&q=80" },
+                    { name: "Night City Lights", url: "https://images.unsplash.com/photo-1519501025264-65ba15a82390?auto=format&fit=crop&w=600&q=80" }
+                ]
+            }
+        };
+
+        let selectedWallpaperUrl = '';
+
+        function perbaruiPresetOtomatis() {
+            const tipe = document.getElementById('eventType').value;
+            const orientasi = document.querySelector('input[name="wallpaperOrientation"]:checked').value;
+            const container = document.getElementById('presetWallpaperContainer');
+            
+            container.innerHTML = '';
+            const listPreset = wallpaperDatabase[tipe][orientasi];
+            
+            listPreset.forEach((item, index) => {
+                const isSelected = index === 0 ? 'selected' : '';
+                if(index === 0) selectedWallpaperUrl = item.url; // Default pilihan pertama
+                
+                container.innerHTML += `
+                    <div class="preset-card ${isSelected}" style="background-image: url('${item.url}');" onclick="pilihPresetWallpaper('${item.url}', this)">
+                        <div class="preset-label">${item.name}</div>
+                    </div>
+                `;
+            });
+            document.getElementById('phoneScreen').style.backgroundImage = `url(${selectedWallpaperUrl})`;
+        }
 
         function pilihPresetWallpaper(url, element) {
             selectedWallpaperUrl = url;
@@ -419,12 +494,52 @@
             if(file) {
                 document.getElementById('fileName').innerText = "✔️ File: " + file.name;
                 document.querySelectorAll('.preset-card').forEach(card => card.classList.remove('selected'));
-                
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     selectedWallpaperUrl = e.target.result;
                     document.getElementById('phoneScreen').style.backgroundImage = `url(${e.target.result})`;
                 }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        // UNTUK MENU KELOLA / EDIT
+        let selectedEditWallpaperUrl = '';
+        function perbaruiPresetEditOtomatis() {
+            const orientasi = document.querySelector('input[name="editOrientation"]:checked').value;
+            const container = document.getElementById('editPresetContainer');
+            
+            // Menggunakan kategori Event umum atau Wedding sebagai default jika edit
+            container.innerHTML = '';
+            const listPreset = wallpaperDatabase['Event'][orientasi];
+            
+            listPreset.forEach((item, index) => {
+                const isSelected = index === 0 ? 'selected' : '';
+                if(index === 0) selectedEditWallpaperUrl = item.url;
+                
+                container.innerHTML += `
+                    <div class="preset-card ${isSelected}" style="background-image: url('${item.url}');" onclick="pilihEditPresetWallpaper('${item.url}', this)">
+                        <div class="preset-label">${item.name}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function pilihEditPresetWallpaper(url, element) {
+            selectedEditWallpaperUrl = url;
+            document.querySelectorAll('#editPresetContainer .preset-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('editWallpaperFile').value = ""; // Reset file upload
+            document.getElementById('editFileName').innerText = "✏️ Atau Unggah File Sendiri";
+        }
+
+        function previewFileEditCustom() {
+            const file = document.getElementById('editWallpaperFile').files[0];
+            if(file) {
+                document.getElementById('editFileName').innerText = "✔️ File: " + file.name;
+                document.querySelectorAll('#editPresetContainer .preset-card').forEach(card => card.classList.remove('selected'));
+                const reader = new FileReader();
+                reader.onload = function(e) { selectedEditWallpaperUrl = e.target.result; }
                 reader.readAsDataURL(file);
             }
         }
@@ -440,6 +555,7 @@
         function bukaForm() { 
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
+            perbaruiPresetOtomatis();
             updateEventPreview();
         }
         
@@ -454,6 +570,9 @@
             document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('editWaitingText').value = event.waitingText || "The Wedding Of";
             document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? 'Tak Terbatas' : `${event.quota} Orang`;
+
+            selectedEditWallpaperUrl = event.wallpaperUrl || '';
+            perbaruiPresetEditOtomatis();
 
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
             const linkKamera = `${domainAnda}/camera.html?event=${eventId}`;
@@ -529,6 +648,11 @@
             const eventId = document.getElementById('editEventId').value;
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
             window.open(`${domainAnda}/album.html?event=${eventId}`, '_blank');
+        }
+
+        function gantiJenisAcaraForm() {
+            updateEventPreview();
+            perbaruiPresetOtomatis();
         }
 
         function updateEventPreview() {
@@ -654,12 +778,16 @@
 
         document.getElementById('editEventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const btn = document.getElementById('btnUpdateEvent');
+            btn.innerText = "Menyimpan..."; btn.disabled = true;
+
             const eventId = document.getElementById('editEventId').value;
             let updateData = {
                 startTime: document.getElementById('editStartTime').value,
                 endTime: document.getElementById('editEndTime').value,
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
-                waitingText: document.getElementById('editWaitingText').value
+                waitingText: document.getElementById('editWaitingText').value,
+                wallpaperUrl: selectedEditWallpaperUrl
             };
 
             const fileEdit = document.getElementById('editWallpaperFile').files[0];
@@ -670,8 +798,15 @@
                 if(r.success) updateData.wallpaperUrl = r.data.url;
             }
 
-            await db.collection('events').doc(eventId).update(updateData);
-            alert("Pengaturan diperbarui!");
+            try {
+                await db.collection('events').doc(eventId).update(updateData);
+                alert("Pengaturan wallpaper dan waktu berhasil diperbarui!");
+            } catch(err) {
+                alert("Gagal memperbarui: " + err.message);
+            } finally {
+                btn.innerText = "Simpan Pengaturan";
+                btn.disabled = false;
+            }
         });
     </script>
 </body>
