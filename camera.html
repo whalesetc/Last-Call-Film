@@ -9,7 +9,7 @@
     <!-- FIREBASE SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script> <!-- Tambahan Storage untuk simpan foto -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-storage-compat.js"></script>
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -21,9 +21,10 @@
 
         /* Header Info */
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); position: absolute; top: 0; left: 0; width: 100%; z-index: 10; }
-        .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
-        .film-counter { background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.9rem; font-weight: bold; font-variant-numeric: tabular-nums; backdrop-filter: blur(5px); }
-
+        .event-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;}
+        .film-counter { background: rgba(0,0,0,0.6); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.3); font-size: 0.85rem; font-weight: bold; font-variant-numeric: tabular-nums; backdrop-filter: blur(5px); }
+        .btn-album { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 6px 12px; border-radius: 20px; cursor: pointer; text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
+        
         /* Status Bar (Untuk Demo Mode) */
         #statusBar { background-color: #ef4444; color: #fff; text-align: center; padding: 8px; font-size: 0.8rem; font-weight: bold; display: none; width: 100%; position: absolute; top: 60px; z-index: 9; }
 
@@ -38,9 +39,8 @@
         /* Kontrol Bawah */
         .controls { padding: 30px 20px 40px; background: #000; display: flex; justify-content: space-between; align-items: center; }
         
-        .btn-album { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 10px 15px; border-radius: 10px; cursor: pointer; text-decoration: none; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
-        .btn-album:active { background: rgba(255,255,255,0.2); }
-
+        .thumbnail-btn { width: 50px; height: 50px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; }
+        
         .btn-capture { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; outline: none; transition: transform 0.1s; }
         .btn-capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.2s; }
         .btn-capture:active .btn-capture-inner { background: #ccc; transform: scale(0.9); }
@@ -48,7 +48,14 @@
 
         .btn-switch { width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; font-size: 1.2rem;}
         
-        canvas { display: none; } /* Tersembunyi, hanya untuk memproses foto */
+        /* Modal Preview */
+        #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+        #previewImage { max-width: 100%; max-height: 70vh; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); object-fit: contain; }
+        .preview-actions { display: flex; gap: 15px; width: 100%; max-width: 350px; }
+        .btn-close-modal { flex: 1; padding: 14px; background: rgba(255,255,255,0.2); color: #fff; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+        .btn-save-modal { flex: 2; padding: 14px; background: var(--accent, #6ee7b7); color: #000; border: none; border-radius: 10px; font-weight: bold; font-size: 0.9rem; cursor: pointer; }
+
+        canvas { display: none; }
     </style>
 </head>
 <body>
@@ -66,6 +73,7 @@
 
     <!-- Antarmuka Kamera -->
     <div class="header">
+        <a href="#" id="btnToAlbum" class="btn-album">Album</a>
         <div class="event-name" id="displayEventName">Memuat...</div>
         <div class="film-counter" id="displayFilmCounter">-- / --</div>
     </div>
@@ -78,18 +86,29 @@
     </div>
 
     <div class="controls">
-        <a href="#" id="btnToAlbum" class="btn-album">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
-            Album
-        </a>
+        <!-- Thumbnail Preview Kiri Bawah -->
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 5px;">
+            <img id="lastPhotoThumb" class="thumbnail-btn" onclick="bukaPreview()" src="https://via.placeholder.com/50x50?text=+" alt="Preview">
+        </div>
         
+        <!-- Tombol Jepret Tengah -->
         <button class="btn-capture" id="btnCapture" onclick="jepretFoto()">
             <div class="btn-capture-inner"></div>
         </button>
 
+        <!-- Switch Kamera Kanan Bawah -->
         <button class="btn-switch" onclick="tukarKamera()">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.59-9.21l-5.44-5.44"></path></svg>
         </button>
+    </div>
+
+    <!-- Modal Pop-Up Preview Foto -->
+    <div id="previewModal">
+        <img id="previewImage" src="">
+        <div class="preview-actions">
+            <button class="btn-close-modal" onclick="tutupPreview()">Tutup</button>
+            <button class="btn-save-modal" onclick="simpanFotoManual()">Simpan ke Galeri</button>
+        </div>
     </div>
 
     <canvas id="photoCanvas"></canvas>
@@ -112,13 +131,13 @@
         let eventId = null;
         let eventData = null;
         let isDemoMode = false;
-        let maxPhotos = 15; // Default jika gagal muat
+        let maxPhotos = 15;
         let photosTaken = 0;
+        let currentPhotoDataUrl = null; // Menyimpan data foto sementara untuk preview
         
         let videoStream = null;
-        let currentFacingMode = 'environment'; // 'environment' = kamera belakang, 'user' = kamera depan
+        let currentFacingMode = 'environment'; // 'environment' = belakang, 'user' = depan
 
-        // Elemen DOM
         const video = document.getElementById('cameraFeed');
         const canvas = document.getElementById('photoCanvas');
         const btnCapture = document.getElementById('btnCapture');
@@ -152,7 +171,6 @@
                 document.getElementById('displayEventName').innerText = eventData.eventName;
                 maxPhotos = eventData.guestPhotoLimit || 15;
 
-                // Hitung riwayat jepretan tamu dari penyimpanan HP (localStorage)
                 const storageKey = `lastcall_${eventId}_count`;
                 photosTaken = parseInt(localStorage.getItem(storageKey)) || 0;
                 
@@ -164,14 +182,13 @@
                 if (waktuSekarang < startDateTime || waktuSekarang > endDateTime) {
                     isDemoMode = true;
                     document.getElementById('statusBar').style.display = 'block';
-                    alert("MODE DEMO AKTIF\n\nAcara belum dimulai atau sudah selesai. Anda dapat mencoba menjepret, foto akan otomatis tersimpan ke Galeri HP Anda, tetapi TIDAK akan masuk ke album pengantin dan jatah Roll Film Anda tidak akan berkurang.");
+                    alert("MODE DEMO AKTIF\n\nAcara belum dimulai atau sudah selesai. Anda dapat mencoba menjepret dan menyimpan hasil jepretan, tetapi foto TIDAK akan masuk ke album pengantin dan jatah Roll Film Anda tidak akan berkurang.");
                     document.getElementById('displayFilmCounter').innerText = `DEMO`;
                 } else {
                     isDemoMode = false;
                     perbaruiTampilanRoll();
                 }
 
-                // Sembunyikan loading
                 setTimeout(() => { document.getElementById('loadingScreen').style.display = 'none'; }, 1000);
 
             } catch (error) {
@@ -227,27 +244,25 @@
             flash.classList.add('flash-active');
             setTimeout(() => { flash.classList.remove('flash-active'); }, 150);
 
-            // Set ukuran canvas sesuai video
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
 
-            // Jika kamera depan (user), balik/mirror gambar secara horizontal
             if (currentFacingMode === 'user') {
                 ctx.translate(canvas.width, 0);
                 ctx.scale(-1, 1);
             }
             
-            // Gambar frame ke canvas
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Konversi gambar menjadi file format JPEG kualitas tinggi (90%)
+            // Konversi menjadi URL base64
             const dataURL = canvas.toDataURL('image/jpeg', 0.9);
+            currentPhotoDataUrl = dataURL; // Simpan sementara untuk preview
 
-            // Simpan foto otomatis ke penyimpanan HP Tamu
-            simpanKeGaleriHP(dataURL);
+            // Ubah gambar thumbnail di pojok kiri bawah
+            document.getElementById('lastPhotoThumb').src = dataURL;
 
-            // Jika Mode Live (Bukan Demo), Upload ke Database
+            // Jika Mode Live, Upload ke Firebase di latar belakang
             if (!isDemoMode) {
                 photosTaken++;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
@@ -256,43 +271,52 @@
             }
         }
 
-        // 7. Simpan Foto Secara Lokal ke HP
-        function simpanKeGaleriHP(dataURL) {
+        // 7. Kontrol Modal Preview & Simpan Manual
+        function bukaPreview() {
+            if (!currentPhotoDataUrl) {
+                return alert("Belum ada foto yang diambil.");
+            }
+            document.getElementById('previewImage').src = currentPhotoDataUrl;
+            document.getElementById('previewModal').style.display = 'flex';
+        }
+
+        function tutupPreview() {
+            document.getElementById('previewModal').style.display = 'none';
+        }
+
+        function simpanFotoManual() {
+            if (!currentPhotoDataUrl) return;
             const a = document.createElement('a');
-            a.href = dataURL;
+            a.href = currentPhotoDataUrl;
             a.download = `LastCall_Snap_${Date.now()}.jpg`;
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+            
+            tutupPreview();
+            alert("Foto berhasil disimpan ke galeri Anda!");
         }
 
-        // 8. Upload Foto ke Firebase Storage & Firestore
+        // 8. Upload Foto ke Firebase Storage & Firestore (Berjalan Otomatis di Latar Belakang)
         function uploadKeFirebase(dataURL) {
             const fileName = `foto_${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
             const storageRef = storage.ref(`events/${eventId}/${fileName}`);
 
-            // Tampilkan info sedang memproses (Opsional, agar user tidak bingung)
             const btnInner = document.querySelector('.btn-capture-inner');
-            btnInner.style.background = '#6ee7b7'; // Hijau saat proses upload
+            btnInner.style.background = '#6ee7b7'; 
             
-            // Upload Base64 Data URL
             storageRef.putString(dataURL, 'data_url').then((snapshot) => {
                 snapshot.ref.getDownloadURL().then((downloadURL) => {
-                    // Simpan URL foto ke koleksi Firestore khusus album acara ini
                     db.collection('events').doc(eventId).collection('photos').add({
                         url: downloadURL,
                         uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    
-                    // Kembalikan warna tombol jepret
                     btnInner.style.background = '#fff';
                 });
             }).catch((error) => {
-                console.error("Gagal mengunggah foto ke album utama:", error);
-                alert("Sinyal lemah, foto gagal terunggah ke album pengantin (tetapi sudah tersimpan di galeri HP Anda).");
+                console.error("Gagal mengunggah:", error);
                 btnInner.style.background = '#fff';
                 
-                // Refund 1 jatah kuota jika gagal terunggah (Fair play)
                 photosTaken--;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
                 perbaruiTampilanRoll();
