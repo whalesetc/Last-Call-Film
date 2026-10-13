@@ -15,6 +15,8 @@
         
         #loadingScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 9999; display: flex; flex-direction: column; align-items: center; justify-content: center; }
         #loadingText { margin-top: 20px; font-family: 'Playfair Display', serif; font-size: 1.5rem; }
+        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #6ee7b7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         .header { padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: #000; border-bottom: 1px solid rgba(255,255,255,0.05); z-index: 10; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 600; flex: 1; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 10px;}
@@ -22,6 +24,9 @@
         .btn-album { background: rgba(255,255,255,0.1); color: #fff; padding: 6px 12px; border-radius: 20px; text-decoration: none; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
         
         #statusBar { background-color: #ef4444; color: #fff; text-align: center; padding: 8px; font-size: 0.8rem; font-weight: bold; display: none; width: 100%; z-index: 9; }
+        
+        /* Indikator Latar Belakang */
+        #uploadIndicator { background-color: #3b82f6; color: #fff; text-align: center; padding: 6px; font-size: 0.75rem; font-weight: 600; display: none; width: 100%; z-index: 9; }
 
         .camera-wrapper { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; padding: 15px 20px; background: #111; }
         .camera-container { height: 100%; max-width: 100%; aspect-ratio: 3 / 4; background: #000; position: relative; overflow: hidden; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); border: 2px solid rgba(255,255,255,0.1); }
@@ -41,20 +46,15 @@
         .btn-capture { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; outline: none; transition: transform 0.1s; }
         .btn-capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.2s; }
         .btn-capture:active .btn-capture-inner { background: #ccc; transform: scale(0.9); }
-        .btn-capture:disabled { opacity: 0.5; cursor: not-allowed; }
+        .btn-capture:disabled { opacity: 0.5; cursor: not-allowed; border-color: rgba(255,255,255,0.5); }
+        .btn-capture:disabled .btn-capture-inner { background: rgba(255,255,255,0.5); }
 
         .btn-switch { position: absolute; right: 0; width: 45px; height: 45px; background: rgba(255,255,255,0.1); border-radius: 50%; display: flex; justify-content: center; align-items: center; border: 1px solid rgba(255,255,255,0.3); cursor: pointer; color: #fff; font-size: 1.2rem; }
         
         .thumbnail-gallery { display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 8px; width: 100%; }
-        .thumbnail-btn { width: 42px; height: 42px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; transition: 0.2s; }
-        .thumbnail-btn:active { transform: scale(0.9); border-color: var(--accent, #6ee7b7); }
+        .thumbnail-btn { width: 42px; height: 42px; border-radius: 6px; border: 2px solid rgba(255,255,255,0.3); object-fit: cover; cursor: pointer; background: #222; transition: 0.2s; position: relative; }
+        .thumbnail-btn:active { transform: scale(0.9); border-color: #6ee7b7; }
         
-        /* OVERLAY UPLOAD ANTI-GAGAL */
-        #uploadOverlay { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 9999; flex-direction: column; align-items: center; justify-content: center; backdrop-filter: blur(5px); }
-        .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-top: 4px solid #6ee7b7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        #uploadText { font-weight: bold; font-size: 0.9rem; color: #fff; }
-
         #previewModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
         #previewImage { max-width: 100%; max-height: 70vh; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 20px rgba(0,0,0,0.8); object-fit: contain; }
         .preview-actions { display: flex; gap: 15px; width: 100%; max-width: 350px; }
@@ -71,12 +71,6 @@
         <div id="loadingText">Menyiapkan Kamera...</div>
     </div>
 
-    <!-- OVERLAY UPLOAD -->
-    <div id="uploadOverlay">
-        <div class="spinner"></div>
-        <div id="uploadText">Menyimpan ke album...<br><span style="font-size:0.75rem;font-weight:normal;opacity:0.8;">Jangan tutup halaman ini</span></div>
-    </div>
-
     <div class="header">
         <a href="#" id="btnToAlbum" class="btn-album">Lihat Album</a>
         <div class="event-name" id="displayEventName">Memuat...</div>
@@ -84,6 +78,7 @@
     </div>
 
     <div id="statusBar">🔴 MODE DEMO - Foto tidak masuk ke album</div>
+    <div id="uploadIndicator">Mengirim <span id="pendingCount">0</span> foto ke album...</div>
 
     <div class="camera-wrapper">
         <div class="camera-container">
@@ -136,12 +131,25 @@
         
         let videoStream = null;
         let currentFacingMode = 'environment';
+        
+        // Variabel untuk melacak antrean upload latar belakang
+        let pendingUploads = 0;
 
         const video = document.getElementById('cameraFeed');
         const canvas = document.getElementById('photoCanvas');
         const btnCapture = document.getElementById('btnCapture');
         const thumbnailGallery = document.getElementById('thumbnailGallery');
-        const uploadOverlay = document.getElementById('uploadOverlay');
+        const uploadIndicator = document.getElementById('uploadIndicator');
+        const pendingCountDisplay = document.getElementById('pendingCount');
+
+        // Mencegah tamu menutup browser saat masih ada foto yang dikirim
+        window.addEventListener('beforeunload', function (e) {
+            if (pendingUploads > 0) {
+                const msg = 'Masih ada foto yang sedang dikirim ke album. Yakin ingin keluar?';
+                e.returnValue = msg;
+                return msg;
+            }
+        });
 
         window.onload = async () => {
             const urlParams = new URLSearchParams(window.location.search);
@@ -224,12 +232,22 @@
             mulaiKamera();
         }
 
+        function updateUploadIndicator() {
+            if (pendingUploads > 0) {
+                uploadIndicator.style.display = 'block';
+                pendingCountDisplay.innerText = pendingUploads;
+            } else {
+                uploadIndicator.style.display = 'none';
+            }
+        }
+
         function jepretFoto() {
             if (!isDemoMode && photosTaken >= maxPhotos) {
                 alert("Roll film Anda sudah habis!");
                 return;
             }
 
+            // Efek Flash
             const flash = document.getElementById('flashEffect');
             flash.classList.add('flash-active');
             setTimeout(() => { flash.classList.remove('flash-active'); }, 150);
@@ -263,6 +281,7 @@
 
             const dataURL = canvas.toDataURL('image/jpeg', 0.85);
 
+            // Tampilkan Thumbnail secara instan
             const thumbImg = document.createElement('img');
             thumbImg.className = 'thumbnail-btn';
             thumbImg.src = dataURL;
@@ -273,7 +292,9 @@
                 photosTaken++;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
                 perbaruiTampilanRoll();
-                unggahKeServer(dataURL);
+                
+                // Panggil upload tanpa memblokir tombol
+                unggahKeServerDiLatarBelakang(dataURL);
             }
         }
 
@@ -299,14 +320,13 @@
             tutupPreview();
         }
 
-        async function unggahKeServer(dataURL) {
-            btnCapture.disabled = true;
-            uploadOverlay.style.display = 'flex'; // Munculkan layar loading agar tamu tidak kabur
+        // PENGUNGGAHAN LATAR BELAKANG (TANPA JEDA)
+        async function unggahKeServerDiLatarBelakang(dataURL) {
+            pendingUploads++;
+            updateUploadIndicator();
 
             try {
-                // =============== API KEY ANDA ===============
                 const IMGBB_API_KEY = "16a4714fa54ed030ef5416ae07a05f68"; 
-                // ============================================
 
                 const base64Data = dataURL.split(',')[1];
                 const formData = new FormData();
@@ -327,21 +347,24 @@
                         uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 } else {
-                    throw new Error(result.error ? result.error.message : "Gagal diunggah ke ImgBB.");
+                    throw new Error("Gagal diunggah ke ImgBB.");
                 }
 
             } catch (error) {
-                console.error("Error Upload:", error);
-                alert("Foto gagal terkirim!\n\nPenyebab: " + error.message);
+                console.error("Error Upload Latar Belakang:", error);
                 
-                // Kembalikan kuota jika gagal
+                // Jika gagal, kembalikan 1 kuota
                 photosTaken--;
                 localStorage.setItem(`lastcall_${eventId}_count`, photosTaken);
                 perbaruiTampilanRoll();
             } finally {
-                // Sembunyikan layar loading setelah selesai (sukses/gagal)
-                uploadOverlay.style.display = 'none';
-                if(photosTaken < maxPhotos) btnCapture.disabled = false;
+                pendingUploads--;
+                updateUploadIndicator();
+                
+                // Pastikan tombol bisa digunakan jika kuota masih ada
+                if(photosTaken < maxPhotos) {
+                    btnCapture.disabled = false;
+                }
             }
         }
     </script>
