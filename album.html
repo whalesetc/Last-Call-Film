@@ -20,19 +20,16 @@
         .event-title { font-family: 'Playfair Display', serif; font-size: 2.2rem; margin-bottom: 5px; }
         .photo-count { color: var(--text-muted); font-size: 0.9rem; }
         .btn-back { position: absolute; top: 20px; left: 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; padding: 8px 16px; border-radius: 8px; text-decoration: none; font-size: 0.85rem; transition: 0.2s; }
-        .btn-back:hover { background: rgba(255,255,255,0.1); }
 
         /* Panel Kontrol Seleksi & Unduh */
         .action-bar { max-width: 1000px; margin: 0 auto 20px auto; width: 100%; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; background: rgba(255,255,255,0.03); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border-color); }
         .action-group { display: flex; gap: 10px; flex-wrap: wrap; }
         
         .btn-action { background: rgba(255,255,255,0.1); color: #fff; border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; cursor: pointer; transition: 0.2s; }
-        .btn-action:hover { background: rgba(255,255,255,0.2); }
         .btn-primary-action { background: var(--accent); color: #000; border: none; }
-        .btn-primary-action:hover { opacity: 0.9; }
 
         /* Grid Galeri */
-        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 15px; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; padding-bottom: 40px; }
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; padding-bottom: 40px; }
         
         .photo-item { width: 100%; aspect-ratio: 3 / 4; background: #1a1917; border-radius: 10px; overflow: hidden; position: relative; cursor: pointer; border: 1px solid var(--border-color); transition: 0.2s; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -60,7 +57,6 @@
         <p class="photo-count" id="photoCountDisplay">0 Foto Diambil</p>
     </div>
 
-    <!-- Action Bar untuk Fitur Select & Download -->
     <div class="action-bar" id="actionBar" style="display: none;">
         <div class="action-group">
             <button class="btn-action" id="btnToggleSelect" onclick="toggleSelectMode()">Pilih Foto</button>
@@ -75,12 +71,11 @@
         <div class="empty-state">Mencari rol film acara...</div>
     </div>
 
-    <!-- Modal Preview -->
     <div id="previewModal">
         <img id="previewImage" src="">
         <div class="preview-actions">
             <button class="btn-close-modal" onclick="tutupPreview()">Tutup</button>
-            <button class="btn-save-modal" onclick="unduhFotoSatuSatu()">Simpan ke Galeri</button>
+            <button class="btn-save-modal" onclick="unduhFotoSatuSatu()">Unduh Foto</button>
         </div>
     </div>
 
@@ -96,7 +91,6 @@
 
         let eventId = new URLSearchParams(window.location.search).get('event');
         let currentDownloadUrl = "";
-        let fotoDataList = [];
         let isSelectMode = false;
 
         if (!eventId) {
@@ -110,9 +104,7 @@
         async function muatDataAcara() {
             try {
                 const doc = await db.collection('events').doc(eventId).get();
-                if (doc.exists) {
-                    document.getElementById('eventNameDisplay').innerText = doc.data().eventName;
-                }
+                if (doc.exists) document.getElementById('eventNameDisplay').innerText = doc.data().eventName;
             } catch (error) {
                 console.error("Gagal memuat judul:", error);
             }
@@ -136,22 +128,19 @@
                   countDisplay.innerText = `${snapshot.size} Foto Diambil`;
                   actionBar.style.display = 'flex';
                   gallery.innerHTML = ""; 
-                  fotoDataList = [];
 
                   snapshot.forEach((doc) => {
                       const data = doc.data();
-                      fotoDataList.push(data.url);
-
                       const div = document.createElement('div');
                       div.className = 'photo-item';
+                      // CROSSORIGIN DIHAPUS AGAR GAMBAR TIDAK DIBLOKIR BROWSER
                       div.innerHTML = `
                           <input type="checkbox" class="photo-checkbox" value="${data.url}">
-                          <img src="${data.url}" alt="Jepretan Tamu" crossorigin="anonymous" referrerpolicy="no-referrer">
+                          <img src="${data.url}" alt="Jepretan Tamu" loading="lazy">
                       `;
                       
-                      // Logika klik: Jika mode select aktif, centang checkbox. Jika tidak, buka preview.
                       div.onclick = (e) => {
-                          if (e.target.tagName === 'INPUT') return; // Biarkan checkbox bekerja sendiri
+                          if (e.target.tagName === 'INPUT') return; 
                           const cb = div.querySelector('.photo-checkbox');
                           if (isSelectMode) {
                               cb.checked = !cb.checked;
@@ -173,7 +162,6 @@
               });
         }
 
-        // Fitur Tombol Pilih (Select Mode)
         function toggleSelectMode() {
             isSelectMode = !isSelectMode;
             const bodyEl = document.getElementById('bodyElement');
@@ -191,13 +179,11 @@
                 btnToggle.innerText = "Pilih Foto";
                 btnSelectAll.style.display = 'none';
                 downloadGroup.style.display = 'none';
-                // Bersihkan centangan
                 document.querySelectorAll('.photo-checkbox').forEach(cb => cb.checked = false);
                 document.querySelectorAll('.photo-item').forEach(item => item.classList.remove('selected'));
             }
         }
 
-        // Pilih Semua Foto
         function selectAllPhotos() {
             const checkboxes = document.querySelectorAll('.photo-checkbox');
             const items = document.querySelectorAll('.photo-item');
@@ -210,32 +196,31 @@
             document.getElementById('btnSelectAll').innerText = allChecked ? "Pilih Semua" : "Batalkan Semua";
         }
 
-        // Unduh Terpilih sebagai ZIP
+        // MENGGUNAKAN PROXY AGAR IMGBB MENGIZINKAN DOWNLOAD ZIP
         async function downloadSelectedZip() {
             const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
-            if (checkedBoxes.length === 0) {
-                return alert("Silakan pilih minimal satu foto yang ingin diunduh!");
-            }
+            if (checkedBoxes.length === 0) return alert("Silakan pilih minimal satu foto!");
 
-            alert(`Memproses ${checkedBoxes.length} foto menjadi file ZIP. Mohon tunggu sebentar...`);
+            alert(`Memproses ${checkedBoxes.length} foto menjadi ZIP. Mohon tunggu sebentar...`);
             const zip = new JSZip();
             const folder = zip.folder("TheLastCall_Album");
 
             let count = 0;
             for (let cb of checkedBoxes) {
                 try {
-                    const response = await fetch(cb.value);
+                    const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(cb.value);
+                    const response = await fetch(proxyUrl);
                     const blob = await response.blob();
                     folder.file(`foto_${++count}.jpg`, blob);
                 } catch (err) {
-                    console.error("Gagal mengambil gambar untuk zip:", err);
+                    console.error("Gagal mengambil gambar:", err);
                 }
             }
 
             zip.generateAsync({ type: "blob" }).then((content) => {
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(content);
-                link.download = `TheLastCall_Selected_${Date.now()}.zip`;
+                link.download = `TheLastCall_Album_${Date.now()}.zip`;
                 document.body.appendChild(link);
                 link.click();
                 document.body.removeChild(link);
@@ -253,10 +238,10 @@
             currentDownloadUrl = "";
         }
 
-        // Unduh Satuan ke Galeri / Perangkat
         function unduhFotoSatuSatu() {
             if (!currentDownloadUrl) return;
-            fetch(currentDownloadUrl)
+            const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(currentDownloadUrl);
+            fetch(proxyUrl)
                 .then(response => response.blob())
                 .then(blob => {
                     const blobUrl = window.URL.createObjectURL(blob);
@@ -269,7 +254,10 @@
                     window.URL.revokeObjectURL(blobUrl);
                     tutupPreview();
                 })
-                .catch(err => alert("Gagal mengunduh foto."));
+                .catch(err => {
+                    // Fallback jika proxy sibuk, buka di tab baru
+                    window.open(currentDownloadUrl, '_blank');
+                });
         }
     </script>
 </body>
