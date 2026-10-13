@@ -66,6 +66,9 @@
         .form-control { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; outline: none; font-family: inherit; }
         .form-control:focus { border-color: var(--accent); }
         
+        .time-group { display: flex; gap: 15px; }
+        .time-group .form-group { flex: 1; margin-bottom: 0; }
+        
         .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
         .radio-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: 0.2s; background: rgba(255,255,255,0.02); }
         .radio-card input { display: none; }
@@ -118,7 +121,6 @@
 <body>
 
     <nav>
-        <!-- LOGO DENGAN IKON ROLL FILM -->
         <div class="logo font-serif" onclick="location.reload()">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
@@ -137,7 +139,7 @@
         </div>
     </nav>
 
-    <!-- 1. HALAMAN LANDING BARU (TEMA DIGITAL DISPOSABLE CAMERA) -->
+    <!-- 1. HALAMAN LANDING -->
     <div id="landingPage" class="section active-section">
         <div class="hero-badge">✧ Digital Disposable Camera untuk Acaramu</div>
         <h1 class="hero-title font-serif">Kamera di Tangan Tamu.<br><span class="text-accent">Nostalgia di Setiap Jepretan.</span></h1>
@@ -178,7 +180,7 @@
         </div>
     </div>
 
-    <!-- 3. FORMULIR PEMBUATAN ACARA BARU -->
+    <!-- 3. FORMULIR PEMBUATAN ACARA BARU (DENGAN JAM MULAI/SELESAI) -->
     <div id="createEventForm" class="section" style="max-width: 700px;">
         <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Batal</button>
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Detail Acara Baru</h2>
@@ -198,10 +200,23 @@
                 <input type="text" id="eventName" class="form-control" oninput="updateEventPreview()" required>
             </div>
 
+            <!-- Penambahan Input Tanggal, Jam Mulai, Jam Selesai -->
             <div class="form-group">
                 <label>Tanggal Acara</label>
                 <input type="date" id="eventDate" class="form-control" required>
             </div>
+
+            <div class="time-group" style="margin-bottom: 25px;">
+                <div class="form-group">
+                    <label>Jam Mulai Acara</label>
+                    <input type="time" id="eventStartTime" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Jam Selesai Acara</label>
+                    <input type="time" id="eventEndTime" class="form-control" required>
+                </div>
+            </div>
+            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:-15px; margin-bottom:25px;">Kamera hanya akan menyimpan foto ke album saat jam acara berlangsung. Sebelum jam ini, tamu hanya dapat mencoba mode Demo.</p>
 
             <div class="form-group">
                 <label>Batas Maksimal Foto per Tamu (Kapasitas Roll Film)</label>
@@ -317,10 +332,21 @@
                 </div>
 
                 <div class="dash-card">
-                    <h3>Pengaturan Fitur</h3>
+                    <h3>Pengaturan Waktu & Fitur</h3>
                     <form id="editEventForm">
                         <input type="hidden" id="editEventId">
                         
+                        <div class="time-group" style="margin-bottom: 15px;">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 0.85rem;">Jam Mulai</label>
+                                <input type="time" id="editStartTime" class="form-control" style="padding: 10px;" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="font-size: 0.85rem;">Jam Selesai</label>
+                                <input type="time" id="editEndTime" class="form-control" style="padding: 10px;" required>
+                            </div>
+                        </div>
+
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-size: 0.85rem;">Batas Jepret per Tamu (Kapasitas Roll)</label>
                             <input type="number" id="editGuestPhotoLimit" class="form-control" min="1" max="36" style="padding: 10px;" required>
@@ -491,6 +517,8 @@
             document.getElementById('editEventId').value = eventId;
             document.getElementById('editGuestPhotoLimit').value = event.guestPhotoLimit || 15;
             document.getElementById('editPrivacy').value = event.privacy || 'visible';
+            document.getElementById('editStartTime').value = event.startTime || "00:00";
+            document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? 'Tak Terbatas' : `${event.quota} Orang`;
 
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
@@ -798,13 +826,14 @@
                         : `<span class="badge">Aktif</span>`;
                         
                     let limitText = data.guestPhotoLimit ? data.guestPhotoLimit : 15;
+                    let timeText = data.startTime && data.endTime ? `${data.startTime} - ${data.endTime}` : 'Sepanjang Hari';
                     
                     listDiv.innerHTML += `
                         <div class="event-card">
                             <div class="event-info">
                                 <h3>${data.eventName} <span style="font-size:0.8rem; font-weight:normal;">(${data.eventType})</span></h3>
-                                <p>Tgl: ${data.date} • Paket: ${data.quota === 9999 ? 'Tak Terbatas' : data.quota + ' Orang'}</p>
-                                <p>Batas Jepretan per Tamu: <strong>${limitText} Foto</strong> • Privasi: ${data.privacy}</p>
+                                <p>Tgl: ${data.date} (${timeText}) • Paket: ${data.quota === 9999 ? 'Tak Terbatas' : data.quota + ' Orang'}</p>
+                                <p>Kapasitas Roll Tamu: <strong>${limitText} Foto</strong> • Privasi: ${data.privacy}</p>
                                 <p style="margin-top: 5px;">${statusBadge}</p>
                             </div>
                             <div>
@@ -833,6 +862,8 @@
             const eventType = document.getElementById('eventType').value;
             const eventName = document.getElementById('eventName').value;
             const eventDate = document.getElementById('eventDate').value;
+            const eventStartTime = document.getElementById('eventStartTime').value;
+            const eventEndTime = document.getElementById('eventEndTime').value;
             const privacy = document.querySelector('input[name="privacy"]:checked').value;
             const guestPhotoLimit = parseInt(document.getElementById('guestPhotoLimit').value);
             
@@ -864,6 +895,8 @@
                     eventType: eventType,
                     eventName: eventName,
                     date: eventDate,
+                    startTime: eventStartTime, // JAM MULAI
+                    endTime: eventEndTime, // JAM SELESAI
                     privacy: privacy,
                     guestPhotoLimit: guestPhotoLimit,
                     quota: kuota,
@@ -898,11 +931,18 @@
             btn.disabled = true;
 
             const eventId = document.getElementById('editEventId').value;
+            const newStartTime = document.getElementById('editStartTime').value;
+            const newEndTime = document.getElementById('editEndTime').value;
             const newLimit = parseInt(document.getElementById('editGuestPhotoLimit').value);
             const newPrivacy = document.getElementById('editPrivacy').value;
 
             try {
-                await db.collection('events').doc(eventId).update({ guestPhotoLimit: newLimit, privacy: newPrivacy });
+                await db.collection('events').doc(eventId).update({ 
+                    startTime: newStartTime,
+                    endTime: newEndTime,
+                    guestPhotoLimit: newLimit, 
+                    privacy: newPrivacy 
+                });
                 alert("Pengaturan acara berhasil diperbarui!");
                 bukaDasbor();
             } catch (error) {
