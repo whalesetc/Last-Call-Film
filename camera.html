@@ -63,7 +63,7 @@
         /* Flash Effect */
         #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Bottom Controls - Berada Tepat di Bawah Kotak Foto */
+        /* Bottom Controls */
         .bottom-controls { position: absolute; bottom: 75px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
         /* Capture Button */
@@ -76,20 +76,19 @@
         /* Flip Camera Button */
         .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
 
-        /* Thumbnail Strip (Galeri Mini Paling Bawah) */
+        /* Thumbnail Strip */
         .thumbnail-strip { position: absolute; bottom: 8px; left: 0; width: 100%; height: 60px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
         .thumbnail-strip::-webkit-scrollbar { display: none; }
         .thumb-img { width: 38px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* OVERLAY LAYAR PENUH (LOADING / WAITING / ENDED) */
+        /* OVERLAY LAYAR PENUH */
         .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
         .overlay-content { background: rgba(0,0,0,0.75); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
         
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        /* COUNTDOWN TIMER STYLES */
         .cd-timer { display: flex; gap: 12px; margin: 20px 0 30px 0; }
         .cd-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; min-width: 65px; backdrop-filter: blur(5px); }
         .cd-val { font-size: 1.6rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
@@ -130,13 +129,6 @@
             <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px; max-width: 300px;">Masa waktu penggunaan kamera untuk acara ini telah berakhir. Silakan lihat hasil foto di album.</p>
             <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem; background: #fff; color: #000; font-weight: bold;">Lihat Album Foto</a>
         </div>
-    </div>
-
-    <!-- 4. LAYAR TRANSISI SINKRONISASI KE ALBUM -->
-    <div id="transitionScreen" class="fullscreen-overlay" style="display: none;">
-        <div class="loader"></div>
-        <p style="color: #fff; font-size: 1.2rem; font-family: 'Playfair Display', serif; margin-bottom: 5px;">Menyelesaikan Film...</p>
-        <p id="transitionText" style="color: #888; font-size: 0.8rem;">Menyinkronkan foto ke album</p>
     </div>
 
     <div class="top-bar">
@@ -180,11 +172,9 @@
     <!-- Galeri Mini (Thumbnail) -->
     <div class="thumbnail-strip" id="thumbnailStrip"></div>
 
-    <!-- Canvas tersembunyi untuk cropping 9:16 Portrait -->
     <canvas id="canvasHidden" style="display: none;"></canvas>
 
     <script>
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -194,13 +184,13 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // Variabel Global
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 0;
         let countdownTimerInterval = null;
+        let isUploadingQueue = false;
         
         let stream = null;
         let facingMode = 'environment';
@@ -209,11 +199,6 @@
         const btnCapture = document.getElementById('btnCapture');
         const thumbnailStrip = document.getElementById('thumbnailStrip');
 
-        // SISTEM ANTREAN (QUEUE) PINTAR
-        let uploadQueue = [];
-        let isUploadingQueue = false;
-
-        // Inisialisasi
         async function initApp() {
             if (!eventId) { alert("Tautan tidak valid."); return; }
 
@@ -264,6 +249,8 @@
 
                 document.getElementById('initScreen').style.display = 'none';
 
+                prosesAntreanUpload();
+
             } catch (error) {
                 alert("Gagal memuat data: " + error.message);
             }
@@ -272,10 +259,7 @@
         function tampilkanLayarTunggu(event, startDateTime) {
             const overlay = document.getElementById('waitingOverlay');
             overlay.style.display = 'flex';
-            
-            if (event.wallpaperUrl) {
-                overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
-            }
+            if (event.wallpaperUrl) overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
 
             document.getElementById('waitingTextDisplay').innerText = event.waitingText || "The Wedding Of";
             document.getElementById('waitingTitleDisplay').innerText = event.eventName;
@@ -302,9 +286,7 @@
         function tampilkanLayarSelesai(event) {
             const overlay = document.getElementById('endedOverlay');
             overlay.style.display = 'flex';
-            if (event.wallpaperUrl) {
-                overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
-            }
+            if (event.wallpaperUrl) overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
         }
 
         function buatElemenRollFilm() {
@@ -379,16 +361,13 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        // FUNGSI JEPET INSTAN DENGAN HASIL 9:16 PORTRAIT (STORY / FEED VERTICAL)
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // Flash effect
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // Perhitungan Crop Presisi ke Rasio 9:16 Portrait
             const targetRatio = 9 / 16;
             let srcW = video.videoWidth;
             let srcH = video.videoHeight;
@@ -405,7 +384,6 @@
                 srcH = newHeight;
             }
 
-            // Output HD Portrait (1080 x 1920)
             canvas.width = 1080;
             canvas.height = 1920;
             const ctx = canvas.getContext('2d');
@@ -417,8 +395,9 @@
 
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
-            // Thumbnail Instan
             const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.1);
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
             
@@ -426,22 +405,33 @@
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // Masukkan ke antrean upload
-            canvas.toBlob(blob => {
-                uploadQueue.push(blob);
-                prosesAntreanUpload();
-            }, 'image/jpeg', 0.75);
+            // Simpan foto ke antrean LocalStorage agar bisa diambil alih oleh album jika pengguna langsung pindah
+            let pending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+            pending.push({
+                id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
+                dataUrl: fullDataUrl,
+                guestId: guestId,
+                timestamp: Date.now()
+            });
+            localStorage.setItem(`pending_${eventId}`, JSON.stringify(pending));
+
+            prosesAntreanUpload();
         }
 
         async function prosesAntreanUpload() {
-            if (isUploadingQueue || uploadQueue.length === 0) return;
-            
+            if (isUploadingQueue) return;
+            let pending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+            if (pending.length === 0) return;
+
             isUploadingQueue = true;
-            const blobFile = uploadQueue[0];
+            let item = pending[0];
 
             try {
+                const resBlob = await fetch(item.dataUrl);
+                const blob = await resBlob.blob();
+
                 const formData = new FormData();
-                formData.append('image', blobFile);
+                formData.append('image', blob);
 
                 const uploadRes = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', {
                     method: 'POST', body: formData
@@ -451,43 +441,33 @@
                 if (uploadData.success) {
                     await db.collection('photos').add({
                         eventId: eventId,
-                        guestId: guestId,
+                        guestId: item.guestId,
                         url: uploadData.data.url,
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                    
-                    uploadQueue.shift(); 
-                } else {
-                    throw new Error("Gagal mengunggah ke server.");
+
+                    // Hapus dari pending localStorage setelah berhasil
+                    let currentPending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                    currentPending = currentPending.filter(p => p.id !== item.id);
+                    localStorage.setItem(`pending_${eventId}`, JSON.stringify(currentPending));
                 }
             } catch (err) {
-                console.warn("Sinyal jelek, mengulang pengiriman foto di latar belakang...");
-                await new Promise(resolve => setTimeout(resolve, 2000));
+                console.warn("Sinyal lambat, menyimpan di antrean lokal...", err);
+                await new Promise(r => setTimeout(r, 3000));
             } finally {
                 isUploadingQueue = false;
-                if (uploadQueue.length > 0) {
+                let remaining = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                if (remaining.length > 0) {
                     prosesAntreanUpload();
                 }
             }
         }
 
+        // BUKA ALBUM INSTAN TANPA JEDA / TANPA SINKRONISASI LOADING SCREEN
         function bukaAlbum(e) {
             if (e) e.preventDefault();
-            
-            if (uploadQueue.length > 0) {
-                document.getElementById('transitionScreen').style.display = 'flex';
-                
-                const cekAntrean = setInterval(() => {
-                    document.getElementById('transitionText').innerText = `Menyimpan ${uploadQueue.length} foto terakhir...`;
-                    
-                    if (uploadQueue.length === 0) {
-                        clearInterval(cekAntrean);
-                        window.location.href = document.getElementById('linkAlbum').href;
-                    }
-                }, 500);
-            } else {
-                window.location.href = document.getElementById('linkAlbum').href;
-            }
+            const link = document.getElementById('linkAlbum').href;
+            window.location.href = link;
         }
 
         initApp();
