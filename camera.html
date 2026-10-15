@@ -54,7 +54,7 @@
         /* Flash Effect */
         #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Bottom Controls - Naik sedikit untuk tempat galeri mini */
+        /* Bottom Controls */
         .bottom-controls { position: absolute; bottom: 85px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
         /* Capture Button */
@@ -317,11 +317,13 @@
                 });
                 const uploadData = await uploadRes.json();
                 
+                // DIKEMBALIKAN KE JALUR ASLI AGAR TERBACA DI ALBUM
                 if (uploadData.success) {
-                    await db.collection('events').doc(eventId).collection('photos').add({
+                    await db.collection('photos').add({
+                        eventId: eventId,
                         guestId: guestId,
                         url: uploadData.data.url,
-                        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             } catch (err) {
