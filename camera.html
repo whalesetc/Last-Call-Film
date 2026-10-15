@@ -13,10 +13,11 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
         body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+        .font-serif { font-family: 'Playfair Display', serif; }
         
         /* Top Navigation Bar */
         .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; }
+        .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; display: inline-block; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* UI ROLL FILM MEKANIK */
@@ -57,40 +58,73 @@
         /* Bottom Controls */
         .bottom-controls { position: absolute; bottom: 85px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
-        /* Capture Button (TANPA LOADING / INSTANT) */
+        /* Capture Button */
         .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; padding: 0; position: relative; }
         .capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.1s; display: flex; justify-content: center; align-items: center; }
         .capture-btn:active .capture-inner { transform: scale(0.85); background: #ccc; }
-        
-        /* Disabled State (Hanya jika kuota habis) */
         .capture-btn:disabled { border-color: #555; cursor: not-allowed; }
         .capture-btn:disabled .capture-inner { background: #555; }
 
         /* Flip Camera Button */
         .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
 
-        /* Thumbnail Strip (Galeri Mini di Bawah) */
+        /* Thumbnail Strip (Galeri Mini) */
         .thumbnail-strip { position: absolute; bottom: 10px; left: 0; width: 100%; height: 65px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
         .thumbnail-strip::-webkit-scrollbar { display: none; }
         .thumb-img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* Loading Screen Init & Transisi Album */
-        .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        /* OVERLAY LAYAR PENUH (LOADING / WAITING / ENDED) */
+        .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
+        .overlay-content { background: rgba(0,0,0,0.75); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
+        
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
+        /* COUNTDOWN TIMER STYLES */
+        .cd-timer { display: flex; gap: 12px; margin: 20px 0 30px 0; }
+        .cd-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; min-width: 65px; backdrop-filter: blur(5px); }
+        .cd-val { font-size: 1.6rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+        .cd-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+
         #outOfQuota { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 50; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
+    <!-- 1. LAYAR LOADING INTI -->
     <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
     </div>
 
-    <!-- Layar Transisi ke Album (Mencegah gagal jika antrean foto belum selesai) -->
+    <!-- 2. LAYAR TUNGGU (JIKA ACARA BELUM MULAI) -->
+    <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
+            <h1 id="waitingTitleDisplay" class="font-serif" style="font-size: 2.2rem; margin-bottom: 25px; line-height: 1.2;">Nama Acara</h1>
+            <p style="color: #6ee7b7; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Kamera Akan Terbuka Dalam:</p>
+            
+            <div class="cd-timer">
+                <div class="cd-box"><div class="cd-val" id="cdHours">00</div><div class="cd-lbl">Jam</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
+            </div>
+
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
+        </div>
+    </div>
+
+    <!-- 3. LAYAR SELESAI (JIKA ACARA SUDAH BERAKHIR) -->
+    <div id="endedOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 10px; color: #ff6b6b;">Acara Telah Selesai</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px; max-width: 300px;">Masa waktu penggunaan kamera untuk acara ini telah berakhir. Silakan lihat hasil foto di album.</p>
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem; background: #fff; color: #000; font-weight: bold;">Lihat Album Foto</a>
+        </div>
+    </div>
+
+    <!-- 4. LAYAR TRANSISI SINKRONISASI KE ALBUM -->
     <div id="transitionScreen" class="fullscreen-overlay" style="display: none;">
         <div class="loader"></div>
         <p style="color: #fff; font-size: 1.2rem; font-family: 'Playfair Display', serif; margin-bottom: 5px;">Menyelesaikan Film...</p>
@@ -101,7 +135,6 @@
         <a href="#" id="linkAlbum" class="btn-album" onclick="bukaAlbum(event)">Lihat Album</a>
         <div class="event-name" id="eventNameDisplay">Memuat...</div>
         
-        <!-- UI Roll Mekanik -->
         <div class="roll-wrapper">
             <div class="roll-label">Sisa<br>Film</div>
             <div class="roll-container">
@@ -156,6 +189,7 @@
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 0;
+        let countdownTimerInterval = null;
         
         let stream = null;
         let facingMode = 'environment';
@@ -193,13 +227,78 @@
                 const fotoSblmnya = localStorage.getItem(`count_${eventId}`);
                 fotoTerambil = fotoSblmnya ? parseInt(fotoSblmnya) : 0;
                 
+                // =========================================================================
+                // VALiDASI WAKTU ACARA (TANGGAL & JAM MULAI / SELESAI)
+                // =========================================================================
+                const sekarang = new Date();
+                const eventDate = currentEvent.date;
+                const startTime = currentEvent.startTime || '00:00';
+                const endTime = currentEvent.endTime || '23:59';
+
+                const startDateTime = new Date(`${eventDate}T${startTime}:00`);
+                const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+
+                if (sekarang < startDateTime) {
+                    // 1. ACARA BELUM MULAI -> TAMPILKAN LAYAR TUNGGU + COUNTDOWN
+                    tampilkanLayarTunggu(currentEvent, startDateTime);
+                    document.getElementById('initScreen').style.display = 'none';
+                    return; // Jangan jalankan kamera
+                } else if (sekarang > endDateTime) {
+                    // 2. ACARA SUDAH SELESAI -> TAMPILKAN LAYAR SELESAI
+                    tampilkanLayarSelesai(currentEvent);
+                    document.getElementById('initScreen').style.display = 'none';
+                    return; // Jangan jalankan kamera
+                }
+
+                // 3. ACARA SEDANG BERLANGSUNG -> BUKA KAMERA NORMAL
                 buatElemenRollFilm();
                 perbaruiUI();
                 await mulaiKamera();
 
                 document.getElementById('initScreen').style.display = 'none';
+
             } catch (error) {
                 alert("Gagal memuat data: " + error.message);
+            }
+        }
+
+        // TAMPILKAN LAYAR TUNGGU DENGAN COUNTDOWN DYNAMIC
+        function tampilkanLayarTunggu(event, startDateTime) {
+            const overlay = document.getElementById('waitingOverlay');
+            overlay.style.display = 'flex';
+            
+            if (event.wallpaperUrl) {
+                overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
+            }
+
+            document.getElementById('waitingTextDisplay').innerText = event.waitingText || "The Wedding Of";
+            document.getElementById('waitingTitleDisplay').innerText = event.eventName;
+
+            countdownTimerInterval = setInterval(() => {
+                const sekarang = new Date();
+                const selisih = startDateTime - sekarang;
+
+                if (selisih <= 0) {
+                    clearInterval(countdownTimerInterval);
+                    location.reload(); // Reload otomatis saat jam acara dimulai!
+                } else {
+                    const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                    const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+
+                    document.getElementById('cdHours').innerText = String(jam).padStart(2, '0');
+                    document.getElementById('cdMinutes').innerText = String(menit).padStart(2, '0');
+                    document.getElementById('cdSeconds').innerText = String(detik).padStart(2, '0');
+                }
+            }, 1000);
+        }
+
+        // TAMPILKAN LAYAR ACARA SELESAI
+        function tampilkanLayarSelesai(event) {
+            const overlay = document.getElementById('endedOverlay');
+            overlay.style.display = 'flex';
+            if (event.wallpaperUrl) {
+                overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
             }
         }
 
@@ -230,7 +329,6 @@
                 }
             });
 
-            // Geser roll film
             const offset = fotoTerambil * -30;
             document.getElementById('rollNumbers').style.transform = `translateY(${offset}px)`;
 
@@ -276,18 +374,14 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        // =========================================================================
-        // FUNGSI JEPET BEBAS HAMBATAN (INSTANT CAPTURE)
-        // =========================================================================
+        // FUNGSI JEPET INSTAN (ANRTEAN LATAR BELAKANG)
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // 1. Efek Flash Instan
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // 2. Buat Canvas Sementara untuk mengambil gambar seketika (Mendukung jepret cepat)
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = video.videoWidth;
             tempCanvas.height = video.videoHeight;
@@ -297,7 +391,6 @@
             }
             tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
 
-            // 3. Tampilkan Thumbnail & Kurangi Kuota Seketika di Layar
             const thumbnailDataUrl = tempCanvas.toDataURL('image/jpeg', 0.1);
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
@@ -306,35 +399,30 @@
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // 4. Proses foto menjadi file dan masukkan ke Antrean Latar Belakang
             tempCanvas.toBlob(blob => {
                 uploadQueue.push(blob);
-                prosesAntreanUpload(); // Mulai jalankan antrean
+                prosesAntreanUpload();
             }, 'image/jpeg', 0.7);
         }
 
-        // =========================================================================
-        // PROSES UPLOAD ANTREAN (ANTI GAGAL & AUTO RETRY)
-        // =========================================================================
+        // PROSES UPLOAD ANTREAN (PASTIKAN PATH FIREBASE BENAR)
         async function prosesAntreanUpload() {
-            // Jika sedang ada yang dikirim atau antrean kosong, diam saja
             if (isUploadingQueue || uploadQueue.length === 0) return;
             
             isUploadingQueue = true;
-            const blobFile = uploadQueue[0]; // Ambil file pertama di antrean
+            const blobFile = uploadQueue[0];
 
             try {
                 const formData = new FormData();
                 formData.append('image', blobFile);
 
-                // Kirim ke ImgBB
                 const uploadRes = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', {
                     method: 'POST', body: formData
                 });
                 const uploadData = await uploadRes.json();
                 
                 if (uploadData.success) {
-                    // Simpan ke Database (PASTIKAN JALURNYA BENAR: db.collection('photos'))
+                    // Jalur simpan tetap aman ke 'photos'
                     await db.collection('photos').add({
                         eventId: eventId,
                         guestId: guestId,
@@ -342,35 +430,27 @@
                         timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                     
-                    // BERHASIL! Hapus foto pertama dari antrean
                     uploadQueue.shift(); 
                 } else {
                     throw new Error("Gagal mengunggah ke server.");
                 }
             } catch (err) {
                 console.warn("Sinyal jelek, mengulang pengiriman foto di latar belakang...");
-                // GAGAL? Jangan hapus dari antrean! Tunggu 2 detik lalu ulangi otomatis.
                 await new Promise(resolve => setTimeout(resolve, 2000));
             } finally {
                 isUploadingQueue = false;
-                // Cek apakah masih ada foto lain di antrean
                 if (uploadQueue.length > 0) {
                     prosesAntreanUpload();
                 }
             }
         }
 
-        // =========================================================================
-        // BUKA ALBUM (DENGAN TRANSISI AMAN JIKA ADA ANTREAN)
-        // =========================================================================
         function bukaAlbum(e) {
             if (e) e.preventDefault();
             
-            // Jika tamu mengklik "Lihat Album" tapi masih ada foto yang antre diupload
             if (uploadQueue.length > 0) {
                 document.getElementById('transitionScreen').style.display = 'flex';
                 
-                // Cek setiap 500ms apakah antrean sudah habis
                 const cekAntrean = setInterval(() => {
                     document.getElementById('transitionText').innerText = `Menyimpan ${uploadQueue.length} foto terakhir...`;
                     
@@ -380,7 +460,6 @@
                     }
                 }, 500);
             } else {
-                // Jika antrean kosong, langsung pindah tanpa loading
                 window.location.href = document.getElementById('linkAlbum').href;
             }
         }
