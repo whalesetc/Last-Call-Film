@@ -16,10 +16,10 @@
         
         /* Top Navigation Bar */
         .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
-        .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); }
+        .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* UI ROLL FILM MEKANIK BARU */
+        /* UI ROLL FILM MEKANIK */
         .roll-wrapper { display: flex; align-items: center; gap: 8px; }
         .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
         .roll-container { 
@@ -39,7 +39,7 @@
             transition: all 0.3s; 
         }
 
-        /* Camera Viewfinder (TETAP PORTRAIT DI SEMUA PERANGKAT) */
+        /* Camera Viewfinder (PORTRAIT) */
         .camera-container { 
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center; 
             background: #111; overflow: hidden; margin-top: 60px; margin-bottom: 100px; 
@@ -47,7 +47,7 @@
         }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Frame Guide (Kotak bidikan) */
+        /* Frame Guide */
         .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 60%; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .viewfinder-guide::after { content: '+'; color: rgba(255,255,255,0.5); font-size: 2rem; font-weight: 300; }
 
@@ -125,7 +125,7 @@
         </button>
     </div>
 
-    <!-- Canvas tersembunyi untuk memproses gambar -->
+    <!-- Canvas tersembunyi -->
     <canvas id="canvasHidden" style="display: none;"></canvas>
 
     <script>
@@ -147,26 +147,21 @@
         let batasFoto = 0;
         let antreanUpload = 0; // Melacak sisa foto yang sedang dikirim di background
         
-        // Variabel Kamera
         let stream = null;
         let facingMode = 'environment';
         const video = document.getElementById('cameraStream');
         const canvas = document.getElementById('canvasHidden');
         const btnCapture = document.getElementById('btnCapture');
 
-        // Peringatkan tamu jika menutup halaman padahal foto masih proses dikirim
-        window.addEventListener('beforeunload', (e) => {
-            if (antreanUpload > 0) {
-                e.preventDefault();
-                e.returnValue = "Beberapa foto masih dalam proses penyimpanan. Jangan tutup halaman ini dulu ya!";
-            }
+        // PERLINDUNGAN: Mencegah pindah ke album jika foto terakhir belum kelar di-upload
+        document.getElementById('linkAlbum').addEventListener('click', function(e) {
+            e.preventDefault();
+            bukaAlbum();
         });
 
-        // Inisialisasi Halaman
+        // Inisialisasi
         async function initApp() {
-            if (!eventId) {
-                alert("Tautan tidak valid."); return;
-            }
+            if (!eventId) { alert("Tautan tidak valid."); return; }
 
             const domain = window.location.href.split('?')[0].replace('camera.html', '').replace(/\/$/, '');
             document.getElementById('linkAlbum').href = `${domain}/album.html?event=${eventId}`;
@@ -199,12 +194,9 @@
             }
         }
 
-        // FUNGSI MEMBUAT ANGKA ROLL FILM (Dari tinggi ke 0)
         function buatElemenRollFilm() {
             const container = document.getElementById('rollNumbers');
             container.innerHTML = '';
-            
-            // Masukkan angka berurut dari batas maksimal turun hingga 0
             for (let i = batasFoto; i >= 0; i--) {
                 const numDiv = document.createElement('div');
                 numDiv.className = 'roll-number';
@@ -213,10 +205,8 @@
             }
         }
 
-        // PERBARUI UI & ANIMASI ROLL FILM
         function perbaruiUI() {
             const numbers = document.querySelectorAll('.roll-number');
-            // indeks yang aktif adalah jumlah foto yang sudah diambil
             const activeIndex = fotoTerambil;
 
             numbers.forEach((el, idx) => {
@@ -231,11 +221,9 @@
                 }
             });
 
-            // Geser kontainer angka ke atas (tinggi per baris 30px)
             const offset = fotoTerambil * -30;
             document.getElementById('rollNumbers').style.transform = `translateY(${offset}px)`;
 
-            // Tampilkan layar habis jika jatah habis
             if (fotoTerambil >= batasFoto) {
                 btnCapture.disabled = true;
                 document.getElementById('outOfQuota').style.display = 'flex';
@@ -259,19 +247,15 @@
             mulaiKamera();
         }
 
-        // FUNGSI AMBIL FOTO (INSTANT & BACKGROUND UPLOAD)
         async function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
             
-            // 1. Kunci tombol sesaat agar tidak double klik cepat
             btnCapture.disabled = true;
 
-            // 2. Efek Flash Instan
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 100);
 
-            // 3. Simpan foto ke canvas (Mengurangi kualitas dikit agar upload super ngebut)
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
@@ -280,20 +264,18 @@
             }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 4. Update Angka Roll dan Kuota secara INSTAN di Layar (Tanpa nunggu upload)
+            // Update UI langsung
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // 5. Buka tombol setelah 0.4 detik (Jika belum habis)
             setTimeout(() => {
                 if(fotoTerambil < batasFoto) btnCapture.disabled = false;
             }, 400);
 
-            // 6. PROSES UPLOAD DI BACKGROUND (Sembunyi)
+            // PROSES UPLOAD
             antreanUpload++; 
             try {
-                // Kompresi jpeg menjadi 70% agar cepat
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
                 const formData = new FormData();
                 formData.append('image', blob);
@@ -303,26 +285,31 @@
                 });
                 const uploadData = await uploadRes.json();
                 
-                // 7. Simpan ke database dengan format dan path yang BENAR
                 if (uploadData.success) {
-                    await db.collection('events').doc(eventId).collection('photos').add({
+                    // DIKEMBALIKAN KE JALUR DATABASE YANG BENAR
+                    await db.collection('photos').add({
+                        eventId: eventId,
                         guestId: guestId,
                         url: uploadData.data.url,
-                        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             } catch (err) {
-                console.error("Gagal mengupload di latar belakang:", err);
+                console.error("Gagal upload:", err);
             } finally {
-                antreanUpload--; // Mengurangi antrean proses
+                antreanUpload--;
             }
         }
 
         function bukaAlbum() {
+            // Cegah pindah halaman jika foto masih dikirim ke server
+            if (antreanUpload > 0) {
+                alert("Tunggu sebentar ya, foto terakhir sedang disimpan...");
+                return;
+            }
             window.location.href = document.getElementById('linkAlbum').href;
         }
 
-        // Jalankan aplikasi
         initApp();
     </script>
 </body>
