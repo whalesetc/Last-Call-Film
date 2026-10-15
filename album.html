@@ -41,8 +41,7 @@
         .event-title { font-size: 2rem; font-weight: 600; margin-bottom: 5px; }
         .photo-count { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
 
-        /* Panel Aksi Pilihan (Select Actions) */
-        .selection-panel { display: none; background: rgba(30,30,30,0.95); padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 65px; z-index: 90; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
+        .selection-panel { display: none; background: rgba(30,30,30,0.95); padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 65px; z-index: 90; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); flex-wrap: wrap; gap: 10px;}
         .selection-panel.active { display: flex; }
 
         .gallery-container { padding: 15px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; }
@@ -64,7 +63,6 @@
         .photo-card.selected { border: 3px solid #3b82f6; }
         .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        /* Checkbox Pilihan */
         .card-checkbox { position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 5; }
         .selection-active .card-checkbox { display: flex; }
         .photo-card.selected .card-checkbox { background: #3b82f6; border-color: #3b82f6; }
@@ -115,11 +113,11 @@
 
     <!-- Panel Kontrol Select & Select All -->
     <div class="selection-panel" id="selectionPanel">
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-action" onclick="select هرAll(true)">Pilih Semua</button>
+        <div style="display: flex; gap: 8px;">
+            <button class="btn-action" onclick="selectAll(true)">Pilih Semua</button>
             <button class="btn-action" onclick="selectAll(false)">Batal Pilih</button>
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px;">
             <button class="btn-action" onclick="unduhTerpilihZip()" style="background: #2563eb; border: none;">Unduh Terpilih</button>
             <button class="btn-action" id="btnDeleteSelected" onclick="hapusTerpilihOwner()" style="background: #dc2626; border: none; display: none;">Hapus Terpilih</button>
             <button class="btn-action" onclick="toggleSelectMode()" style="background: rgba(255,255,255,0.2);">Selesai</button>
@@ -237,21 +235,31 @@
             } else {
                 empty.style.display = 'none';
 
+                // Render Foto Pending Lokal
                 pendingLokal.forEach(item => {
                     const card = document.createElement('div');
-                    card.className = 'photo-card';
+                    card.className = `photo-card ${selectedPhotoIds.has(item.id) ? 'selected' : ''}`;
+                    
                     card.innerHTML = `
                         <div class="card-checkbox"></div>
                         <img src="${item.dataUrl}" alt="Foto Pending">
                         <div class="pending-badge">⏳ Menyimpan...</div>
                     `;
+
+                    card.onclick = () => {
+                        if (isSelectMode) {
+                            toggleSelectPhoto(item.id, card);
+                        } else {
+                            bukaModal(item.dataUrl);
+                        }
+                    };
                     grid.appendChild(card);
                 });
 
+                // Render Foto dari Firestore
                 listFotoGlobal.forEach(foto => {
                     const card = document.createElement('div');
                     card.className = `photo-card ${selectedPhotoIds.has(foto.docId) ? 'selected' : ''}`;
-                    card.dataset.id = foto.docId;
                     
                     let deleteBtnHTML = '';
                     if (isOwner && !isSelectMode) {
@@ -264,7 +272,7 @@
                         ${deleteBtnHTML}
                     `;
                     
-                    card.onclick = (e) => {
+                    card.onclick = () => {
                         if (isSelectMode) {
                             toggleSelectPhoto(foto.docId, card);
                         } else {
@@ -298,12 +306,12 @@
             rendernUIGrid();
         }
 
-        function toggleSelectPhoto(docId, cardElement) {
-            if (selectedPhotoIds.has(docId)) {
-                selectedPhotoIds.delete(docId);
+        function toggleSelectPhoto(id, cardElement) {
+            if (selectedPhotoIds.has(id)) {
+                selectedPhotoIds.delete(id);
                 cardElement.classList.remove('selected');
             } else {
-                selectedPhotoIds.add(docId);
+                selectedPhotoIds.add(id);
                 cardElement.classList.add('selected');
             }
         }
@@ -311,7 +319,11 @@
         function selectAll(select) {
             selectedPhotoIds.clear();
             if (select) {
+                // Masukkan ID dari foto Firestore
                 listFotoGlobal.forEach(f => selectedPhotoIds.add(f.docId));
+                // Masukkan ID dari foto pending lokal
+                let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                pendingLokal.forEach(p => selectedPhotoIds.add(p.id));
             }
             rendernUIGrid();
         }
@@ -327,10 +339,20 @@
             let count = 0;
 
             for (let id of selectedPhotoIds) {
-                let foto = listFotoGlobal.find(f => f.docId === id);
-                if (foto) {
+                let fotoObj = listFotoGlobal.find(f => f.docId === id);
+                let imageUrl = '';
+
+                if (fotoObj) {
+                    imageUrl = fotoObj.url;
+                } else {
+                    let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                    let pendingObj = pendingLokal.find(p => p.id === id);
+                    if (pendingObj) imageUrl = pendingObj.dataUrl;
+                }
+
+                if (imageUrl) {
                     try {
-                        const response = await fetch(foto.url);
+                        const response = await fetch(imageUrl);
                         const blob = await response.blob();
                         folder.file(`Foto_${++count}.jpg`, blob);
                     } catch(e) {}
@@ -347,11 +369,20 @@
             if (confirm(`Hapus ${selectedPhotoIds.size} foto yang dipilih secara permanen?`)) {
                 try {
                     const batch = db.batch();
+                    let hasFirestoreDelete = false;
+
                     selectedPhotoIds.forEach(id => {
-                        const ref = db.collection('photos').doc(id);
-                        batch.delete(ref);
+                        if (!id.startsWith('p_')) {
+                            const ref = db.collection('photos').doc(id);
+                            batch.delete(ref);
+                            hasFirestoreDelete = true;
+                        }
                     });
-                    await batch.commit();
+
+                    if (hasFirestoreDelete) {
+                        await batch.commit();
+                    }
+
                     selectedPhotoIds.clear();
                     toggleSelectMode();
                 } catch (err) {
@@ -454,7 +485,8 @@
         }
 
         async function unduhSemuaZip() {
-            if (listFotoGlobal.length === 0) {
+            let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+            if (listFotoGlobal.length === 0 && pendingLokal.length === 0) {
                 alert("Belum ada foto yang bisa diunduh.");
                 return;
             }
@@ -465,13 +497,18 @@
 
             const zip = new JSZip();
             const folder = zip.folder("TheLastCall_Photos");
+            let total = 0;
 
             try {
-                for (let i = 0; i < listFotoGlobal.length; i++) {
-                    const url = listFotoGlobal[i].url;
-                    const response = await fetch(url);
+                for (let f of listFotoGlobal) {
+                    const response = await fetch(f.url);
                     const blob = await response.blob();
-                    folder.file(`Foto_${i + 1}.jpg`, blob);
+                    folder.file(`Foto_${++total}.jpg`, blob);
+                }
+                for (let p of pendingLokal) {
+                    const response = await fetch(p.dataUrl);
+                    const blob = await response.blob();
+                    folder.file(`Foto_${++total}.jpg`, blob);
                 }
 
                 const content = await zip.generateAsync({ type: "blob" });
