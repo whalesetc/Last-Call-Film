@@ -73,8 +73,8 @@
         .thumb-img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* Loading Screen Init */
-        #initScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+        /* Loading Screen Init & Transisi Album */
+        .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
@@ -83,9 +83,17 @@
 </head>
 <body>
 
-    <div id="initScreen">
+    <!-- Layar Loading Awal -->
+    <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
+    </div>
+
+    <!-- Layar Transisi ke Album (Anti Gagal & Tanpa Alert) -->
+    <div id="transitionScreen" class="fullscreen-overlay" style="display: none;">
+        <div class="loader"></div>
+        <p style="color: #fff; font-size: 1.2rem; font-family: 'Playfair Display', serif; margin-bottom: 5px;">Menyempurnakan Foto...</p>
+        <p style="color: #888; font-size: 0.8rem;">Membuka album secara otomatis</p>
     </div>
 
     <div class="top-bar">
@@ -108,7 +116,7 @@
         
         <div id="outOfQuota">
             <h2 class="font-serif" style="margin-bottom: 10px; color: #6ee7b7;">Film Habis!</h2>
-            <p style="color: #aaa; margin-bottom: 20px; font-size: 0.9rem;">Kamu sudah menggunakan seluruh jatah foto. Silakan lihat hasilnya di album.</p>
+            <p style="color: #aaa; margin-bottom: 20px; font-size: 0.9rem;">Kamu sudah menggunakan seluruh jatah foto.</p>
             <button onclick="bukaAlbum()" style="background: #fff; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">Lihat Album Sekarang</button>
         </div>
     </div>
@@ -150,7 +158,7 @@
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 0;
-        let antreanUpload = 0; 
+        let antreanUpload = 0; // Melacak proses background
         
         let stream = null;
         let facingMode = 'environment';
@@ -159,7 +167,7 @@
         const btnCapture = document.getElementById('btnCapture');
         const thumbnailStrip = document.getElementById('thumbnailStrip');
 
-        // Mencegah pindah halaman saat proses upload belum selesai
+        // Navigasi ke album
         document.getElementById('linkAlbum').addEventListener('click', function(e) {
             e.preventDefault();
             bukaAlbum();
@@ -178,7 +186,6 @@
                 localStorage.setItem(`guest_${eventId}`, guestId);
             }
 
-            // Muat thumbnail yang sebelumnya disimpan di localStorage (jika ada)
             muatThumbnailLokal();
 
             try {
@@ -271,19 +278,17 @@
             img.src = dataUrl;
             img.className = 'thumb-img';
             thumbnailStrip.appendChild(img);
-            thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth; // Auto scroll ke paling kanan
+            thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        // FUNGSI JEPET INSTAN TANPA DELAY
+        // FUNGSI JEPET INSTAN
         async function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // Efek Flash
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // Ambil gambar dari video ke canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
@@ -292,20 +297,17 @@
             }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Buat versi kualitas sangat rendah HANYA untuk galeri mini instan (Base64)
             const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.1);
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
 
-            // Update UI angka & batasan
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // PROSES UPLOAD DI LATAR BELAKANG (Tanpa mengganggu pengguna jepret lagi)
+            // PROSES UPLOAD BACKGROUND
             antreanUpload++; 
             try {
-                // Konversi canvas ke file gambar (Kualitas standar untuk disimpan)
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
                 const formData = new FormData();
                 formData.append('image', blob);
@@ -316,11 +318,10 @@
                 const uploadData = await uploadRes.json();
                 
                 if (uploadData.success) {
-                    await db.collection('photos').add({
-                        eventId: eventId,
+                    await db.collection('events').doc(eventId).collection('photos').add({
                         guestId: guestId,
                         url: uploadData.data.url,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             } catch (err) {
@@ -330,11 +331,23 @@
             }
         }
 
+        // TRANISI MENUJU ALBUM (TANPA ALERT POPUP)
         function bukaAlbum() {
             if (antreanUpload > 0) {
-                alert("Tunggu sebentar ya, foto terakhir sedang disinkronisasikan secara otomatis ke album...");
+                // 1. Tampilkan layar transisi loading (bukan popup alert)
+                document.getElementById('transitionScreen').style.display = 'flex';
+                
+                // 2. Pantau proses upload di background, otomatis pindah jika sudah selesai (0)
+                const cekUpload = setInterval(() => {
+                    if (antreanUpload === 0) {
+                        clearInterval(cekUpload);
+                        window.location.href = document.getElementById('linkAlbum').href;
+                    }
+                }, 500);
                 return;
             }
+            
+            // Jika tidak ada foto yang mengantre, langsung buka album
             window.location.href = document.getElementById('linkAlbum').href;
         }
 
