@@ -20,8 +20,23 @@
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .counter { background: rgba(0,0,0,0.5); padding: 8px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; font-variant-numeric: tabular-nums; border: 1px solid rgba(255,255,255,0.2); }
 
-        /* Camera Viewfinder */
-        .camera-container { flex: 1; position: relative; display: flex; justify-content: center; align-items: center; background: #111; overflow: hidden; margin-top: 60px; margin-bottom: 100px; border-radius: 20px; }
+        /* Camera Viewfinder (DIPERBAIKI AGAR SELALU PORTRAIT) */
+        .camera-container { 
+            flex: 1; 
+            position: relative; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            background: #111; 
+            overflow: hidden; 
+            margin-top: 60px; 
+            margin-bottom: 100px; 
+            border-radius: 20px; 
+            width: 100%;
+            max-width: 450px; /* Ini yang membuat tampilannya tetap portrait seperti HP */
+            margin-left: auto;
+            margin-right: auto;
+        }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
         /* Frame Guide (Kotak bidikan) */
