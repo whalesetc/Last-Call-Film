@@ -176,7 +176,7 @@
                 <input type="text" id="waitingText" class="form-control" value="The Wedding Of" required>
             </div>
 
-            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA (DIHAPDAT KE HALAMAN ORDERAN) -->
+            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA -->
             <div class="form-group">
                 <label>Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                 
@@ -418,7 +418,7 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
         
-        // DATABASE WALLPAPER PRESET (DISESUAIKAN DENGAN TEMA PERNIKAHAN, BUNGA, CINCIN & POLOS HITAM)
+        // DATABASE WALLPAPER PRESET 
         const wallpaperDatabase = {
             Wedding: {
                 portrait: [
@@ -557,7 +557,30 @@
 
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         
+        // ====================================================================================
+        // FUNGSI CEK ACARA AKTIF: Memastikan pengguna hanya bisa membuat 1 acara yang belum selesai
+        // ====================================================================================
         function bukaForm() { 
+            let adaAcaraAktif = false;
+            const sekarang = new Date();
+
+            for (let i = 0; i < daftarAcaraGlobal.length; i++) {
+                let d = daftarAcaraGlobal[i];
+                // Cek jam selesai dari acara tersebut
+                let eventEnd = new Date(`${d.date}T${d.endTime || '23:59'}:00`);
+                
+                // Jika acara belum selesai ATAU status masih Pending bayar, maka tidak boleh buat acara baru
+                if (sekarang <= eventEnd || d.status === 'Pending') {
+                    adaAcaraAktif = true;
+                    break;
+                }
+            }
+
+            if (adaAcaraAktif) {
+                alert("Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru lagi setelah acara Anda sebelumnya telah selesai (melewati batas waktu).");
+                return;
+            }
+
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
             perbaruiPresetOtomatis();
