@@ -12,7 +12,7 @@
 
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
-        body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+        body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
         .font-serif { font-family: 'Playfair Display', serif; }
         
         /* Top Navigation Bar */
@@ -40,23 +40,31 @@
             transition: all 0.3s; 
         }
 
-        /* Camera Viewfinder (PORTRAIT) - Diberi margin bawah agar tidak bertabrakan dengan tombol */
+        /* Camera Viewfinder PORTRAIT (9:16 Aspect Ratio Khas IG Story) */
         .camera-container { 
-            flex: 1; position: relative; display: flex; justify-content: center; align-items: center; 
-            background: #111; overflow: hidden; margin-top: 60px; margin-bottom: 175px; 
-            border-radius: 20px; width: 100%; max-width: 450px; margin-left: auto; margin-right: auto;
+            position: relative; display: flex; justify-content: center; align-items: center; 
+            background: #111; overflow: hidden; 
+            margin-top: 65px; margin-bottom: 160px; 
+            border-radius: 20px; 
+            aspect-ratio: 9 / 16; 
+            height: calc(100vh - 235px);
+            max-height: 580px;
+            width: auto;
+            max-width: calc((100vh - 235px) * (9 / 16));
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
         /* Frame Guide */
-        .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; height: 60%; border: 1px solid rgba(255,255,255,0.3); border-radius: 10px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
-        .viewfinder-guide::after { content: '+'; color: rgba(255,255,255,0.5); font-size: 2rem; font-weight: 300; }
+        .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 85%; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .viewfinder-guide::after { content: '+'; color: rgba(255,255,255,0.4); font-size: 2rem; font-weight: 300; }
 
         /* Flash Effect */
         #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Bottom Controls - Diposisikan tepat di bawah kotak foto */
-        .bottom-controls { position: absolute; bottom: 80px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
+        /* Bottom Controls - Berada Tepat di Bawah Kotak Foto */
+        .bottom-controls { position: absolute; bottom: 75px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
         /* Capture Button */
         .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; padding: 0; position: relative; }
@@ -69,9 +77,9 @@
         .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
 
         /* Thumbnail Strip (Galeri Mini Paling Bawah) */
-        .thumbnail-strip { position: absolute; bottom: 10px; left: 0; width: 100%; height: 65px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
+        .thumbnail-strip { position: absolute; bottom: 8px; left: 0; width: 100%; height: 60px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
         .thumbnail-strip::-webkit-scrollbar { display: none; }
-        .thumb-img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
+        .thumb-img { width: 38px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
         /* OVERLAY LAYAR PENUH (LOADING / WAITING / ENDED) */
@@ -172,6 +180,9 @@
     <!-- Galeri Mini (Thumbnail) -->
     <div class="thumbnail-strip" id="thumbnailStrip"></div>
 
+    <!-- Canvas tersembunyi untuk cropping 9:16 Portrait -->
+    <canvas id="canvasHidden" style="display: none;"></canvas>
+
     <script>
         // Konfigurasi Firebase
         const firebaseConfig = {
@@ -194,6 +205,7 @@
         let stream = null;
         let facingMode = 'environment';
         const video = document.getElementById('cameraStream');
+        const canvas = document.getElementById('canvasHidden');
         const btnCapture = document.getElementById('btnCapture');
         const thumbnailStrip = document.getElementById('thumbnailStrip');
 
@@ -367,23 +379,46 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
+        // FUNGSI JEPET INSTAN DENGAN HASIL 9:16 PORTRAIT (STORY / FEED VERTICAL)
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
+            // Flash effect
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = video.videoWidth;
-            tempCanvas.height = video.videoHeight;
-            const tempCtx = tempCanvas.getContext('2d');
-            if(facingMode === 'user') {
-                tempCtx.translate(tempCanvas.width, 0); tempCtx.scale(-1, 1);
-            }
-            tempCtx.drawImage(video, 0, 0, tempCanvas.width, tempCanvas.height);
+            // Perhitungan Crop Presisi ke Rasio 9:16 Portrait
+            const targetRatio = 9 / 16;
+            let srcW = video.videoWidth;
+            let srcH = video.videoHeight;
+            let srcX = 0;
+            let srcY = 0;
 
-            const thumbnailDataUrl = tempCanvas.toDataURL('image/jpeg', 0.1);
+            if (srcW / srcH > targetRatio) {
+                const newWidth = srcH * targetRatio;
+                srcX = (srcW - newWidth) / 2;
+                srcW = newWidth;
+            } else {
+                const newHeight = srcW / targetRatio;
+                srcY = (srcH - newHeight) / 2;
+                srcH = newHeight;
+            }
+
+            // Output HD Portrait (1080 x 1920)
+            canvas.width = 1080;
+            canvas.height = 1920;
+            const ctx = canvas.getContext('2d');
+
+            if(facingMode === 'user') {
+                ctx.translate(canvas.width, 0); 
+                ctx.scale(-1, 1);
+            }
+
+            ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+
+            // Thumbnail Instan
+            const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.1);
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
             
@@ -391,10 +426,11 @@
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            tempCanvas.toBlob(blob => {
+            // Masukkan ke antrean upload
+            canvas.toBlob(blob => {
                 uploadQueue.push(blob);
                 prosesAntreanUpload();
-            }, 'image/jpeg', 0.7);
+            }, 'image/jpeg', 0.75);
         }
 
         async function prosesAntreanUpload() {
