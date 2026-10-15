@@ -15,12 +15,10 @@
         body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
         .font-serif { font-family: 'Playfair Display', serif; }
         
-        /* Top Navigation Bar */
         .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
         .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; display: inline-block; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* UI ROLL FILM MEKANIK */
         .roll-wrapper { display: flex; align-items: center; gap: 8px; }
         .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
         .roll-container { 
@@ -40,7 +38,6 @@
             transition: all 0.3s; 
         }
 
-        /* Camera Viewfinder PORTRAIT (9:16 Aspect Ratio Khas IG Story) */
         .camera-container { 
             position: relative; display: flex; justify-content: center; align-items: center; 
             background: #111; overflow: hidden; 
@@ -56,33 +53,26 @@
         }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Frame Guide */
         .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 85%; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
         .viewfinder-guide::after { content: '+'; color: rgba(255,255,255,0.4); font-size: 2rem; font-weight: 300; }
 
-        /* Flash Effect */
         #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Bottom Controls */
         .bottom-controls { position: absolute; bottom: 75px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
-        /* Capture Button */
         .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; padding: 0; position: relative; }
         .capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.1s; display: flex; justify-content: center; align-items: center; }
         .capture-btn:active .capture-inner { transform: scale(0.85); background: #ccc; }
         .capture-btn:disabled { border-color: #555; cursor: not-allowed; }
         .capture-btn:disabled .capture-inner { background: #555; }
 
-        /* Flip Camera Button */
         .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
 
-        /* Thumbnail Strip */
         .thumbnail-strip { position: absolute; bottom: 8px; left: 0; width: 100%; height: 60px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
         .thumbnail-strip::-webkit-scrollbar { display: none; }
         .thumb-img { width: 38px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
-        /* OVERLAY LAYAR PENUH */
         .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
         .overlay-content { background: rgba(0,0,0,0.75); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
         
@@ -99,13 +89,11 @@
 </head>
 <body>
 
-    <!-- 1. LAYAR LOADING INTI -->
     <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
     </div>
 
-    <!-- 2. LAYAR TUNGGU (JIKA ACARA BELUM MULAI) -->
     <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
         <div class="overlay-content">
             <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
@@ -122,7 +110,6 @@
         </div>
     </div>
 
-    <!-- 3. LAYAR SELESAI (JIKA ACARA SUDAH BERAKHIR) -->
     <div id="endedOverlay" class="fullscreen-overlay" style="display: none;">
         <div class="overlay-content">
             <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 10px; color: #ff6b6b;">Acara Telah Selesai</h2>
@@ -169,7 +156,6 @@
         </button>
     </div>
 
-    <!-- Galeri Mini (Thumbnail) -->
     <div class="thumbnail-strip" id="thumbnailStrip"></div>
 
     <canvas id="canvasHidden" style="display: none;"></canvas>
@@ -224,7 +210,6 @@
                 const fotoSblmnya = localStorage.getItem(`count_${eventId}`);
                 fotoTerambil = fotoSblmnya ? parseInt(fotoSblmnya) : 0;
                 
-                // VALIDASI WAKTU ACARA
                 const sekarang = new Date();
                 const eventDate = currentEvent.date;
                 const startTime = currentEvent.startTime || '00:00';
@@ -396,7 +381,7 @@
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
 
             const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.1);
-            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.75);
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.65);
 
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
@@ -405,7 +390,6 @@
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // Simpan foto ke antrean LocalStorage agar bisa diambil alih oleh album jika pengguna langsung pindah
             let pending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
             pending.push({
                 id: 'p_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
@@ -427,33 +411,31 @@
             let item = pending[0];
 
             try {
-                const resBlob = await fetch(item.dataUrl);
-                const blob = await resBlob.blob();
-
+                // Ekstrak string base64 untuk dikirim langsung via API Form
+                const base64Data = item.dataUrl.split(',')[1];
                 const formData = new FormData();
-                formData.append('image', blob);
+                formData.append('image', base64Data);
 
                 const uploadRes = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', {
                     method: 'POST', body: formData
                 });
                 const uploadData = await uploadRes.json();
                 
-                if (uploadData.success) {
+                if (uploadData && uploadData.success) {
                     await db.collection('photos').add({
                         eventId: eventId,
                         guestId: item.guestId,
                         url: uploadData.data.url,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        createdTime: firebase.firestore.FieldValue.serverTimestamp()
                     });
 
-                    // Hapus dari pending localStorage setelah berhasil
                     let currentPending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
                     currentPending = currentPending.filter(p => p.id !== item.id);
                     localStorage.setItem(`pending_${eventId}`, JSON.stringify(currentPending));
                 }
             } catch (err) {
-                console.warn("Sinyal lambat, menyimpan di antrean lokal...", err);
-                await new Promise(r => setTimeout(r, 3000));
+                console.warn("Sedang mencoba unggah ulang di latar belakang...", err);
+                await new Promise(r => setTimeout(r, 2000));
             } finally {
                 isUploadingQueue = false;
                 let remaining = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
@@ -463,7 +445,6 @@
             }
         }
 
-        // BUKA ALBUM INSTAN TANPA JEDA / TANPA SINKRONISASI LOADING SCREEN
         function bukaAlbum(e) {
             if (e) e.preventDefault();
             const link = document.getElementById('linkAlbum').href;
