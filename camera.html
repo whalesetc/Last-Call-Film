@@ -42,7 +42,7 @@
         /* Camera Viewfinder (PORTRAIT) */
         .camera-container { 
             flex: 1; position: relative; display: flex; justify-content: center; align-items: center; 
-            background: #111; overflow: hidden; margin-top: 60px; margin-bottom: 100px; 
+            background: #111; overflow: hidden; margin-top: 60px; margin-bottom: 150px; 
             border-radius: 20px; width: 100%; max-width: 450px; margin-left: auto; margin-right: auto;
         }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
@@ -54,20 +54,24 @@
         /* Flash Effect */
         #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Bottom Controls */
-        .bottom-controls { position: absolute; bottom: 0; left: 0; width: 100%; height: 100px; display: flex; justify-content: center; align-items: center; background: #000; padding: 0 20px; z-index: 10; }
+        /* Bottom Controls - Naik sedikit untuk tempat galeri mini */
+        .bottom-controls { position: absolute; bottom: 85px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
         
         /* Capture Button */
-        .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.2s; padding: 0; }
-        .capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.2s; }
+        .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; padding: 0; }
+        .capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.1s; }
         .capture-btn:active .capture-inner { transform: scale(0.9); background: #ccc; }
-        
-        /* Disabled/Loading State */
         .capture-btn:disabled { border-color: #555; cursor: not-allowed; }
         .capture-btn:disabled .capture-inner { background: #555; }
 
         /* Flip Camera Button */
         .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
+
+        /* Thumbnail Strip (Galeri Mini di Bawah) */
+        .thumbnail-strip { position: absolute; bottom: 10px; left: 0; width: 100%; height: 65px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
+        .thumbnail-strip::-webkit-scrollbar { display: none; }
+        .thumb-img { width: 45px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
+        @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
         /* Loading Screen Init */
         #initScreen { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; }
@@ -92,9 +96,7 @@
         <div class="roll-wrapper">
             <div class="roll-label">Sisa<br>Film</div>
             <div class="roll-container">
-                <div class="roll-numbers" id="rollNumbers">
-                    <!-- Angka akan diisi otomatis melalui JS -->
-                </div>
+                <div class="roll-numbers" id="rollNumbers"></div>
             </div>
         </div>
     </div>
@@ -125,11 +127,14 @@
         </button>
     </div>
 
+    <!-- Galeri Mini (Thumbnail) -->
+    <div class="thumbnail-strip" id="thumbnailStrip"></div>
+
     <!-- Canvas tersembunyi -->
     <canvas id="canvasHidden" style="display: none;"></canvas>
 
     <script>
-        // Konfigurasi Firebase Anda
+        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -145,15 +150,16 @@
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 0;
-        let antreanUpload = 0; // Melacak sisa foto yang sedang dikirim di background
+        let antreanUpload = 0; 
         
         let stream = null;
         let facingMode = 'environment';
         const video = document.getElementById('cameraStream');
         const canvas = document.getElementById('canvasHidden');
         const btnCapture = document.getElementById('btnCapture');
+        const thumbnailStrip = document.getElementById('thumbnailStrip');
 
-        // PERLINDUNGAN: Mencegah pindah ke album jika foto terakhir belum kelar di-upload
+        // Mencegah pindah halaman saat proses upload belum selesai
         document.getElementById('linkAlbum').addEventListener('click', function(e) {
             e.preventDefault();
             bukaAlbum();
@@ -172,6 +178,9 @@
                 localStorage.setItem(`guest_${eventId}`, guestId);
             }
 
+            // Muat thumbnail yang sebelumnya disimpan di localStorage (jika ada)
+            muatThumbnailLokal();
+
             try {
                 const doc = await db.collection('events').doc(eventId).get();
                 if (!doc.exists) { alert("Acara tidak ditemukan!"); return; }
@@ -188,7 +197,6 @@
                 await mulaiKamera();
 
                 document.getElementById('initScreen').style.display = 'none';
-
             } catch (error) {
                 alert("Gagal memuat data: " + error.message);
             }
@@ -247,15 +255,35 @@
             mulaiKamera();
         }
 
+        function muatThumbnailLokal() {
+            const thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+            thumbs.forEach(url => tambahThumbnailKeLayar(url));
+        }
+
+        function simpanThumbnailLokal(dataUrl) {
+            let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+            thumbs.push(dataUrl);
+            localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+        }
+
+        function tambahThumbnailKeLayar(dataUrl) {
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.className = 'thumb-img';
+            thumbnailStrip.appendChild(img);
+            thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth; // Auto scroll ke paling kanan
+        }
+
+        // FUNGSI JEPET INSTAN TANPA DELAY
         async function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
-            
-            btnCapture.disabled = true;
 
+            // Efek Flash
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
-            setTimeout(() => { flash.style.opacity = '0'; }, 100);
+            setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
+            // Ambil gambar dari video ke canvas
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
@@ -264,18 +292,20 @@
             }
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Update UI langsung
+            // Buat versi kualitas sangat rendah HANYA untuk galeri mini instan (Base64)
+            const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.1);
+            tambahThumbnailKeLayar(thumbnailDataUrl);
+            simpanThumbnailLokal(thumbnailDataUrl);
+
+            // Update UI angka & batasan
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            setTimeout(() => {
-                if(fotoTerambil < batasFoto) btnCapture.disabled = false;
-            }, 400);
-
-            // PROSES UPLOAD
+            // PROSES UPLOAD DI LATAR BELAKANG (Tanpa mengganggu pengguna jepret lagi)
             antreanUpload++; 
             try {
+                // Konversi canvas ke file gambar (Kualitas standar untuk disimpan)
                 const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.7));
                 const formData = new FormData();
                 formData.append('image', blob);
@@ -286,7 +316,6 @@
                 const uploadData = await uploadRes.json();
                 
                 if (uploadData.success) {
-                    // DIKEMBALIKAN KE JALUR DATABASE YANG BENAR
                     await db.collection('photos').add({
                         eventId: eventId,
                         guestId: guestId,
@@ -302,9 +331,8 @@
         }
 
         function bukaAlbum() {
-            // Cegah pindah halaman jika foto masih dikirim ke server
             if (antreanUpload > 0) {
-                alert("Tunggu sebentar ya, foto terakhir sedang disimpan...");
+                alert("Tunggu sebentar ya, foto terakhir sedang disinkronisasikan secara otomatis ke album...");
                 return;
             }
             window.location.href = document.getElementById('linkAlbum').href;
