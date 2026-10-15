@@ -303,19 +303,16 @@
                 });
                 const uploadData = await uploadRes.json();
                 
+                // 7. Simpan ke database dengan format dan path yang BENAR
                 if (uploadData.success) {
-                    await db.collection('photos').add({
-                        eventId: eventId,
+                    await db.collection('events').doc(eventId).collection('photos').add({
                         guestId: guestId,
                         url: uploadData.data.url,
-                        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                        uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
                 }
             } catch (err) {
                 console.error("Gagal mengupload di latar belakang:", err);
-                // Karena kita langsung potong kuota di layar secara instan, 
-                // jika upload gagal karena putus sinyal, fotonya akan hilang. 
-                // (Ini ditukar demi performa kecepatan jepret seperti kamera asli).
             } finally {
                 antreanUpload--; // Mengurangi antrean proses
             }
