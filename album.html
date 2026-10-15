@@ -8,9 +8,10 @@
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
-    <!-- Library JSZip & FileSaver untuk Unduh ZIP -->
+    <!-- Library JSZip & FileSaver -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -19,7 +20,6 @@
         body { background-color: #0b0b0a; color: #fff; min-height: 100vh; display: flex; flex-direction: column; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
-        /* Top Navigation */
         .top-bar { 
             position: sticky; top: 0; left: 0; width: 100%; padding: 15px 20px; 
             display: flex; justify-content: space-between; align-items: center; 
@@ -40,7 +40,6 @@
         .event-title { font-size: 2rem; font-weight: 600; margin-bottom: 5px; }
         .photo-count { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
 
-        /* Photo Grid */
         .gallery-container { padding: 15px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; }
         .photo-grid { 
             display: grid; 
@@ -59,15 +58,24 @@
         .photo-card:hover { transform: scale(1.02); }
         .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-        /* Empty State */
+        .pending-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(251, 188, 5, 0.85); color: #000; font-size: 0.65rem; font-weight: bold; padding: 3px 7px; border-radius: 10px; backdrop-filter: blur(4px); }
+
+        .btn-delete-owner { 
+            position: absolute; top: 8px; right: 8px; 
+            background: rgba(220, 38, 38, 0.85); color: #fff; 
+            border: none; width: 28px; height: 28px; border-radius: 50%; 
+            display: flex; justify-content: center; align-items: center; 
+            cursor: pointer; font-size: 0.85rem; backdrop-filter: blur(4px);
+            transition: 0.2s; z-index: 5;
+        }
+        .btn-delete-owner:hover { background: rgba(239, 68, 68, 1); transform: scale(1.1); }
+
         .empty-state { text-align: center; color: rgba(255,255,255,0.4); padding: 60px 20px; font-style: italic; }
 
-        /* Loading Spinner */
         .loader-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0b0b0a; z-index: 999; display: flex; justify-content: center; align-items: center; flex-direction: column; }
         .loader { width: 35px; height: 35px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #6ee7b7; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 15px; }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Modal Preview Gambar */
         .modal-preview { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
         .modal-preview img { max-width: 100%; max-height: 80vh; border-radius: 12px; object-fit: contain; }
         .modal-close { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 1.5rem; cursor: pointer; background: rgba(255,255,255,0.1); width: 40px; height: 40px; border-radius: 50%; display: flex; justify-content: center; align-items: center; }
@@ -86,7 +94,6 @@
     <div class="top-bar">
         <a href="#" id="linkKamera" class="btn-action">&larr; Kamera</a>
         <div style="display: flex; gap: 8px;">
-            <!-- TOMBOL REFRESH MANUAL -->
             <button class="btn-action btn-refresh" onclick="refreshManual()">
                 <span id="refreshIcon" class="spin-icon">🔄</span> Refresh
             </button>
@@ -106,14 +113,12 @@
         </div>
     </div>
 
-    <!-- Modal Pratinjau Foto -->
     <div class="modal-preview" id="imageModal" onclick="tutupModal()">
         <span class="modal-close">&times;</span>
         <img id="modalImg" src="" alt="Preview">
     </div>
 
     <script>
-        // Konfigurasi Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -121,12 +126,14 @@
             appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let listFotoGlobal = [];
-        let unsubscribeListener = null;
+        let isOwner = false;
+        let isUploadingFromAlbum = false;
 
         async function initAlbum() {
             if (!eventId) { alert("Tautan album tidak valid!"); return; }
@@ -135,14 +142,23 @@
             document.getElementById('linkKamera').href = `${domain}/camera.html?event=${eventId}`;
 
             try {
-                // Ambil Nama Acara
                 const eventDoc = await db.collection('events').doc(eventId).get();
                 if (eventDoc.exists) {
-                    document.getElementById('eventNameDisplay').innerText = eventDoc.data().eventName;
+                    const eventData = eventDoc.data();
+                    document.getElementById('eventNameDisplay').innerText = eventData.eventName;
+
+                    auth.onAuthStateChanged(user => {
+                        if (user && user.uid === eventData.ownerId) {
+                            isOwner = true;
+                        } else {
+                            isOwner = false;
+                        }
+                        rendernUIGrid();
+                    });
                 }
 
-                // Pasang Listener Realtime
                 pasangRealtimeListener();
+                prosesPendingAntreanLokal();
 
             } catch (err) {
                 console.error("Gagal memuat album:", err);
@@ -150,20 +166,28 @@
             }
         }
 
-        // OTOMATIS MEMPERBARUI FOTO KETIKA UPLOAD SELESAI (REALTIME)
+        // QUERY TANPA DIBANTU INDEX KHUSUS (DUSORTIR SECARA LOKAL PADA MEMORI)
         function pasangRealtimeListener() {
-            if (unsubscribeListener) unsubscribeListener();
-
-            unsubscribeListener = db.collection('photos')
+            db.collection('photos')
                 .where('eventId', '==', eventId)
-                .orderBy('timestamp', 'desc')
                 .onSnapshot(snapshot => {
-                    listFotoGlobal = [];
+                    let tempArr = [];
                     snapshot.forEach(doc => {
-                        listFotoGlobal.push(doc.data());
+                        tempArr.push({
+                            docId: doc.id,
+                            ...doc.data()
+                        });
                     });
 
-                    tampilkanFotoGrid(listFotoGlobal);
+                    // Sorting manual dari terbaru ke tertua
+                    tempArr.sort((a, b) => {
+                        let tA = a.createdTime ? a.createdTime.toMillis() : Date.now();
+                        let tB = b.createdTime ? b.createdTime.toMillis() : Date.now();
+                        return tB - tA;
+                    });
+
+                    listFotoGlobal = tempArr;
+                    rendernUIGrid();
                     document.getElementById('loadingOverlay').style.display = 'none';
                 }, error => {
                     console.error("Error listener:", error);
@@ -171,53 +195,138 @@
                 });
         }
 
-        // MENAMPILKAN FOTO DI LAYAR
-        function tampilkanFotoGrid(photos) {
+        function rendernUIGrid() {
             const grid = document.getElementById('photoGrid');
             const empty = document.getElementById('emptyState');
             const countDisplay = document.getElementById('photoCountDisplay');
 
-            grid.innerHTML = '';
-            countDisplay.innerText = `${photos.length} Foto Diambil`;
+            let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+            let totalFoto = listFotoGlobal.length + pendingLokal.length;
 
-            if (photos.length === 0) {
+            grid.innerHTML = '';
+            countDisplay.innerText = `${totalFoto} Foto Diambil`;
+
+            if (totalFoto === 0) {
                 empty.style.display = 'block';
             } else {
                 empty.style.display = 'none';
-                photos.forEach(foto => {
+
+                pendingLokal.forEach(item => {
                     const card = document.createElement('div');
                     card.className = 'photo-card';
-                    card.innerHTML = `<img src="${foto.url}" loading="lazy" alt="Foto">`;
+                    card.innerHTML = `
+                        <img src="${item.dataUrl}" alt="Foto Pending">
+                        <div class="pending-badge">⏳ Menyimpan...</div>
+                    `;
+                    card.onclick = () => bukaModal(item.dataUrl);
+                    grid.appendChild(card);
+                });
+
+                listFotoGlobal.forEach(foto => {
+                    const card = document.createElement('div');
+                    card.className = 'photo-card';
+                    
+                    let deleteBtnHTML = '';
+                    if (isOwner) {
+                        deleteBtnHTML = `<button class="btn-delete-owner" onclick="hapusFoto(event, '${foto.docId}')" title="Hapus Foto">🗑️</button>`;
+                    }
+
+                    card.innerHTML = `
+                        <img src="${foto.url}" loading="lazy" alt="Foto">
+                        ${deleteBtnHTML}
+                    `;
                     card.onclick = () => bukaModal(foto.url);
                     grid.appendChild(card);
                 });
             }
         }
 
-        // REFRESH MANUAL SAAT TOMBOL DITEKAN
+        async function prosesPendingAntreanLokal() {
+            if (isUploadingFromAlbum) return;
+
+            let pending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+            if (pending.length === 0) return;
+
+            isUploadingFromAlbum = true;
+            let item = pending[0];
+
+            try {
+                const base64Data = item.dataUrl.split(',')[1];
+                const formData = new FormData();
+                formData.append('image', base64Data);
+
+                const uploadRes = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', {
+                    method: 'POST', body: formData
+                });
+                const uploadData = await uploadRes.json();
+
+                if (uploadData && uploadData.success) {
+                    await db.collection('photos').add({
+                        eventId: eventId,
+                        guestId: item.guestId,
+                        url: uploadData.data.url,
+                        createdTime: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+
+                    let currentPending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                    currentPending = currentPending.filter(p => p.id !== item.id);
+                    localStorage.setItem(`pending_${eventId}`, JSON.stringify(currentPending));
+                    rendernUIGrid();
+                }
+            } catch (err) {
+                console.warn("Upload pending di album gagal:", err);
+                await new Promise(r => setTimeout(r, 2000));
+            } finally {
+                isUploadingFromAlbum = false;
+                let remaining = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
+                if (remaining.length > 0) {
+                    prosesPendingAntreanLokal();
+                }
+            }
+        }
+
+        async function hapusFoto(e, docId) {
+            e.stopPropagation();
+            if (!isOwner) return;
+
+            if (confirm("Apakah Anda yakin ingin menghapus foto ini secara permanen dari album?")) {
+                try {
+                    await db.collection('photos').doc(docId).delete();
+                } catch (err) {
+                    alert("Gagal menghapus foto: " + err.message);
+                }
+            }
+        }
+
         async function refreshManual() {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('spinning');
+            
+            prosesPendingAntreanLokal();
 
             try {
                 const snapshot = await db.collection('photos')
                     .where('eventId', '==', eventId)
-                    .orderBy('timestamp', 'desc')
                     .get();
 
-                listFotoGlobal = [];
-                snapshot.forEach(doc => listFotoGlobal.push(doc.data()));
-                tampilkanFotoGrid(listFotoGlobal);
+                let tempArr = [];
+                snapshot.forEach(doc => tempArr.push({ docId: doc.id, ...doc.data() }));
+
+                tempArr.sort((a, b) => {
+                    let tA = a.createdTime ? a.createdTime.toMillis() : Date.now();
+                    let tB = b.createdTime ? b.createdTime.toMillis() : Date.now();
+                    return tB - tA;
+                });
+
+                listFotoGlobal = tempArr;
+                rendernUIGrid();
             } catch (err) {
                 console.error("Gagal refresh:", err);
             } finally {
-                setTimeout(() => {
-                    icon.classList.remove('spinning');
-                }, 500);
+                setTimeout(() => icon.classList.remove('spinning'), 500);
             }
         }
 
-        // BUKA & TUTUP PREVIEW FOTO
         function bukaModal(url) {
             document.getElementById('modalImg').src = url;
             document.getElementById('imageModal').style.display = 'flex';
@@ -226,7 +335,6 @@
             document.getElementById('imageModal').style.display = 'none';
         }
 
-        // FITUR UNDUH SELURUH FOTO ABU (ZIP)
         async function unduhSemuaZip() {
             if (listFotoGlobal.length === 0) {
                 alert("Belum ada foto yang bisa diunduh.");
