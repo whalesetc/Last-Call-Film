@@ -27,9 +27,17 @@
         .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-wa:hover { background: #20ba59; }
 
+        /* Profile Menu Styles */
+        .profile-container { position: relative; display: inline-block; }
         .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #fff; transition: 0.2s; }
         .profile-btn:hover { background: rgba(255,255,255,0.1); }
-        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; }
+        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+        .profile-dropdown { display: none; position: absolute; right: 0; top: 120%; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 160px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 200; }
+        .profile-dropdown.show { display: block; }
+        .dropdown-item { padding: 12px 15px; cursor: pointer; color: #fff; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s; text-align: left; width: 100%; background: transparent; border: none; font-family: inherit; }
+        .dropdown-item:last-child { border-bottom: none; }
+        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
+        .text-danger { color: #ff6b6b; }
 
         .section { display: none; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
         .active-section { display: block; }
@@ -176,7 +184,6 @@
                 <input type="text" id="waitingText" class="form-control" value="The Wedding Of" required>
             </div>
 
-            <!-- PILIHAN ORIENTASI & WALLPAPER PRESET SESUAI ACARA -->
             <div class="form-group">
                 <label>Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                 
@@ -185,9 +192,7 @@
                     <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong>Landscape</strong></label>
                 </div>
 
-                <div class="preset-grid" id="presetWallpaperContainer">
-                    <!-- Diisi dinamis via JS -->
-                </div>
+                <div class="preset-grid" id="presetWallpaperContainer"></div>
                 
                 <div class="mockup-container">
                     <div class="phone-mockup" id="phonePreviewBox">
@@ -305,28 +310,25 @@
                     </div>
                 </div>
 
-                <!-- PENGATURAN WAKTU & WALLPAPER DI MENU KELOLA -->
                 <div class="dash-card">
                     <h3>Pengaturan Waktu & Wallpaper</h3>
                     <form id="editEventForm">
                         <input type="hidden" id="editEventId">
                         
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Teks Sambutan Aesthetic Wallpaper</label>
+                            <label style="font-size: 0.85rem;">Teks Sambutan Aesthetic</label>
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
+                            <label style="font-size: 0.85rem;">Pilih Wallpaper Standar atau Unggah</label>
                             
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="portrait" checked onclick="perbaruiPresetEditOtomatis()"><strong>Portrait</strong></label>
                                 <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="landscape" onclick="perbaruiPresetEditOtomatis()"><strong>Landscape</strong></label>
                             </div>
 
-                            <div class="preset-grid" id="editPresetContainer">
-                                <!-- Diisi dinamis via JS -->
-                            </div>
+                            <div class="preset-grid" id="editPresetContainer"></div>
 
                             <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3); text-align: center; display: block; margin-top: 10px;">
                                 <input type="file" id="editWallpaperFile" accept="image/*" style="display:none;" onchange="previewFileEditCustom()">
@@ -375,7 +377,7 @@
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;">Nanti Saja</button>
     </div>
 
-    <!-- MODAL AUTH & PROFILE -->
+    <!-- MODAL AUTH -->
     <div class="auth-modal" id="authModal">
         <div class="auth-box">
             <span class="auth-close" onclick="tutupAuthModal()">✖</span>
@@ -401,6 +403,19 @@
         </div>
     </div>
 
+    <!-- MODAL EDIT PROFILE -->
+    <div class="auth-modal" id="profileModal">
+        <div class="auth-box">
+            <span class="auth-close" onclick="tutupProfileModal()">✖</span>
+            <h3 style="margin-bottom: 20px; font-family: 'Playfair Display', serif;">Edit Profil</h3>
+            <div class="form-group">
+                <label>Nama Tampilan</label>
+                <input type="text" id="editProfileName" class="auth-input" placeholder="Nama Anda">
+            </div>
+            <button class="auth-btn btn-primary" onclick="simpanProfile()" style="width:100%;">Simpan Perubahan</button>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
@@ -418,7 +433,6 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
         
-        // DATABASE WALLPAPER PRESET 
         const wallpaperDatabase = {
             Wedding: {
                 portrait: [
@@ -509,7 +523,6 @@
             }
         }
 
-        // UNTUK MENU KELOLA / EDIT
         let selectedEditWallpaperUrl = '';
         function perbaruiPresetEditOtomatis() {
             const orientasi = document.querySelector('input[name="editOrientation"]:checked').value;
@@ -557,19 +570,14 @@
 
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         
-        // ====================================================================================
-        // FUNGSI CEK ACARA AKTIF: Memastikan pengguna hanya bisa membuat 1 acara yang belum selesai
-        // ====================================================================================
         function bukaForm() { 
             let adaAcaraAktif = false;
             const sekarang = new Date();
 
             for (let i = 0; i < daftarAcaraGlobal.length; i++) {
                 let d = daftarAcaraGlobal[i];
-                // Cek jam selesai dari acara tersebut
                 let eventEnd = new Date(`${d.date}T${d.endTime || '23:59'}:00`);
                 
-                // Jika acara belum selesai ATAU status masih Pending bayar, maka tidak boleh buat acara baru
                 if (sekarang <= eventEnd || d.status === 'Pending') {
                     adaAcaraAktif = true;
                     break;
@@ -719,11 +727,68 @@
             db.collection('members').doc(user.uid).set({ name: user.displayName, email: user.email }, {merge: true});
         }
 
+        // =========================================================
+        // PENGATURAN MENU PROFIL (DROPDOWN, EDIT NAMA, LOGOUT)
+        // =========================================================
+        function toggleProfileDropdown() {
+            document.getElementById('profileDropdown').classList.toggle('show');
+        }
+
+        // Menutup dropdown jika user klik area kosong di layar
+        window.onclick = function(event) {
+            if (!event.target.closest('.profile-container')) {
+                const dropdowns = document.getElementsByClassName("profile-dropdown");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+                }
+            }
+        }
+
+        function bukaProfileModal() {
+            document.getElementById('profileDropdown').classList.remove('show');
+            document.getElementById('editProfileName').value = currentUser.displayName || '';
+            document.getElementById('profileModal').style.display = 'flex';
+        }
+
+        function tutupProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
+
+        function simpanProfile() {
+            const newName = document.getElementById('editProfileName').value;
+            if(!newName) return alert("Nama tidak boleh kosong.");
+            
+            currentUser.updateProfile({ displayName: newName }).then(() => {
+                db.collection('members').doc(currentUser.uid).update({ name: newName }).catch(()=>{});
+                alert("Profil berhasil diperbarui!");
+                location.reload();
+            }).catch(err => alert("Gagal memperbarui profil: " + err.message));
+        }
+
+        function logoutAkun() {
+            auth.signOut().then(() => {
+                location.reload();
+            }).catch(err => alert("Gagal keluar: " + err.message));
+        }
+
         auth.onAuthStateChanged(user => {
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
-                navMenu.innerHTML = `<div class="profile-btn"><div class="profile-icon">${(user.displayName||'M').charAt(0)}</div><span>${user.displayName||user.email}</span></div>`;
+                const initial = (user.displayName || user.email || 'U').charAt(0);
+                const displayName = user.displayName || user.email.split('@')[0];
+                
+                // Tampilan Navbar yang Memiliki Menu Dropdown
+                navMenu.innerHTML = `
+                    <div class="profile-container">
+                        <div class="profile-btn" onclick="toggleProfileDropdown()">
+                            <div class="profile-icon">${initial}</div>
+                            <span>${displayName}</span>
+                        </div>
+                        <div class="profile-dropdown" id="profileDropdown">
+                            <button class="dropdown-item" onclick="bukaProfileModal()">Edit Profil</button>
+                            <button class="dropdown-item text-danger" onclick="logoutAkun()">Keluar Akun</button>
+                        </div>
+                    </div>
+                `;
                 bukaDasbor();
             } else {
                 navMenu.innerHTML = `<button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>`;
