@@ -35,10 +35,15 @@
         .btn-action:hover { background: rgba(255,255,255,0.2); }
         .btn-action:active { transform: scale(0.95); }
         .btn-refresh { background: rgba(110, 231, 183, 0.15); border-color: rgba(110, 231, 183, 0.4); color: #6ee7b7; }
+        .btn-select-mode { background: rgba(59, 130, 246, 0.2); border-color: rgba(59, 130, 246, 0.5); color: #93c5fd; }
 
         .header-section { text-align: center; padding: 30px 20px 20px 20px; }
         .event-title { font-size: 2rem; font-weight: 600; margin-bottom: 5px; }
         .photo-count { color: rgba(255,255,255,0.5); font-size: 0.85rem; }
+
+        /* Panel Aksi Pilihan (Select Actions) */
+        .selection-panel { display: none; background: rgba(30,30,30,0.95); padding: 12px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 65px; z-index: 90; justify-content: space-between; align-items: center; backdrop-filter: blur(10px); }
+        .selection-panel.active { display: flex; }
 
         .gallery-container { padding: 15px; flex: 1; max-width: 1100px; margin: 0 auto; width: 100%; }
         .photo-grid { 
@@ -56,7 +61,14 @@
             transition: transform 0.2s; cursor: pointer; 
         }
         .photo-card:hover { transform: scale(1.02); }
+        .photo-card.selected { border: 3px solid #3b82f6; }
         .photo-card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* Checkbox Pilihan */
+        .card-checkbox { position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; border-radius: 50%; border: 2px solid #fff; background: rgba(0,0,0,0.4); display: none; justify-content: center; align-items: center; z-index: 5; }
+        .selection-active .card-checkbox { display: flex; }
+        .photo-card.selected .card-checkbox { background: #3b82f6; border-color: #3b82f6; }
+        .photo-card.selected .card-checkbox::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: bold; }
 
         .pending-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(251, 188, 5, 0.85); color: #000; font-size: 0.65rem; font-weight: bold; padding: 3px 7px; border-radius: 10px; backdrop-filter: blur(4px); }
 
@@ -68,7 +80,6 @@
             cursor: pointer; font-size: 0.85rem; backdrop-filter: blur(4px);
             transition: 0.2s; z-index: 5;
         }
-        .btn-delete-owner:hover { background: rgba(239, 68, 68, 1); transform: scale(1.1); }
 
         .empty-state { text-align: center; color: rgba(255,255,255,0.4); padding: 60px 20px; font-style: italic; }
 
@@ -94,10 +105,24 @@
     <div class="top-bar">
         <a href="#" id="linkKamera" class="btn-action">&larr; Kamera</a>
         <div style="display: flex; gap: 8px;">
+            <button class="btn-action btn-select-mode" id="btnSelectToggle" onclick="toggleSelectMode()">Pilih</button>
             <button class="btn-action btn-refresh" onclick="refreshManual()">
                 <span id="refreshIcon" class="spin-icon">🔄</span> Refresh
             </button>
             <button class="btn-action" onclick="unduhSemuaZip()" id="btnZip" style="background: #fff; color: #000; font-weight: 600;">Unduh ZIP</button>
+        </div>
+    </div>
+
+    <!-- Panel Kontrol Select & Select All -->
+    <div class="selection-panel" id="selectionPanel">
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-action" onclick="select هرAll(true)">Pilih Semua</button>
+            <button class="btn-action" onclick="selectAll(false)">Batal Pilih</button>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-action" onclick="unduhTerpilihZip()" style="background: #2563eb; border: none;">Unduh Terpilih</button>
+            <button class="btn-action" id="btnDeleteSelected" onclick="hapusTerpilihOwner()" style="background: #dc2626; border: none; display: none;">Hapus Terpilih</button>
+            <button class="btn-action" onclick="toggleSelectMode()" style="background: rgba(255,255,255,0.2);">Selesai</button>
         </div>
     </div>
 
@@ -134,6 +159,8 @@
         let listFotoGlobal = [];
         let isOwner = false;
         let isUploadingFromAlbum = false;
+        let isSelectMode = false;
+        let selectedPhotoIds = new Set();
 
         async function initAlbum() {
             if (!eventId) { alert("Tautan album tidak valid!"); return; }
@@ -150,6 +177,7 @@
                     auth.onAuthStateChanged(user => {
                         if (user && user.uid === eventData.ownerId) {
                             isOwner = true;
+                            document.getElementById('btnDeleteSelected').style.display = 'inline-flex';
                         } else {
                             isOwner = false;
                         }
@@ -166,7 +194,6 @@
             }
         }
 
-        // QUERY TANPA DIBANTU INDEX KHUSUS (DUSORTIR SECARA LOKAL PADA MEMORI)
         function pasangRealtimeListener() {
             db.collection('photos')
                 .where('eventId', '==', eventId)
@@ -179,7 +206,6 @@
                         });
                     });
 
-                    // Sorting manual dari terbaru ke tertua
                     tempArr.sort((a, b) => {
                         let tA = a.createdTime ? a.createdTime.toMillis() : Date.now();
                         let tB = b.createdTime ? b.createdTime.toMillis() : Date.now();
@@ -215,29 +241,122 @@
                     const card = document.createElement('div');
                     card.className = 'photo-card';
                     card.innerHTML = `
+                        <div class="card-checkbox"></div>
                         <img src="${item.dataUrl}" alt="Foto Pending">
                         <div class="pending-badge">⏳ Menyimpan...</div>
                     `;
-                    card.onclick = () => bukaModal(item.dataUrl);
                     grid.appendChild(card);
                 });
 
                 listFotoGlobal.forEach(foto => {
                     const card = document.createElement('div');
-                    card.className = 'photo-card';
+                    card.className = `photo-card ${selectedPhotoIds.has(foto.docId) ? 'selected' : ''}`;
+                    card.dataset.id = foto.docId;
                     
                     let deleteBtnHTML = '';
-                    if (isOwner) {
+                    if (isOwner && !isSelectMode) {
                         deleteBtnHTML = `<button class="btn-delete-owner" onclick="hapusFoto(event, '${foto.docId}')" title="Hapus Foto">🗑️</button>`;
                     }
 
                     card.innerHTML = `
+                        <div class="card-checkbox"></div>
                         <img src="${foto.url}" loading="lazy" alt="Foto">
                         ${deleteBtnHTML}
                     `;
-                    card.onclick = () => bukaModal(foto.url);
+                    
+                    card.onclick = (e) => {
+                        if (isSelectMode) {
+                            toggleSelectPhoto(foto.docId, card);
+                        } else {
+                            bukaModal(foto.url);
+                        }
+                    };
+
                     grid.appendChild(card);
                 });
+            }
+        }
+
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            const panel = document.getElementById('selectionPanel');
+            const btnToggle = document.getElementById('btnSelectToggle');
+            const grid = document.getElementById('photoGrid');
+
+            if (isSelectMode) {
+                panel.classList.add('active');
+                grid.classList.add('selection-active');
+                btnToggle.innerText = "Batal Pilih";
+                btnToggle.style.background = "rgba(239, 68, 68, 0.2)";
+            } else {
+                panel.classList.remove('active');
+                grid.classList.remove('selection-active');
+                btnToggle.innerText = "Pilih";
+                btnToggle.style.background = "";
+                selectedPhotoIds.clear();
+            }
+            rendernUIGrid();
+        }
+
+        function toggleSelectPhoto(docId, cardElement) {
+            if (selectedPhotoIds.has(docId)) {
+                selectedPhotoIds.delete(docId);
+                cardElement.classList.remove('selected');
+            } else {
+                selectedPhotoIds.add(docId);
+                cardElement.classList.add('selected');
+            }
+        }
+
+        function selectAll(select) {
+            selectedPhotoIds.clear();
+            if (select) {
+                listFotoGlobal.forEach(f => selectedPhotoIds.add(f.docId));
+            }
+            rendernUIGrid();
+        }
+
+        async function unduhTerpilihZip() {
+            if (selectedPhotoIds.size === 0) {
+                alert("Belum ada foto yang dipilih.");
+                return;
+            }
+
+            const zip = new JSZip();
+            const folder = zip.folder("TheLastCall_Terpilih");
+            let count = 0;
+
+            for (let id of selectedPhotoIds) {
+                let foto = listFotoGlobal.find(f => f.docId === id);
+                if (foto) {
+                    try {
+                        const response = await fetch(foto.url);
+                        const blob = await response.blob();
+                        folder.file(`Foto_${++count}.jpg`, blob);
+                    } catch(e) {}
+                }
+            }
+
+            const content = await zip.generateAsync({ type: "blob" });
+            saveAs(content, `Album_Terpilih_${eventId}.zip`);
+        }
+
+        async function hapusTerpilihOwner() {
+            if (!isOwner || selectedPhotoIds.size === 0) return;
+
+            if (confirm(`Hapus ${selectedPhotoIds.size} foto yang dipilih secara permanen?`)) {
+                try {
+                    const batch = db.batch();
+                    selectedPhotoIds.forEach(id => {
+                        const ref = db.collection('photos').doc(id);
+                        batch.delete(ref);
+                    });
+                    await batch.commit();
+                    selectedPhotoIds.clear();
+                    toggleSelectMode();
+                } catch (err) {
+                    alert("Gagal menghapus: " + err.message);
+                }
             }
         }
 
@@ -274,7 +393,6 @@
                     rendernUIGrid();
                 }
             } catch (err) {
-                console.warn("Upload pending di album gagal:", err);
                 await new Promise(r => setTimeout(r, 2000));
             } finally {
                 isUploadingFromAlbum = false;
