@@ -202,7 +202,7 @@
                 if (!doc.exists) { alert("Acara tidak ditemukan!"); return; }
 
                 let currentEvent = doc.data();
-                batasFoto = currentEvent.guestPhotoLimit || 15;
+                batasFoto = parseInt(currentEvent.guestPhotoLimit) || 15;
                 document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
 
                 const fotoSblmnya = localStorage.getItem(`count_${eventId}`);
@@ -283,10 +283,9 @@
 
         function perbaruiUI() {
             const numbers = document.querySelectorAll('.roll-number');
-            const activeIndex = fotoTerambil;
-
+            
             numbers.forEach((el, idx) => {
-                if (idx === activeIndex) {
+                if (idx === fotoTerambil) {
                     el.style.color = '#fff';
                     el.style.fontSize = '1.3rem';
                     el.style.opacity = '1';
@@ -304,6 +303,9 @@
                 btnCapture.disabled = true;
                 document.getElementById('outOfQuota').style.display = 'flex';
                 if(stream) stream.getTracks().forEach(track => track.stop());
+            } else {
+                btnCapture.disabled = false;
+                document.getElementById('outOfQuota').style.display = 'none';
             }
         }
 
@@ -311,7 +313,7 @@
             if (stream) stream.getTracks().forEach(track => track.stop());
             try {
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: facingMode, width: { ideal: 1920 }, height: { ideal: 1080 } },
+                    video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
                     audio: false
                 });
                 video.srcObject = stream;
@@ -331,7 +333,7 @@
         function simpanThumbnailLokal(dataUrl) {
             let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
             thumbs.push(dataUrl);
-            if (thumbs.length > 20) thumbs.shift();
+            if (thumbs.length > 25) thumbs.shift();
             localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
         }
 
@@ -343,13 +345,15 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        async function ambilFoto() {
+        function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
+            // Flash effect
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
+            // Hitung Crop Aspect Ratio 9:16
             const targetRatio = 9 / 16;
             let srcW = video.videoWidth;
             let srcH = video.videoHeight;
@@ -366,9 +370,8 @@
                 srcH = newHeight;
             }
 
-            // Full HD 1080x1920 px Portrait
-            canvas.width = 1080;
-            canvas.height = 1920;
+            canvas.width = 720;
+            canvas.height = 1280;
             const ctx = canvas.getContext('2d');
 
             if(facingMode === 'user') {
@@ -378,9 +381,10 @@
 
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            // Kualitas Optimal 82% (Kualitas HD tajam & sangat hemat data ~150KB)
-            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+            // Kompresi ringan (~90KB) - HD Jernih & Sangat Cepat
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.70);
 
+            // Thumbnail strip
             const thumbCanvas = document.createElement('canvas');
             thumbCanvas.width = 72;
             thumbCanvas.height = 128;
@@ -390,21 +394,20 @@
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
             
+            // PERBARUI METERAN SISA FILM SEKETIKA
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // UPLOAD INSTAN KE FIRESTORE
-            try {
-                db.collection('photos').add({
-                    eventId: eventId,
-                    guestId: guestId,
-                    url: fullDataUrl,
-                    createdTime: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch(e) {
-                console.error("Error simpan foto:", e);
-            }
+            // UPLOAD LANGSUNG KE FIRESTORE (100% INSTAN)
+            db.collection('photos').add({
+                eventId: eventId,
+                guestId: guestId,
+                url: fullDataUrl,
+                createdTime: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+                console.error("Gagal simpan foto:", err);
+            });
         }
 
         function bukaAlbum(e) {
