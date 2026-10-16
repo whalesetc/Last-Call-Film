@@ -111,7 +111,6 @@
         </div>
     </div>
 
-    <!-- Panel Kontrol Select & Select All -->
     <div class="selection-panel" id="selectionPanel">
         <div style="display: flex; gap: 8px;">
             <button class="btn-action" onclick="selectAll(true)">Pilih Semua</button>
@@ -166,6 +165,11 @@
             const domain = window.location.href.split('?')[0].replace('album.html', '').replace(/\/$/, '');
             document.getElementById('linkKamera').href = `${domain}/camera.html?event=${eventId}`;
 
+            // Pengaman timeout 3 detik agar layar loading tidak macet selamanya
+            const safetyTimer = setTimeout(() => {
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }, 3000);
+
             try {
                 const eventDoc = await db.collection('events').doc(eventId).get();
                 if (eventDoc.exists) {
@@ -188,6 +192,7 @@
 
             } catch (err) {
                 console.error("Gagal memuat album:", err);
+                clearTimeout(safetyTimer);
                 document.getElementById('loadingOverlay').style.display = 'none';
             }
         }
@@ -235,7 +240,6 @@
             } else {
                 empty.style.display = 'none';
 
-                // Render Foto Pending Lokal
                 pendingLokal.forEach(item => {
                     const card = document.createElement('div');
                     card.className = `photo-card ${selectedPhotoIds.has(item.id) ? 'selected' : ''}`;
@@ -256,7 +260,6 @@
                     grid.appendChild(card);
                 });
 
-                // Render Foto dari Firestore
                 listFotoGlobal.forEach(foto => {
                     const card = document.createElement('div');
                     card.className = `photo-card ${selectedPhotoIds.has(foto.docId) ? 'selected' : ''}`;
@@ -319,9 +322,7 @@
         function selectAll(select) {
             selectedPhotoIds.clear();
             if (select) {
-                // Masukkan ID dari foto Firestore
                 listFotoGlobal.forEach(f => selectedPhotoIds.add(f.docId));
-                // Masukkan ID dari foto pending lokal
                 let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
                 pendingLokal.forEach(p => selectedPhotoIds.add(p.id));
             }
