@@ -68,8 +68,6 @@
         .photo-card.selected .card-checkbox { background: #3b82f6; border-color: #3b82f6; }
         .photo-card.selected .card-checkbox::after { content: '✓'; color: #fff; font-size: 0.75rem; font-weight: bold; }
 
-        .pending-badge { position: absolute; bottom: 8px; left: 8px; background: rgba(251, 188, 5, 0.85); color: #000; font-size: 0.65rem; font-weight: bold; padding: 3px 7px; border-radius: 10px; backdrop-filter: blur(4px); }
-
         .btn-delete-owner { 
             position: absolute; top: 8px; right: 8px; 
             background: rgba(220, 38, 38, 0.85); color: #fff; 
@@ -155,7 +153,6 @@
         const eventId = urlParams.get('event');
         let listFotoGlobal = [];
         let isOwner = false;
-        let isUploadingFromAlbum = false;
         let isSelectMode = false;
         let selectedPhotoIds = new Set();
 
@@ -165,10 +162,9 @@
             const domain = window.location.href.split('?')[0].replace('album.html', '').replace(/\/$/, '');
             document.getElementById('linkKamera').href = `${domain}/camera.html?event=${eventId}`;
 
-            // Pengaman timeout 3 detik agar layar loading tidak macet selamanya
             const safetyTimer = setTimeout(() => {
                 document.getElementById('loadingOverlay').style.display = 'none';
-            }, 3000);
+            }, 2000);
 
             try {
                 const eventDoc = await db.collection('events').doc(eventId).get();
@@ -188,7 +184,6 @@
                 }
 
                 pasangRealtimeListener();
-                prosesPendingAntreanLokal();
 
             } catch (err) {
                 console.error("Gagal memuat album:", err);
@@ -229,36 +224,13 @@
             const empty = document.getElementById('emptyState');
             const countDisplay = document.getElementById('photoCountDisplay');
 
-            let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-            let totalFoto = listFotoGlobal.length + pendingLokal.length;
-
             grid.innerHTML = '';
-            countDisplay.innerText = `${totalFoto} Foto Diambil`;
+            countDisplay.innerText = `${listFotoGlobal.length} Foto Diambil`;
 
-            if (totalFoto === 0) {
+            if (listFotoGlobal.length === 0) {
                 empty.style.display = 'block';
             } else {
                 empty.style.display = 'none';
-
-                pendingLokal.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = `photo-card ${selectedPhotoIds.has(item.id) ? 'selected' : ''}`;
-                    
-                    card.innerHTML = `
-                        <div class="card-checkbox"></div>
-                        <img src="${item.dataUrl}" alt="Foto Pending">
-                        <div class="pending-badge">⏳ Menyimpan...</div>
-                    `;
-
-                    card.onclick = () => {
-                        if (isSelectMode) {
-                            toggleSelectPhoto(item.id, card);
-                        } else {
-                            bukaModal(item.dataUrl);
-                        }
-                    };
-                    grid.appendChild(card);
-                });
 
                 listFotoGlobal.forEach(foto => {
                     const card = document.createElement('div');
@@ -323,8 +295,6 @@
             selectedPhotoIds.clear();
             if (select) {
                 listFotoGlobal.forEach(f => selectedPhotoIds.add(f.docId));
-                let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-                pendingLokal.forEach(p => selectedPhotoIds.add(p.id));
             }
             rendernUIGrid();
         }
@@ -341,19 +311,9 @@
 
             for (let id of selectedPhotoIds) {
                 let fotoObj = listFotoGlobal.find(f => f.docId === id);
-                let imageUrl = '';
-
-                if (fotoObj) {
-                    imageUrl = fotoObj.url;
-                } else {
-                    let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-                    let pendingObj = pendingLokal.find(p => p.id === id);
-                    if (pendingObj) imageUrl = pendingObj.dataUrl;
-                }
-
-                if (imageUrl) {
+                if (fotoObj && fotoObj.url) {
                     try {
-                        const response = await fetch(imageUrl);
+                        const response = await fetch(fotoObj.url);
                         const blob = await response.blob();
                         folder.file(`Foto_${++count}.jpg`, blob);
                     } catch(e) {}
@@ -370,67 +330,16 @@
             if (confirm(`Hapus ${selectedPhotoIds.size} foto yang dipilih secara permanen?`)) {
                 try {
                     const batch = db.batch();
-                    let hasFirestoreDelete = false;
-
                     selectedPhotoIds.forEach(id => {
-                        if (!id.startsWith('p_')) {
-                            const ref = db.collection('photos').doc(id);
-                            batch.delete(ref);
-                            hasFirestoreDelete = true;
-                        }
+                        const ref = db.collection('photos').doc(id);
+                        batch.delete(ref);
                     });
 
-                    if (hasFirestoreDelete) {
-                        await batch.commit();
-                    }
-
+                    await batch.commit();
                     selectedPhotoIds.clear();
                     toggleSelectMode();
                 } catch (err) {
                     alert("Gagal menghapus: " + err.message);
-                }
-            }
-        }
-
-        async function prosesPendingAntreanLokal() {
-            if (isUploadingFromAlbum) return;
-
-            let pending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-            if (pending.length === 0) return;
-
-            isUploadingFromAlbum = true;
-            let item = pending[0];
-
-            try {
-                const base64Data = item.dataUrl.split(',')[1];
-                const formData = new FormData();
-                formData.append('image', base64Data);
-
-                const uploadRes = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', {
-                    method: 'POST', body: formData
-                });
-                const uploadData = await uploadRes.json();
-
-                if (uploadData && uploadData.success) {
-                    await db.collection('photos').add({
-                        eventId: eventId,
-                        guestId: item.guestId,
-                        url: uploadData.data.url,
-                        createdTime: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-
-                    let currentPending = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-                    currentPending = currentPending.filter(p => p.id !== item.id);
-                    localStorage.setItem(`pending_${eventId}`, JSON.stringify(currentPending));
-                    rendernUIGrid();
-                }
-            } catch (err) {
-                await new Promise(r => setTimeout(r, 2000));
-            } finally {
-                isUploadingFromAlbum = false;
-                let remaining = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-                if (remaining.length > 0) {
-                    prosesPendingAntreanLokal();
                 }
             }
         }
@@ -451,8 +360,6 @@
         async function refreshManual() {
             const icon = document.getElementById('refreshIcon');
             icon.classList.add('spinning');
-            
-            prosesPendingAntreanLokal();
 
             try {
                 const snapshot = await db.collection('photos')
@@ -486,8 +393,7 @@
         }
 
         async function unduhSemuaZip() {
-            let pendingLokal = JSON.parse(localStorage.getItem(`pending_${eventId}`)) || [];
-            if (listFotoGlobal.length === 0 && pendingLokal.length === 0) {
+            if (listFotoGlobal.length === 0) {
                 alert("Belum ada foto yang bisa diunduh.");
                 return;
             }
@@ -503,11 +409,6 @@
             try {
                 for (let f of listFotoGlobal) {
                     const response = await fetch(f.url);
-                    const blob = await response.blob();
-                    folder.file(`Foto_${++total}.jpg`, blob);
-                }
-                for (let p of pendingLokal) {
-                    const response = await fetch(p.dataUrl);
                     const blob = await response.blob();
                     folder.file(`Foto_${++total}.jpg`, blob);
                 }
