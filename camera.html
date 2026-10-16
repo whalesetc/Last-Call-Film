@@ -19,19 +19,18 @@
         .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; display: inline-block; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* METERAN SISA FILM INSTAN & PASTI */
+        /* TAMPILAN SISA FILM YANG BENAR */
         .roll-wrapper { display: flex; align-items: center; gap: 8px; }
         .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
         .roll-container { 
-            height: 45px; width: 45px; 
+            height: 40px; min-width: 40px; padding: 0 10px;
             background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); 
             border-radius: 8px; display: flex; justify-content: center; align-items: center; 
-            box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+            backdrop-filter: blur(5px);
         }
         .roll-number-display { 
             font-family: 'Courier New', Courier, monospace; 
             font-size: 1.2rem; font-weight: bold; color: #fff; 
-            transition: transform 0.15s ease-out;
         }
 
         .camera-container { 
@@ -169,7 +168,7 @@
         const eventId = urlParams.get('event');
         let guestId = '';
         let fotoTerambil = 0;
-        let batasFoto = 0;
+        let batasFoto = 28; // Default cadangan
         let countdownTimerInterval = null;
         
         let stream = null;
@@ -192,42 +191,56 @@
             }
 
             try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) { alert("Acara tidak ditemukan!"); return; }
+                // Bersihkan variabel memori lokal agar angkanya akurat
+                let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
+                if (isNaN(countLokal)) countLokal = 0;
 
-                let currentEvent = doc.data();
-                batasFoto = parseInt(currentEvent.guestPhotoLimit) || 15;
-                document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
+                let thumbsLokal = [];
+                try {
+                    thumbsLokal = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                } catch (e) {
+                    localStorage.removeItem(`thumbs_${eventId}`);
+                }
 
-                // SINKRONISASI TOTAL FOTO TERAMBIL DENGAN STRIP GALERI
-                const thumbsLokal = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-                const countLokal = parseInt(localStorage.getItem(`count_${eventId}`)) || 0;
                 fotoTerambil = Math.max(countLokal, thumbsLokal.length);
                 localStorage.setItem(`count_${eventId}`, fotoTerambil);
 
                 muatThumbnailLokal();
 
-                const sekarang = new Date();
-                const eventDate = currentEvent.date;
-                const startTime = currentEvent.startTime || '00:00';
-                const endTime = currentEvent.endTime || '23:59';
+                // Ambil Data Acara Firebase
+                const doc = await db.collection('events').doc(eventId).get();
+                if (doc.exists) {
+                    let currentEvent = doc.data();
+                    document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
+                    
+                    let limit = parseInt(currentEvent.guestPhotoLimit);
+                    if (!isNaN(limit) && limit > 0) {
+                        batasFoto = limit;
+                    }
 
-                const startDateTime = new Date(`${eventDate}T${startTime}:00`);
-                const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+                    const sekarang = new Date();
+                    const eventDate = currentEvent.date;
+                    const startTime = currentEvent.startTime || '00:00';
+                    const endTime = currentEvent.endTime || '23:59';
 
-                if (sekarang < startDateTime) {
-                    tampilkanLayarTunggu(currentEvent, startDateTime);
-                    document.getElementById('initScreen').style.display = 'none';
-                    return;
-                } else if (sekarang > endDateTime) {
-                    tampilkanLayarSelesai(currentEvent);
-                    document.getElementById('initScreen').style.display = 'none';
-                    return;
+                    const startDateTime = new Date(`${eventDate}T${startTime}:00`);
+                    const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+
+                    if (sekarang < startDateTime) {
+                        tampilkanLayarTunggu(currentEvent, startDateTime);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    } else if (sekarang > endDateTime) {
+                        tampilkanLayarSelesai(currentEvent);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    }
+                } else {
+                    alert("Acara tidak ditemukan!"); return;
                 }
 
                 perbaruiUI();
                 await mulaiKamera();
-
                 document.getElementById('initScreen').style.display = 'none';
 
             } catch (error) {
@@ -269,7 +282,9 @@
         }
 
         function perbaruiUI() {
-            const sisa = Math.max(0, batasFoto - fotoTerambil);
+            let sisa = batasFoto - fotoTerambil;
+            if (isNaN(sisa) || sisa < 0) sisa = 0;
+
             const display = document.getElementById('sisaFilmDisplay');
             if (display) {
                 display.innerText = sisa;
@@ -303,14 +318,25 @@
 
         function muatThumbnailLokal() {
             thumbnailStrip.innerHTML = '';
-            const thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-            thumbs.forEach(url => tambahThumbnailKeLayar(url));
+            try {
+                const thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.forEach(url => tambahThumbnailKeLayar(url));
+            } catch (e) {
+                localStorage.removeItem(`thumbs_${eventId}`);
+            }
         }
 
         function simpanThumbnailLokal(dataUrl) {
-            let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-            thumbs.push(dataUrl);
-            localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+            try {
+                let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.push(dataUrl);
+                if (thumbs.length > 25) thumbs.shift();
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+            } catch (e) {
+                // Bersihkan penyimpanan jika kepenuhan agar kamera tidak macet
+                localStorage.removeItem(`thumbs_${eventId}`);
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify([dataUrl]));
+            }
         }
 
         function tambahThumbnailKeLayar(dataUrl) {
@@ -321,15 +347,20 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        async function ambilFoto() {
+        function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // Flash effect
+            // 1. UPDATE ANGKA SISA FOTO SEKETIKA (Tanpa Loading/Jeda)
+            fotoTerambil++;
+            localStorage.setItem(`count_${eventId}`, fotoTerambil);
+            perbaruiUI();
+
+            // 2. Efek Jepretan
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // Crop 9:16
+            // 3. Proses Crop dan Pengambilan Gambar
             const targetRatio = 9 / 16;
             let srcW = video.videoWidth;
             let srcH = video.videoHeight;
@@ -359,6 +390,7 @@
             
             const fullDataUrl = canvas.toDataURL('image/jpeg', 0.70);
 
+            // Tambahkan ke strip bawah
             const thumbCanvas = document.createElement('canvas');
             thumbCanvas.width = 72;
             thumbCanvas.height = 128;
@@ -367,20 +399,15 @@
 
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
-            
-            // PROSES HITUNGAN SISA FOTO SEKETIKA
-            fotoTerambil++;
-            localStorage.setItem(`count_${eventId}`, fotoTerambil);
-            perbaruiUI();
 
-            // UPLOAD FIRESTORE LATAR BELAKANG
+            // 4. UPLOAD LANGSUNG KE FIRESTORE (Latar Belakang - Anti Gagal)
             db.collection('photos').add({
                 eventId: eventId,
                 guestId: guestId,
                 url: fullDataUrl,
                 createdTime: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(err => {
-                console.error("Gagal simpan foto:", err);
+                console.error("Gagal simpan foto ke database:", err);
             });
         }
 
