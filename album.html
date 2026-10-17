@@ -6,7 +6,7 @@
     <title>Album Foto • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Hanya Firestore & Auth) -->
+    <!-- Firebase SDK LITE -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
@@ -94,7 +94,7 @@
     </div>
 
     <div class="header-section">
-        <h1 class="event-title font-serif" id="eventNameDisplay">Nama Acara</h1>
+        <h1 class="event-title font-serif" id="eventNameDisplay">Memuat Acara...</h1>
         <p class="photo-count" id="photoCountDisplay">0 Foto Diambil</p>
     </div>
 
@@ -129,38 +129,44 @@
         let selectedPhotoIds = new Set();
 
         async function initAlbum() {
-            if (!eventId) { alert("Tautan album tidak valid!"); return; }
+            if (!eventId) { 
+                document.getElementById('loadingOverlay').style.display = 'none';
+                return; 
+            }
 
             const domain = window.location.href.split('?')[0].replace('album.html', '').replace(/\/$/, '');
             document.getElementById('linkKamera').href = `${domain}/camera.html?event=${eventId}`;
 
             const safetyTimer = setTimeout(() => {
                 document.getElementById('loadingOverlay').style.display = 'none';
-            }, 2000);
+            }, 2500);
 
             try {
-                const eventDoc = await db.collection('events').doc(eventId).get();
-                if (eventDoc.exists) {
-                    const eventData = eventDoc.data();
-                    document.getElementById('eventNameDisplay').innerText = eventData.eventName;
+                db.collection('events').doc(eventId).get().then(eventDoc => {
+                    if (eventDoc.exists) {
+                        const eventData = eventDoc.data();
+                        document.getElementById('eventNameDisplay').innerText = eventData.eventName;
 
-                    auth.onAuthStateChanged(user => {
-                        if (user && user.uid === eventData.ownerId) {
-                            isOwner = true;
-                            document.getElementById('btnDeleteSelected').style.display = 'inline-flex';
-                        } else {
-                            isOwner = false;
-                        }
-                        rendernUIGrid();
-                    });
-                }
-
+                        auth.onAuthStateChanged(user => {
+                            if (user && user.uid === eventData.ownerId) {
+                                isOwner = true;
+                                document.getElementById('btnDeleteSelected').style.display = 'inline-flex';
+                                rendernUIGrid();
+                            }
+                        });
+                    } else {
+                        document.getElementById('eventNameDisplay').innerText = "Acara Privat";
+                    }
+                });
+                
+                // Pasang listener foto secara terpisah agar tidak tertahan error
                 pasangRealtimeListener();
 
             } catch (err) {
                 console.error("Gagal memuat album:", err);
                 clearTimeout(safetyTimer);
                 document.getElementById('loadingOverlay').style.display = 'none';
+                pasangRealtimeListener();
             }
         }
 
@@ -186,7 +192,7 @@
                     rendernUIGrid();
                     document.getElementById('loadingOverlay').style.display = 'none';
                 }, error => {
-                    console.error("Error listener:", error);
+                    console.error("Gagal menarik foto:", error);
                     document.getElementById('loadingOverlay').style.display = 'none';
                 });
         }
