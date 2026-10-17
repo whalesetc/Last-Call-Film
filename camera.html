@@ -6,8 +6,9 @@
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Ditambahkan Auth untuk Login Tamu Otomatis) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
     <style>
@@ -21,36 +22,10 @@
 
         .roll-wrapper { display: flex; align-items: center; gap: 8px; }
         .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
-        .roll-container { 
-            height: 50px; width: 45px; 
-            background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); 
-            border-radius: 8px; overflow: hidden; position: relative; 
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.8); backdrop-filter: blur(5px);
-        }
-        .roll-numbers { 
-            position: absolute; top: 10px; left: 0; width: 100%; 
-            display: flex; flex-direction: column; align-items: center; 
-            transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1); 
-        }
-        .roll-number { 
-            height: 30px; line-height: 30px; font-family: 'Courier New', Courier, monospace; 
-            font-size: 1rem; font-weight: bold; color: rgba(255,255,255,0.3); 
-            transition: all 0.3s; 
-        }
+        .roll-container { height: 40px; min-width: 40px; padding: 0 10px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .roll-number-display { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; font-weight: bold; color: #fff; }
 
-        .camera-container { 
-            position: relative; display: flex; justify-content: center; align-items: center; 
-            background: #111; overflow: hidden; 
-            margin-top: 65px; margin-bottom: 160px; 
-            border-radius: 20px; 
-            aspect-ratio: 9 / 16; 
-            height: calc(100vh - 235px);
-            max-height: 580px;
-            width: auto;
-            max-width: calc((100vh - 235px) * (9 / 16));
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
-        }
+        .camera-container { position: relative; display: flex; justify-content: center; align-items: center; background: #111; overflow: hidden; margin-top: 65px; margin-bottom: 160px; border-radius: 20px; aspect-ratio: 9 / 16; height: calc(100vh - 235px); max-height: 580px; width: auto; max-width: calc((100vh - 235px) * (9 / 16)); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
         .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 85%; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
@@ -105,7 +80,6 @@
                 <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
                 <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
             </div>
-
             <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
         </div>
     </div>
@@ -125,7 +99,7 @@
         <div class="roll-wrapper">
             <div class="roll-label">Sisa<br>Film</div>
             <div class="roll-container">
-                <div class="roll-numbers" id="rollNumbers"></div>
+                <div class="roll-number-display" id="sisaFilmDisplay">--</div>
             </div>
         </div>
     </div>
@@ -167,13 +141,14 @@
             appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let guestId = '';
         let fotoTerambil = 0;
-        let batasFoto = 0;
+        let batasFoto = 28; 
         let countdownTimerInterval = null;
         
         let stream = null;
@@ -195,45 +170,61 @@
                 localStorage.setItem(`guest_${eventId}`, guestId);
             }
 
-            muatThumbnailLokal();
-
             try {
-                const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) { alert("Acara tidak ditemukan!"); return; }
+                // Login Anonim (Otomatis) agar diizinkan Firebase mengirim foto
+                await auth.signInAnonymously();
 
-                let currentEvent = doc.data();
-                batasFoto = currentEvent.guestPhotoLimit || 15;
-                document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
+                let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
+                if (isNaN(countLokal)) countLokal = 0;
 
-                const fotoSblmnya = localStorage.getItem(`count_${eventId}`);
-                fotoTerambil = fotoSblmnya ? parseInt(fotoSblmnya) : 0;
-                
-                const sekarang = new Date();
-                const eventDate = currentEvent.date;
-                const startTime = currentEvent.startTime || '00:00';
-                const endTime = currentEvent.endTime || '23:59';
-
-                const startDateTime = new Date(`${eventDate}T${startTime}:00`);
-                const endDateTime = new Date(`${eventDate}T${endTime}:00`);
-
-                if (sekarang < startDateTime) {
-                    tampilkanLayarTunggu(currentEvent, startDateTime);
-                    document.getElementById('initScreen').style.display = 'none';
-                    return;
-                } else if (sekarang > endDateTime) {
-                    tampilkanLayarSelesai(currentEvent);
-                    document.getElementById('initScreen').style.display = 'none';
-                    return;
+                let thumbsLokal = [];
+                try {
+                    thumbsLokal = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                } catch (e) {
+                    localStorage.removeItem(`thumbs_${eventId}`);
                 }
 
-                buatElemenRollFilm();
+                fotoTerambil = Math.max(countLokal, thumbsLokal.length);
+                localStorage.setItem(`count_${eventId}`, fotoTerambil);
+
+                muatThumbnailLokal();
+
+                const doc = await db.collection('events').doc(eventId).get();
+                if (doc.exists) {
+                    let currentEvent = doc.data();
+                    document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
+                    
+                    let limit = parseInt(currentEvent.guestPhotoLimit);
+                    if (!isNaN(limit) && limit > 0) {
+                        batasFoto = limit;
+                    }
+
+                    const sekarang = new Date();
+                    const eventDate = currentEvent.date;
+                    const startTime = currentEvent.startTime || '00:00';
+                    const endTime = currentEvent.endTime || '23:59';
+
+                    const startDateTime = new Date(`${eventDate}T${startTime}:00`);
+                    const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+
+                    if (sekarang < startDateTime) {
+                        tampilkanLayarTunggu(currentEvent, startDateTime);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    } else if (sekarang > endDateTime) {
+                        tampilkanLayarSelesai(currentEvent);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    }
+                }
+
                 perbaruiUI();
                 await mulaiKamera();
-
                 document.getElementById('initScreen').style.display = 'none';
 
             } catch (error) {
-                alert("Gagal memuat data: " + error.message);
+                console.error(error);
+                alert("Gagal memuat sistem keamanan kamera. Pastikan Rules Firebase Anda sudah terbuka.");
             }
         }
 
@@ -270,40 +261,19 @@
             if (event.wallpaperUrl) overlay.style.backgroundImage = `url('${event.wallpaperUrl}')`;
         }
 
-        function buatElemenRollFilm() {
-            const container = document.getElementById('rollNumbers');
-            container.innerHTML = '';
-            for (let i = batasFoto; i >= 0; i--) {
-                const numDiv = document.createElement('div');
-                numDiv.className = 'roll-number';
-                numDiv.innerText = i;
-                container.appendChild(numDiv);
-            }
-        }
-
         function perbaruiUI() {
-            const numbers = document.querySelectorAll('.roll-number');
-            const activeIndex = fotoTerambil;
-
-            numbers.forEach((el, idx) => {
-                if (idx === activeIndex) {
-                    el.style.color = '#fff';
-                    el.style.fontSize = '1.3rem';
-                    el.style.opacity = '1';
-                } else {
-                    el.style.color = 'rgba(255,255,255,0.3)';
-                    el.style.fontSize = '1rem';
-                    el.style.opacity = '0.5';
-                }
-            });
-
-            const offset = fotoTerambil * -30;
-            document.getElementById('rollNumbers').style.transform = `translateY(${offset}px)`;
+            let sisa = batasFoto - fotoTerambil;
+            if (isNaN(sisa) || sisa < 0) sisa = 0;
+            const display = document.getElementById('sisaFilmDisplay');
+            if (display) display.innerText = sisa;
 
             if (fotoTerambil >= batasFoto) {
                 btnCapture.disabled = true;
                 document.getElementById('outOfQuota').style.display = 'flex';
                 if(stream) stream.getTracks().forEach(track => track.stop());
+            } else {
+                btnCapture.disabled = false;
+                document.getElementById('outOfQuota').style.display = 'none';
             }
         }
 
@@ -324,15 +294,25 @@
         }
 
         function muatThumbnailLokal() {
-            const thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-            thumbs.forEach(url => tambahThumbnailKeLayar(url));
+            thumbnailStrip.innerHTML = '';
+            try {
+                const thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.forEach(url => tambahThumbnailKeLayar(url));
+            } catch (e) {
+                localStorage.removeItem(`thumbs_${eventId}`);
+            }
         }
 
         function simpanThumbnailLokal(dataUrl) {
-            let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-            thumbs.push(dataUrl);
-            if (thumbs.length > 20) thumbs.shift();
-            localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+            try {
+                let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.push(dataUrl);
+                if (thumbs.length > 25) thumbs.shift();
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+            } catch (e) {
+                localStorage.removeItem(`thumbs_${eventId}`);
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify([dataUrl]));
+            }
         }
 
         function tambahThumbnailKeLayar(dataUrl) {
@@ -343,8 +323,12 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        async function ambilFoto() {
+        function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
+
+            fotoTerambil++;
+            localStorage.setItem(`count_${eventId}`, fotoTerambil);
+            perbaruiUI();
 
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
@@ -366,8 +350,8 @@
                 srcH = newHeight;
             }
 
-            canvas.width = 720;
-            canvas.height = 1280;
+            canvas.width = 540;
+            canvas.height = 960;
             const ctx = canvas.getContext('2d');
 
             if(facingMode === 'user') {
@@ -377,8 +361,7 @@
 
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            // Kompresi optimal ~60KB
-            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.60);
 
             const thumbCanvas = document.createElement('canvas');
             thumbCanvas.width = 72;
@@ -388,22 +371,15 @@
 
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
-            
-            fotoTerambil++;
-            localStorage.setItem(`count_${eventId}`, fotoTerambil);
-            perbaruiUI();
 
-            // UPLOAD LANGSUNG KE FIRESTORE DATABASE (100% BERHASIL & INSTAN)
-            try {
-                db.collection('photos').add({
-                    eventId: eventId,
-                    guestId: guestId,
-                    url: fullDataUrl,
-                    createdTime: firebase.firestore.FieldValue.serverTimestamp()
-                });
-            } catch(e) {
-                console.error("Error simpan foto:", e);
-            }
+            db.collection('photos').add({
+                eventId: eventId,
+                guestId: guestId,
+                url: fullDataUrl,
+                createdTime: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+                alert("Koneksi ditolak Firebase: " + err.message);
+            });
         }
 
         function bukaAlbum(e) {
