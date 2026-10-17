@@ -6,9 +6,8 @@
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Ditambahkan Auth untuk Login Tamu Otomatis) -->
+    <!-- Firebase SDK (Hanya Firestore, sangat ringan) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
     <style>
@@ -141,7 +140,6 @@
             appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
         firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -171,9 +169,6 @@
             }
 
             try {
-                // Login Anonim (Otomatis) agar diizinkan Firebase mengirim foto
-                await auth.signInAnonymously();
-
                 let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
                 if (isNaN(countLokal)) countLokal = 0;
 
@@ -223,8 +218,7 @@
                 document.getElementById('initScreen').style.display = 'none';
 
             } catch (error) {
-                console.error(error);
-                alert("Gagal memuat sistem keamanan kamera. Pastikan Rules Firebase Anda sudah terbuka.");
+                alert("Gagal memuat data: " + error.message);
             }
         }
 
@@ -378,7 +372,7 @@
                 url: fullDataUrl,
                 createdTime: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(err => {
-                alert("Koneksi ditolak Firebase: " + err.message);
+                console.error("Gagal simpan:", err);
             });
         }
 
