@@ -6,7 +6,7 @@
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK (Hanya Firestore) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
@@ -19,7 +19,6 @@
         .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; display: inline-block; }
         .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-        /* TAMPILAN SISA FILM YANG BENAR */
         .roll-wrapper { display: flex; align-items: center; gap: 8px; }
         .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
         .roll-container { 
@@ -168,7 +167,7 @@
         const eventId = urlParams.get('event');
         let guestId = '';
         let fotoTerambil = 0;
-        let batasFoto = 28; // Default cadangan
+        let batasFoto = 28; 
         let countdownTimerInterval = null;
         
         let stream = null;
@@ -191,7 +190,6 @@
             }
 
             try {
-                // Bersihkan variabel memori lokal agar angkanya akurat
                 let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
                 if (isNaN(countLokal)) countLokal = 0;
 
@@ -207,7 +205,6 @@
 
                 muatThumbnailLokal();
 
-                // Ambil Data Acara Firebase
                 const doc = await db.collection('events').doc(eventId).get();
                 if (doc.exists) {
                     let currentEvent = doc.data();
@@ -333,7 +330,6 @@
                 if (thumbs.length > 25) thumbs.shift();
                 localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
             } catch (e) {
-                // Bersihkan penyimpanan jika kepenuhan agar kamera tidak macet
                 localStorage.removeItem(`thumbs_${eventId}`);
                 localStorage.setItem(`thumbs_${eventId}`, JSON.stringify([dataUrl]));
             }
@@ -350,17 +346,14 @@
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // 1. UPDATE ANGKA SISA FOTO SEKETIKA (Tanpa Loading/Jeda)
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
 
-            // 2. Efek Jepretan
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // 3. Proses Crop dan Pengambilan Gambar
             const targetRatio = 9 / 16;
             let srcW = video.videoWidth;
             let srcH = video.videoHeight;
@@ -377,6 +370,7 @@
                 srcH = newHeight;
             }
 
+            // Kunci resolusi 720p HD. Menjamin foto selalu < 1MB agar diterima Firestore.
             canvas.width = 720;
             canvas.height = 1280;
             const ctx = canvas.getContext('2d');
@@ -388,9 +382,9 @@
 
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.70);
+            // Kompresi stabil di 65%. 100% aman untuk Firestore.
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.65);
 
-            // Tambahkan ke strip bawah
             const thumbCanvas = document.createElement('canvas');
             thumbCanvas.width = 72;
             thumbCanvas.height = 128;
@@ -400,7 +394,9 @@
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
 
-            // 4. UPLOAD LANGSUNG KE FIRESTORE (Latar Belakang - Anti Gagal)
+            // ==========================================
+            // UPLOAD LANGSUNG KE FIRESTORE
+            // ==========================================
             db.collection('photos').add({
                 eventId: eventId,
                 guestId: guestId,
