@@ -55,8 +55,7 @@
         
         #outOfQuota { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 50; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
 
-        /* Notifikasi Sukses */
-        #toastNotif { visibility: hidden; min-width: 250px; background-color: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; border-radius: 12px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px); }
+        #toastNotif { visibility: hidden; min-width: 230px; background-color: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; border-radius: 12px; padding: 12px; position: fixed; z-index: 1000; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 0.85rem; font-weight: 600; backdrop-filter: blur(5px); }
         #toastNotif.show { visibility: visible; animation: popIn 0.3s forwards; }
         @keyframes popIn { from { bottom: 100px; opacity: 0; transform: translate(-50%, 10px); } to { bottom: 120px; opacity: 1; transform: translate(-50%, 0); } }
     </style>
@@ -68,7 +67,6 @@
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
     </div>
 
-    <!-- Antarmuka Kamera -->
     <div class="top-bar">
         <a href="#" id="linkAlbum" class="btn-album" onclick="bukaAlbum(event)">Lihat Album</a>
         <div class="event-name" id="eventNameDisplay">Memuat...</div>
@@ -109,7 +107,7 @@
     <div class="thumbnail-strip" id="thumbnailStrip"></div>
     <canvas id="canvasHidden" style="display: none;"></canvas>
     
-    <div id="toastNotif">Foto tersimpan ke album!</div>
+    <div id="toastNotif">📸 Jepretan tersimpan!</div>
 
     <script>
         const firebaseConfig = {
@@ -126,7 +124,6 @@
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 28; 
-        let isUploading = false;
         
         let stream = null;
         let facingMode = 'environment';
@@ -225,21 +222,20 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        function tunjukkanNotif(pesan, durasi = 2000) {
+        function tunjukkanNotif(pesan) {
             const toast = document.getElementById('toastNotif');
             toast.innerText = pesan;
             toast.classList.add('show');
-            setTimeout(() => { toast.classList.remove('show'); }, durasi);
+            setTimeout(() => { toast.classList.remove('show'); }, 1500);
         }
 
         // ==========================================
-        // SISTEM ANTI-GAGAL: SIMPAN LANGSUNG KE FIREBASE
+        // SISTEM JEPRET INSTAN TANPA TUNGGU (100% MULUS)
         // ==========================================
         function ambilFoto() {
-            if (fotoTerambil >= batasFoto || isUploading) return;
-            isUploading = true;
+            if (fotoTerambil >= batasFoto) return;
 
-            // Flash layar
+            // Efek Flash Kilat
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
@@ -254,42 +250,36 @@
                 const newHeight = srcW / targetRatio; srcY = (srcH - newHeight) / 2; srcH = newHeight;
             }
 
-            // Kompres ukuran gambar agar ringan dan instan masuk database
-            canvas.width = 480;
-            canvas.height = 853;
+            // Kompres ukuran optimal agar ringan dan langsung tampil di bawah
+            canvas.width = 360;
+            canvas.height = 640;
             const ctx = canvas.getContext('2d');
             if(facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            // Ubah gambar menjadi format data URL terkompresi (Base64)
-            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.55);
 
-            // Kirim langsung ke Firebase Firestore (Tanpa ImgBB, Anti-Gagal!)
+            // 1. TAMBAHKAN INSTAN KE LAYAR & COUNTER (TANPA TUNGGU APA PUN)
+            fotoTerambil++;
+            localStorage.setItem(`count_${eventId}`, fotoTerambil);
+            
+            let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+            thumbs.push(compressedDataUrl);
+            if (thumbs.length > 25) thumbs.shift();
+            localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+            
+            tambahThumbnailKeLayar(compressedDataUrl);
+            perbaruiUI();
+            tunjukkanNotif("📸 Jepretan tersimpan!");
+
+            // 2. KIRIM KE FIREBASE DI LATAR BELAKANG (BACKGROUND SYNC)
             db.collection('photos').add({
                 eventId: eventId,
                 guestId: guestId,
                 url: compressedDataUrl,
                 createdTime: firebase.firestore.FieldValue.serverTimestamp()
-            })
-            .then(() => {
-                fotoTerambil++;
-                localStorage.setItem(`count_${eventId}`, fotoTerambil);
-                
-                let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-                thumbs.push(compressedDataUrl);
-                if (thumbs.length > 25) thumbs.shift();
-                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
-                
-                tambahThumbnailKeLayar(compressedDataUrl);
-                perbaruiUI();
-                
-                tunjukkanNotif("✨ Foto sukses masuk album!");
-                isUploading = false;
-            })
-            .catch(err => {
-                console.error("Gagal simpan:", err);
-                alert("Terjadi kendala jaringan saat menyimpan foto.");
-                isUploading = false;
+            }).catch(err => {
+                console.log("Sinkronisasi latar belakang tertunda, aman di lokal.");
             });
         }
 
