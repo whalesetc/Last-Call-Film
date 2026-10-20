@@ -53,14 +53,9 @@
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
-        .cd-timer { display: flex; gap: 12px; margin: 20px 0 30px 0; }
-        .cd-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; min-width: 65px; backdrop-filter: blur(5px); }
-        .cd-val { font-size: 1.6rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
-        .cd-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
-
         #outOfQuota { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 50; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
 
-        /* Notifikasi Sukses/Gagal */
+        /* Notifikasi Sukses */
         #toastNotif { visibility: hidden; min-width: 250px; background-color: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; border-radius: 12px; padding: 16px; position: fixed; z-index: 1000; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px); }
         #toastNotif.show { visibility: visible; animation: popIn 0.3s forwards; }
         @keyframes popIn { from { bottom: 100px; opacity: 0; transform: translate(-50%, 10px); } to { bottom: 120px; opacity: 1; transform: translate(-50%, 0); } }
@@ -71,30 +66,6 @@
     <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
-    </div>
-
-    <!-- Layar Peringatan Tunggu -->
-    <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
-        <div class="overlay-content">
-            <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
-            <h1 id="waitingTitleDisplay" class="font-serif" style="font-size: 2.2rem; margin-bottom: 25px; line-height: 1.2;">Nama Acara</h1>
-            <p style="color: #6ee7b7; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Kamera Akan Terbuka Dalam:</p>
-            <div class="cd-timer">
-                <div class="cd-box"><div class="cd-val" id="cdHours">00</div><div class="cd-lbl">Jam</div></div>
-                <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
-                <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
-            </div>
-            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
-        </div>
-    </div>
-
-    <!-- Layar Peringatan Selesai -->
-    <div id="endedOverlay" class="fullscreen-overlay" style="display: none;">
-        <div class="overlay-content">
-            <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 10px; color: #ff6b6b;">Acara Telah Selesai</h2>
-            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px; max-width: 300px;">Masa waktu penggunaan kamera untuk acara ini telah berakhir. Silakan lihat hasil foto di album.</p>
-            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem; background: #fff; color: #000; font-weight: bold;">Lihat Album Foto</a>
-        </div>
     </div>
 
     <!-- Antarmuka Kamera -->
@@ -138,7 +109,7 @@
     <div class="thumbnail-strip" id="thumbnailStrip"></div>
     <canvas id="canvasHidden" style="display: none;"></canvas>
     
-    <div id="toastNotif">Sedang mengirim foto...</div>
+    <div id="toastNotif">Foto tersimpan ke album!</div>
 
     <script>
         const firebaseConfig = {
@@ -150,15 +121,11 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        // API Key ImgBB Anda
-        const imgbbApiKey = "e260099c988d57272862b5d72290e82b";
-
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 28; 
-        let countdownTimerInterval = null;
         let isUploading = false;
         
         let stream = null;
@@ -197,26 +164,8 @@
                 if (doc.exists) {
                     let currentEvent = doc.data();
                     document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
-                    
                     let limit = parseInt(currentEvent.guestPhotoLimit);
                     if (!isNaN(limit) && limit > 0) batasFoto = limit;
-
-                    const sekarang = new Date();
-                    const eventDate = currentEvent.date;
-                    const startTime = currentEvent.startTime || '00:00';
-                    const endTime = currentEvent.endTime || '23:59';
-                    const startDateTime = new Date(`${eventDate}T${startTime}:00`);
-                    const endDateTime = new Date(`${eventDate}T${endTime}:00`);
-
-                    if (sekarang < startDateTime) {
-                        tampilkanLayarTunggu(currentEvent, startDateTime);
-                        document.getElementById('initScreen').style.display = 'none';
-                        return;
-                    } else if (sekarang > endDateTime) {
-                        tampilkanLayarSelesai(currentEvent);
-                        document.getElementById('initScreen').style.display = 'none';
-                        return;
-                    }
                 }
 
                 perbaruiUI();
@@ -227,10 +176,6 @@
                 alert("Gagal memuat acara: " + error.message);
             }
         }
-
-        // --- Fungsi Waktu Tunggu disembunyikan untuk kerapian ---
-        function tampilkanLayarTunggu(event, startDateTime) { /* Sama seperti sebelumnya */ }
-        function tampilkanLayarSelesai(event) { /* Sama seperti sebelumnya */ }
 
         function perbaruiUI() {
             let sisa = batasFoto - fotoTerambil;
@@ -280,7 +225,7 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
-        function tunjukkanNotif(pesan, durasi = 3000) {
+        function tunjukkanNotif(pesan, durasi = 2000) {
             const toast = document.getElementById('toastNotif');
             toast.innerText = pesan;
             toast.classList.add('show');
@@ -288,7 +233,7 @@
         }
 
         // ==========================================
-        // FUNGSI UPLOAD YANG DIROMBAK UNTUK KEAMANAN BISNIS
+        // SISTEM ANTI-GAGAL: SIMPAN LANGSUNG KE FIREBASE
         // ==========================================
         function ambilFoto() {
             if (fotoTerambil >= batasFoto || isUploading) return;
@@ -298,9 +243,6 @@
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
-
-            // Beri tahu klien sedang proses
-            tunjukkanNotif("📷 Memproses & Mengirim Foto...", 5000);
 
             const targetRatio = 9 / 16;
             let srcW = video.videoWidth;
@@ -312,64 +254,43 @@
                 const newHeight = srcW / targetRatio; srcY = (srcH - newHeight) / 2; srcH = newHeight;
             }
 
-            canvas.width = 720;
-            canvas.height = 1280;
+            // Kompres ukuran gambar agar ringan dan instan masuk database
+            canvas.width = 480;
+            canvas.height = 853;
             const ctx = canvas.getContext('2d');
             if(facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            // Siapkan Thumbnail (Tapi Jangan Ditempel Dulu)
-            const thumbCanvas = document.createElement('canvas');
-            thumbCanvas.width = 72; thumbCanvas.height = 128;
-            thumbCanvas.getContext('2d').drawImage(canvas, 0, 0, 72, 128);
-            const thumbnailDataUrl = thumbCanvas.toDataURL('image/jpeg', 0.3);
+            // Ubah gambar menjadi format data URL terkompresi (Base64)
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.65);
 
-            // Ganti format dari string ke File (Blob) agar Safari tidak memblokirnya
-            canvas.toBlob((blob) => {
-                const formData = new FormData();
-                formData.append("image", blob, "foto_klien.jpg");
-
-                fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-                    method: "POST",
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(result => {
-                    if (result.success) {
-                        return db.collection('photos').add({
-                            eventId: eventId,
-                            guestId: guestId,
-                            url: result.data.url,
-                            createdTime: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    } else {
-                        throw new Error("Ditolak server gambar");
-                    }
-                })
-                .then(() => {
-                    // JIKA BERHASIL: Baru kurangi kuota & tempel foto di layar bawah
-                    fotoTerambil++;
-                    localStorage.setItem(`count_${eventId}`, fotoTerambil);
-                    
-                    let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
-                    thumbs.push(thumbnailDataUrl);
-                    if (thumbs.length > 25) thumbs.shift();
-                    localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
-                    
-                    tambahThumbnailKeLayar(thumbnailDataUrl);
-                    perbaruiUI();
-                    
-                    tunjukkanNotif("✅ Foto berhasil masuk album!", 2000);
-                    isUploading = false;
-                })
-                .catch(err => {
-                    console.error("Gagal total:", err);
-                    // JIKA GAGAL: Jangan kurangi kuota, beri tahu klien
-                    alert("Koneksi Anda tidak stabil, foto gagal terkirim.\n\nJangan khawatir, Sisa Film Anda tidak berkurang. Silakan jepret ulang.");
-                    document.getElementById('toastNotif').classList.remove('show');
-                    isUploading = false;
-                });
-            }, 'image/jpeg', 0.80);
+            // Kirim langsung ke Firebase Firestore (Tanpa ImgBB, Anti-Gagal!)
+            db.collection('photos').add({
+                eventId: eventId,
+                guestId: guestId,
+                url: compressedDataUrl,
+                createdTime: firebase.firestore.FieldValue.serverTimestamp()
+            })
+            .then(() => {
+                fotoTerambil++;
+                localStorage.setItem(`count_${eventId}`, fotoTerambil);
+                
+                let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.push(compressedDataUrl);
+                if (thumbs.length > 25) thumbs.shift();
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+                
+                tambahThumbnailKeLayar(compressedDataUrl);
+                perbaruiUI();
+                
+                tunjukkanNotif("✨ Foto sukses masuk album!");
+                isUploading = false;
+            })
+            .catch(err => {
+                console.error("Gagal simpan:", err);
+                alert("Terjadi kendala jaringan saat menyimpan foto.");
+                isUploading = false;
+            });
         }
 
         function bukaAlbum(e) {
