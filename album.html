@@ -6,11 +6,12 @@
     <title>Album Foto • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK LITE -->
+    <!-- Firebase SDK (HANYA FIRESTORE & AUTH) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
+    <!-- Pustaka untuk Download ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -137,11 +138,13 @@
             const domain = window.location.href.split('?')[0].replace('album.html', '').replace(/\/$/, '');
             document.getElementById('linkKamera').href = `${domain}/camera.html?event=${eventId}`;
 
+            // Safety timer untuk loader
             const safetyTimer = setTimeout(() => {
                 document.getElementById('loadingOverlay').style.display = 'none';
-            }, 2500);
+            }, 3000);
 
             try {
+                // Tarik nama acara & cek apakah yang buka adalah owner
                 db.collection('events').doc(eventId).get().then(eventDoc => {
                     if (eventDoc.exists) {
                         const eventData = eventDoc.data();
@@ -155,12 +158,13 @@
                             }
                         });
                     } else {
-                        document.getElementById('eventNameDisplay').innerText = "Acara Privat";
+                        document.getElementById('eventNameDisplay').innerText = "Acara Tidak Ditemukan";
                     }
                 });
                 
-                // Pasang listener foto secara terpisah agar tidak tertahan error
+                // Mulai mendengarkan data foto yang masuk
                 pasangRealtimeListener();
+                clearTimeout(safetyTimer);
 
             } catch (err) {
                 console.error("Gagal memuat album:", err);
@@ -170,6 +174,7 @@
             }
         }
 
+        // Listener Instan: Setiap ada foto masuk dari ImgBB, langsung tampil di layar
         function pasangRealtimeListener() {
             db.collection('photos')
                 .where('eventId', '==', eventId)
@@ -182,10 +187,11 @@
                         });
                     });
 
+                    // Urutkan dari yang paling baru (atas) ke paling lama (bawah)
                     tempArr.sort((a, b) => {
                         let tA = a.createdTime ? a.createdTime.toMillis() : Date.now();
                         let tB = b.createdTime ? b.createdTime.toMillis() : Date.now();
-                        return tB - tA;
+                        return tB - tA; // descending
                     });
 
                     listFotoGlobal = tempArr;
@@ -219,6 +225,7 @@
                         deleteBtnHTML = `<button class="btn-delete-owner" onclick="hapusFoto(event, '${foto.docId}')" title="Hapus Foto">🗑️</button>`;
                     }
 
+                    // Tampilkan gambar menggunakan URL langsung dari ImgBB
                     card.innerHTML = `
                         <div class="card-checkbox"></div>
                         <img src="${foto.url}" loading="lazy" alt="Foto">
@@ -294,7 +301,9 @@
                         const response = await fetch(fotoObj.url);
                         const blob = await response.blob();
                         folder.file(`Foto_${++count}.jpg`, blob);
-                    } catch(e) {}
+                    } catch(e) {
+                        console.warn("Gagal menarik gambar ke ZIP:", e);
+                    }
                 }
             }
 
@@ -394,7 +403,7 @@
                 const content = await zip.generateAsync({ type: "blob" });
                 saveAs(content, `Album_Foto_${eventId}.zip`);
             } catch (err) {
-                alert("Gagal mengunduh ZIP: " + err.message);
+                alert("Gagal mengunduh ZIP. Beberapa foto mungkin diblokir oleh server. " + err.message);
             } finally {
                 btnZip.innerText = "Unduh ZIP";
                 btnZip.disabled = false;
