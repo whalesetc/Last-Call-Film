@@ -48,11 +48,16 @@
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
         .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
-        .overlay-content { background: rgba(0,0,0,0.75); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
+        .overlay-content { background: rgba(0,0,0,0.8); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
         
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
+        .cd-timer { display: flex; gap: 12px; margin: 20px 0 30px 0; }
+        .cd-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; min-width: 65px; backdrop-filter: blur(5px); }
+        .cd-val { font-size: 1.6rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+        .cd-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+
         #outOfQuota { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 50; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
 
         #toastNotif { visibility: hidden; min-width: 230px; background-color: rgba(30,30,30,0.95); border: 1px solid rgba(255,255,255,0.2); color: #fff; text-align: center; border-radius: 12px; padding: 12px; position: fixed; z-index: 1000; left: 50%; bottom: 120px; transform: translateX(-50%); font-size: 0.85rem; font-weight: 600; backdrop-filter: blur(5px); }
@@ -65,6 +70,30 @@
     <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
+    </div>
+
+    <!-- Layar Peringatan Tunggu (Sebelum Acara Dimulai) -->
+    <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
+            <h1 id="waitingTitleDisplay" class="font-serif" style="font-size: 2.2rem; margin-bottom: 25px; line-height: 1.2;">Nama Acara</h1>
+            <p style="color: #6ee7b7; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Kamera Akan Terbuka Dalam:</p>
+            <div class="cd-timer">
+                <div class="cd-box"><div class="cd-val" id="cdHours">00</div><div class="cd-lbl">Jam</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
+            </div>
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
+        </div>
+    </div>
+
+    <!-- Layar Peringatan Selesai -->
+    <div id="endedOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 10px; color: #ff6b6b;">Acara Telah Selesai</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px; max-width: 300px;">Masa waktu penggunaan kamera untuk acara ini telah berakhir. Silakan lihat hasil foto di album.</p>
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem; background: #fff; color: #000; font-weight: bold;">Lihat Album Foto</a>
+        </div>
     </div>
 
     <div class="top-bar">
@@ -124,6 +153,7 @@
         let guestId = '';
         let fotoTerambil = 0;
         let batasFoto = 28; 
+        let countdownTimerInterval = null;
         
         let stream = null;
         let facingMode = 'environment';
@@ -163,6 +193,23 @@
                     document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
                     let limit = parseInt(currentEvent.guestPhotoLimit);
                     if (!isNaN(limit) && limit > 0) batasFoto = limit;
+
+                    const sekarang = new Date();
+                    const eventDate = currentEvent.date;
+                    const startTime = currentEvent.startTime || '00:00';
+                    const endTime = currentEvent.endTime || '23:59';
+                    const startDateTime = new Date(`${eventDate}T${startTime}:00`);
+                    const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+
+                    if (sekarang < startDateTime) {
+                        tampilkanLayarTunggu(currentEvent, startDateTime);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    } else if (sekarang > endDateTime) {
+                        tampilkanLayarSelesai(currentEvent);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    }
                 }
 
                 perbaruiUI();
@@ -172,6 +219,36 @@
             } catch (error) {
                 alert("Gagal memuat acara: " + error.message);
             }
+        }
+
+        function tampilkanLayarTunggu(event, startDateTime) {
+            document.getElementById('waitingTextDisplay').innerText = event.waitingText || "The Wedding Of";
+            document.getElementById('waitingTitleDisplay').innerText = event.eventName;
+            document.getElementById('waitingOverlay').style.display = 'flex';
+
+            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+            countdownTimerInterval = setInterval(() => {
+                const sekarang = new Date();
+                const selisih = startDateTime - sekarang;
+
+                if (selisih <= 0) {
+                    clearInterval(countdownTimerInterval);
+                    window.location.reload();
+                    return;
+                }
+
+                const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+
+                document.getElementById('cdHours').innerText = String(jam).padStart(2, '0');
+                document.getElementById('cdMinutes').innerText = String(menit).padStart(2, '0');
+                document.getElementById('cdSeconds').innerText = String(detik).padStart(2, '0');
+            }, 1000);
+        }
+
+        function tampilkanLayarSelesai(event) {
+            document.getElementById('endedOverlay').style.display = 'flex';
         }
 
         function perbaruiUI() {
@@ -229,13 +306,9 @@
             setTimeout(() => { toast.classList.remove('show'); }, 1500);
         }
 
-        // ==========================================
-        // SISTEM JEPRET INSTAN TANPA TUNGGU (100% MULUS)
-        // ==========================================
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
-            // Efek Flash Kilat
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
@@ -250,7 +323,6 @@
                 const newHeight = srcW / targetRatio; srcY = (srcH - newHeight) / 2; srcH = newHeight;
             }
 
-            // Kompres ukuran optimal agar ringan dan langsung tampil di bawah
             canvas.width = 360;
             canvas.height = 640;
             const ctx = canvas.getContext('2d');
@@ -259,7 +331,6 @@
             
             const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.55);
 
-            // 1. TAMBAHKAN INSTAN KE LAYAR & COUNTER (TANPA TUNGGU APA PUN)
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             
@@ -272,14 +343,13 @@
             perbaruiUI();
             tunjukkanNotif("📸 Jepretan tersimpan!");
 
-            // 2. KIRIM KE FIREBASE DI LATAR BELAKANG (BACKGROUND SYNC)
             db.collection('photos').add({
                 eventId: eventId,
                 guestId: guestId,
                 url: compressedDataUrl,
                 createdTime: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(err => {
-                console.log("Sinkronisasi latar belakang tertunda, aman di lokal.");
+                console.log("Sinkronisasi latar belakang tertunda.");
             });
         }
 
