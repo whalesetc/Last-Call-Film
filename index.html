@@ -427,6 +427,9 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
 
+        // API Key ImgBB Anda yang Aktif
+        const imgbbApiKey = "e260099c988d57272862b5d72290e82b";
+
         let currentUser = null;
         let daftarAcaraGlobal = []; 
         let dashboardCountdownInterval = null; 
@@ -727,14 +730,10 @@
             db.collection('members').doc(user.uid).set({ name: user.displayName, email: user.email }, {merge: true});
         }
 
-        // =========================================================
-        // PENGATURAN MENU PROFIL (DROPDOWN, EDIT NAMA, LOGOUT)
-        // =========================================================
         function toggleProfileDropdown() {
             document.getElementById('profileDropdown').classList.toggle('show');
         }
 
-        // Menutup dropdown jika user klik area kosong di layar
         window.onclick = function(event) {
             if (!event.target.closest('.profile-container')) {
                 const dropdowns = document.getElementsByClassName("profile-dropdown");
@@ -776,7 +775,6 @@
                 const initial = (user.displayName || user.email || 'U').charAt(0);
                 const displayName = user.displayName || user.email.split('@')[0];
                 
-                // Tampilan Navbar yang Memiliki Menu Dropdown
                 navMenu.innerHTML = `
                     <div class="profile-container">
                         <div class="profile-btn" onclick="toggleProfileDropdown()">
@@ -833,7 +831,7 @@
             if (fileInput) {
                 const formData = new FormData(); formData.append('image', fileInput);
                 try {
-                    const res = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', { method: 'POST', body: formData });
+                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
                     const r = await res.json();
                     if(r.success) wallpaperFinalUrl = r.data.url;
                 } catch(err) {}
@@ -886,7 +884,7 @@
             const fileEdit = document.getElementById('editWallpaperFile').files[0];
             if(fileEdit) {
                 const fd = new FormData(); fd.append('image', fileEdit);
-                const res = await fetch('https://api.imgbb.com/1/upload?key=16a4714fa54ed030ef5416ae07a05f68', { method: 'POST', body: fd });
+                const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: fd });
                 const r = await res.json();
                 if(r.success) updateData.wallpaperUrl = r.data.url;
             }
