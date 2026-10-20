@@ -6,7 +6,7 @@
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Hanya Firestore, sangat ringan) -->
+    <!-- Firebase SDK (Hanya Firestore Database) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
@@ -133,6 +133,7 @@
     <canvas id="canvasHidden" style="display: none;"></canvas>
 
     <script>
+        // Konfigurasi Database Firestore
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
@@ -141,6 +142,9 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
+
+        // API Key ImgBB Milik Anda
+        const imgbbApiKey = "e260099c988d57272862b5d72290e82b";
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
@@ -309,6 +313,15 @@
             }
         }
 
+        function hapusThumbnailLokalTerakhir() {
+            try {
+                let thumbs = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || [];
+                thumbs.pop(); // Hapus thumbnail dari memori
+                localStorage.setItem(`thumbs_${eventId}`, JSON.stringify(thumbs));
+                muatThumbnailLokal(); // Segarkan layar deretan foto
+            } catch (e) {}
+        }
+
         function tambahThumbnailKeLayar(dataUrl) {
             const img = document.createElement('img');
             img.src = dataUrl;
@@ -317,9 +330,13 @@
             thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
         }
 
+        // ==========================================
+        // FUNGSI UPLOAD VIA IMGBB API + GARANSI REFUND
+        // ==========================================
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
 
+            // 1. Kurangi kuota di layar seketika
             fotoTerambil++;
             localStorage.setItem(`count_${eventId}`, fotoTerambil);
             perbaruiUI();
@@ -344,8 +361,9 @@
                 srcH = newHeight;
             }
 
-            canvas.width = 540;
-            canvas.height = 960;
+            // Resolusi Tajam HD (720x1280) Karena ImgBB Kuat Menampung!
+            canvas.width = 720;
+            canvas.height = 1280;
             const ctx = canvas.getContext('2d');
 
             if(facingMode === 'user') {
@@ -355,7 +373,11 @@
 
             ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
             
-            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.60);
+            // Kompresi kualitas tinggi 80% (aman di ImgBB)
+            const fullDataUrl = canvas.toDataURL('image/jpeg', 0.80);
+            
+            // Bersihkan format Base64 agar siap diunggah ke ImgBB
+            const cleanBase64 = fullDataUrl.replace(/^data:image\/(png|jpg|jpeg);base64,/, "");
 
             const thumbCanvas = document.createElement('canvas');
             thumbCanvas.width = 72;
@@ -366,13 +388,47 @@
             tambahThumbnailKeLayar(thumbnailDataUrl);
             simpanThumbnailLokal(thumbnailDataUrl);
 
-            db.collection('photos').add({
-                eventId: eventId,
-                guestId: guestId,
-                url: fullDataUrl,
-                createdTime: firebase.firestore.FieldValue.serverTimestamp()
-            }).catch(err => {
-                console.error("Gagal simpan:", err);
+            // ==========================================
+            // PROSES UPLOAD KE IMGBB LALU KE FIRESTORE
+            // ==========================================
+            const formData = new FormData();
+            formData.append("image", cleanBase64);
+
+            fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
+                method: "POST",
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    const imageUrl = result.data.url; // Dapatkan link foto dari ImgBB
+                    
+                    // Tempelkan Link Foto ke Album Database Firestore Anda
+                    return db.collection('photos').add({
+                        eventId: eventId,
+                        guestId: guestId,
+                        url: imageUrl, // Ini hanya link teks, ukurannya sangat kecil untuk Firestore
+                        createdTime: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                } else {
+                    throw new Error("Gagal mengunggah foto ke server gambar.");
+                }
+            })
+            .then(() => {
+                console.log("Foto 100% Berhasil Masuk Album!");
+            })
+            .catch(err => {
+                console.error("Error Upload:", err);
+                
+                // SISTEM GARANSI REFUND JIKA INTERNET PUTUS / GAGAL UPLOAD
+                if (fotoTerambil > 0) {
+                    fotoTerambil--; // Kembalikan angka sisa film
+                    localStorage.setItem(`count_${eventId}`, fotoTerambil);
+                    hapusThumbnailLokalTerakhir(); // Tarik foto yang gagal dari layar
+                    perbaruiUI(); // Segarkan angka
+                }
+                
+                alert("Gagal terkirim karena jaringan tidak stabil. Sisa foto Anda telah dikembalikan. Silakan jepret ulang.");
             });
         }
 
