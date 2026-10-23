@@ -66,7 +66,7 @@
 </head>
 <body>
 
-    <!-- MODAL INPUT NAMA TAMU (MUNCUL PERTAMA KALI) -->
+    <!-- MODAL INPUT NAMA TAMU -->
     <div id="nameModal" class="fullscreen-overlay" style="display: none; z-index: 10000;">
         <div class="overlay-content">
             <h2 class="font-serif" style="font-size: 1.8rem; margin-bottom: 10px; color: #6ee7b7;">Selamat Datang! 📸</h2>
@@ -81,7 +81,7 @@
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
     </div>
 
-    <!-- Layar Tunggu (Sebelum Acara Dimulai) -->
+    <!-- Layar Tunggu -->
     <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
         <div class="overlay-content">
             <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
@@ -163,7 +163,7 @@
         let guestId = '';
         let guestName = '';
         let fotoTerambil = 0;
-        let batasFoto = 28; 
+        let batasFoto = 15; // Default awal sebelum memuat database
         let countdownTimerInterval = null;
         
         let stream = null;
@@ -192,25 +192,29 @@
                 return;
             }
 
+            // Muat data hitungan lokal langsung agar UI responsif seketika
+            let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
+            if (isNaN(countLokal)) countLokal = 0;
+            
+            let thumbsLokal = [];
+            try { thumbsLokal = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || []; } 
+            catch (e) { localStorage.removeItem(`thumbs_${eventId}`); }
+
+            fotoTerambil = Math.max(countLokal, thumbsLokal.length);
+            localStorage.setItem(`count_${eventId}`, fotoTerambil);
+
+            muatThumbnailLokal();
+            perbaruiUI(); // Langsung perbarui UI dengan data lokal
+
             try {
-                let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
-                if (isNaN(countLokal)) countLokal = 0;
-                
-                let thumbsLokal = [];
-                try { thumbsLokal = JSON.parse(localStorage.getItem(`thumbs_${eventId}`)) || []; } 
-                catch (e) { localStorage.removeItem(`thumbs_${eventId}`); }
-
-                fotoTerambil = Math.max(countLokal, thumbsLokal.length);
-                localStorage.setItem(`count_${eventId}`, fotoTerambil);
-
-                muatThumbnailLokal();
-
                 const doc = await db.collection('events').doc(eventId).get();
                 if (doc.exists) {
                     let currentEvent = doc.data();
                     document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
                     let limit = parseInt(currentEvent.guestPhotoLimit);
                     if (!isNaN(limit) && limit > 0) batasFoto = limit;
+
+                    perbaruiUI(); // Perbarui kembali setelah batas dari database masuk
 
                     const sekarang = new Date();
                     const eventDate = currentEvent.date;
@@ -230,7 +234,6 @@
                     }
                 }
 
-                perbaruiUI();
                 await mulaiKamera();
                 document.getElementById('initScreen').style.display = 'none';
 
@@ -316,7 +319,10 @@
                     audio: false
                 });
                 video.srcObject = stream;
-            } catch (err) { alert("Izinkan akses kamera di browser Anda."); }
+                await video.play();
+            } catch (err) { 
+                alert("Gagal mengaktifkan kamera: " + err.message); 
+            }
         }
 
         function balikKamera() {
@@ -349,6 +355,10 @@
 
         function ambilFoto() {
             if (fotoTerambil >= batasFoto) return;
+            if (!video.videoWidth || !video.videoHeight) {
+                alert("Kamera belum siap, tunggu sebentar.");
+                return;
+            }
 
             const flash = document.getElementById('flashOverlay');
             flash.style.opacity = '1';
