@@ -67,8 +67,6 @@
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
             authDomain: "the-last-call-film.firebaseapp.com",
             projectId: "the-last-call-film",
-            storageBucket: "the-last-call-film.firebasestorage.app",
-            messagingSenderId: "665352445108",
             appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
         firebase.initializeApp(firebaseConfig);
