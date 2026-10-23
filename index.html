@@ -403,19 +403,6 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT PROFILE -->
-    <div class="auth-modal" id="profileModal">
-        <div class="auth-box">
-            <span class="auth-close" onclick="tutupProfileModal()">✖</span>
-            <h3 style="margin-bottom: 20px; font-family: 'Playfair Display', serif;">Edit Profil</h3>
-            <div class="form-group">
-                <label>Nama Tampilan</label>
-                <input type="text" id="editProfileName" class="auth-input" placeholder="Nama Anda">
-            </div>
-            <button class="auth-btn btn-primary" onclick="simpanProfile()" style="width:100%;">Simpan Perubahan</button>
-        </div>
-    </div>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
@@ -743,23 +730,10 @@
             }
         }
 
+        // Mengarahkan langsung ke halaman settings.html
         function bukaProfileModal() {
             document.getElementById('profileDropdown').classList.remove('show');
-            document.getElementById('editProfileName').value = currentUser.displayName || '';
-            document.getElementById('profileModal').style.display = 'flex';
-        }
-
-        function tutupProfileModal() { document.getElementById('profileModal').style.display = 'none'; }
-
-        function simpanProfile() {
-            const newName = document.getElementById('editProfileName').value;
-            if(!newName) return alert("Nama tidak boleh kosong.");
-            
-            currentUser.updateProfile({ displayName: newName }).then(() => {
-                db.collection('members').doc(currentUser.uid).update({ name: newName }).catch(()=>{});
-                alert("Profil berhasil diperbarui!");
-                location.reload();
-            }).catch(err => alert("Gagal memperbarui profil: " + err.message));
+            window.location.href = "settings.html";
         }
 
         function logoutAkun() {
