@@ -103,10 +103,6 @@
         .cd-val { font-size: 1.4rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
         .cd-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
 
-        .bank-info { background: rgba(0,0,0,0.4); border: 1px solid var(--border-color); padding: 15px; border-radius: 10px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;}
-        .bank-name { font-weight: 700; font-size: 1rem; color: #fff;}
-        .bank-acc { font-family: monospace; font-size: 1.2rem; color: var(--accent); margin: 4px 0;}
-
         .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
         .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 400px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
         .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
@@ -312,6 +308,14 @@
                             <option value="9999|800000">Jadi Tak Terbatas (Rp 800.000)</option>
                         </select>
                         <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold;">Upgrade</button>
+                    </div>
+                </div>
+
+                <!-- KARTU DAFTAR PESERTA YANG JOIN -->
+                <div class="dash-card">
+                    <h3>Daftar Peserta yang Join (<span id="totalGuestsCount">0</span>)</h3>
+                    <div id="guestListContainer" style="max-height: 220px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
+                        <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Memuat data peserta...</div>
                     </div>
                 </div>
 
@@ -613,7 +617,39 @@
             document.getElementById('qrCodeImageManage').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(linkKamera)}&margin=10`;
 
             inisialisasiDashboardCountdown(event.date, event.startTime, event.endTime);
+            muatDaftarPeserta(eventId);
             showSection('manageEventSection');
+        }
+
+        async function muatDaftarPeserta(eventId) {
+            const container = document.getElementById('guestListContainer');
+            const countBadge = document.getElementById('totalGuestsCount');
+            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Memuat data peserta...</div>';
+            
+            try {
+                const snapshot = await db.collection('events').doc(eventId).collection('guests').orderBy('joinedAt', 'desc').get();
+                countBadge.innerText = snapshot.size;
+                
+                if (snapshot.empty) {
+                    container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Belum ada peserta yang bergabung.</div>';
+                    return;
+                }
+
+                container.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const waktuJoin = data.joinedAt ? new Date(data.joinedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Baru saja';
+                    container.innerHTML += `
+                        <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="font-weight: 500; font-size: 0.9rem; color: #fff;">👤 ${data.name}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${waktuJoin}</span>
+                        </div>
+                    `;
+                });
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<div style="color: #ff6b6b; font-size: 0.85rem; text-align: center; padding: 15px;">Gagal memuat daftar peserta.</div>';
+            }
         }
 
         function inisialisasiDashboardCountdown(eventDate, startTime, endTime) {
@@ -657,7 +693,6 @@
             showSection('paymentSection');
         }
 
-        // Melanjutkan pembayaran jika status masih Pending
         function lanjutkanPembayaran(eventId) {
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
             if (!eventObj) return;
@@ -693,9 +728,6 @@
             tampilkanHalamanPembayaran();
         }
 
-        // ==========================================
-        // INTEGRASI PEMBAYARAN OTOMATIS MIDTRANS
-        // ==========================================
         async function prosesPembayaranMidtrans() {
             try {
                 const response = await fetch("https://script.google.com/macros/s/AKfycby8jj6300JZxsVXfPbzsDiNhFsc4T_ciUEifp-j4ojGs5VtlWlD1cwyNg6v7hA1B44orQ/exec", {
