@@ -657,13 +657,13 @@
         }
 
         // ==========================================
-        // INTEGRASI PEMBAYARAN OTOMATIS MIDTRANS
+        // INTEGRASI PEMBAYARAN OTOMATIS MIDTRANS (BARU)
         // ==========================================
         async function prosesPembayaranMidtrans() {
             try {
                 alert("Menghubungkan ke sistem pembayaran Midtrans...");
                 
-                const response = await fetch("https://script.google.com/macros/s/AKfycbwiZXvoUuEwX7E8OqjYSgCmBDtlHl-RJl6ysPM0zoIeBu2y1i_3Iy4rNfjf_EdizIaS3Q/exec", {
+                const response = await fetch("https://script.google.com/macros/s/AKfycby8jj6300JZxsVXfPbzsDiNhFsc4T_ciUEifp-j4ojGs5VtlWlD1cwyNg6v7hA1B44orQ/exec", {
                     method: "POST",
                     body: JSON.stringify({
                         price: pendingPaymentInfo.price,
