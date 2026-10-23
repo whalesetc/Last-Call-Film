@@ -2,60 +2,56 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Album Foto • The Last Call Film</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Playfair+Display:ital,wght@0,600;0,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
-    <!-- JSZip untuk fitur Unduh ZIP -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
     <style>
-        :root { --bg-dark: #12110f; --border: rgba(255,255,255,0.1); --accent: #6ee7b7; }
+        :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background: var(--bg-dark); color: #fff; min-height: 100vh; padding: 20px; }
-        
-        .header { max-width: 1200px; margin: 0 auto 30px auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border); padding-bottom: 20px; }
-        h1 { font-family: 'Playfair Display', serif; font-size: 1.8rem; }
-        .btn-action { background: var(--accent); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; }
-        .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border); }
-        
-        .gallery-grid { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
-        .photo-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; aspect-ratio: 9 / 16; position: relative; cursor: pointer; transition: transform 0.2s; }
-        .photo-card:hover { transform: scale(1.02); }
-        .photo-card img { width: 100%; height: 100%; object-fit: cover; }
-        
-        .empty-state { text-align: center; color: #888; grid-column: 1 / -1; padding: 60px 0; }
-        
-        /* Modal Lightbox */
-        #lightbox { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.9); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
-        #lightbox img { max-width: 100%; max-height: 85vh; border-radius: 10px; }
-        .close-btn { position: absolute; top: 20px; right: 25px; color: #fff; font-size: 2rem; cursor: pointer; }
+        body { background-color: var(--bg-dark); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; padding: 20px 5%; }
+        .font-serif { font-family: 'Playfair Display', serif; }
+
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+        .title-area h1 { font-size: 2rem; font-family: 'Playfair Display', serif; }
+        .title-area p { color: var(--text-muted); font-size: 0.9rem; margin-top: 5px; }
+
+        .btn-group { display: flex; gap: 10px; }
+        .btn { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 0.9rem; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; }
+        .btn:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
+        .btn-success { background: var(--accent); color: #000; border: none; font-weight: 600; }
+        .btn-success:hover { opacity: 0.9; }
+
+        .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding-bottom: 40px; }
+        .photo-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
+        .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+        .photo-img { width: 100%; aspect-ratio: 9/16; object-fit: cover; cursor: pointer; background: #000; }
+        .photo-info { padding: 10px 12px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
+        .photo-author { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+
+        .status-msg { text-align: center; color: var(--text-muted); padding: 60px 0; font-size: 1rem; grid-column: 1 / -1; }
     </style>
 </head>
 <body>
 
     <div class="header">
-        <div>
-            <h1 id="eventTitleAlbum">Album Foto Acara</h1>
-            <p style="color: #aaa; font-size: 0.85rem; margin-top: 4px;">Koleksi kenangan autentik dari para tamu.</p>
+        <div class="title-area">
+            <h1 id="albumTitle">Album • Memuat...</h1>
+            <p>Koleksi kenangan autentik dari para tamu.</p>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button class="btn-action btn-outline" onclick="history.back()">← Kembali</button>
-            <button class="btn-action" id="btnDownloadZip" onclick="unduhZipAlbum()">Unduh Semua (.zip)</button>
+        <div class="btn-group">
+            <a href="javascript:history.back()" class="btn">&larr; Kembali</a>
+            <button class="btn btn-success" id="btnDownloadZip" onclick="unduhSemuaZip()">Unduh Semua (.zip)</button>
         </div>
     </div>
 
-    <div class="gallery-grid" id="photoGallery">
-        <div class="empty-state">Memuat foto...</div>
-    </div>
-
-    <div id="lightbox" onclick="tutupLightbox()">
-        <span class="close-btn">&times;</span>
-        <img id="lightboxImg" src="">
+    <div class="gallery-grid" id="galleryContainer">
+        <div class="status-msg">Memuat foto galeri...</div>
     </div>
 
     <script>
@@ -70,82 +66,104 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
-        let fotoDataList = [];
+        let fotoListGlobal = [];
 
         async function muatAlbum() {
-            if (!eventId) { alert("ID Acara tidak valid."); return; }
+            const container = document.getElementById('galleryContainer');
+            if (!eventId) {
+                container.innerHTML = '<div class="status-msg">ID Acara tidak valid.</div>';
+                return;
+            }
 
             try {
-                // Ambil info nama acara
+                // Ambil data nama acara
                 const eventDoc = await db.collection('events').doc(eventId).get();
                 if (eventDoc.exists) {
-                    document.getElementById('eventTitleAlbum').innerText = "Album • " + eventDoc.data().eventName;
+                    document.getElementById('albumTitle').innerText = `Album • ${eventDoc.data().eventName}`;
                 }
 
-                // Ambil foto-foto dari Firestore
-                const snapshot = await db.collection('photos')
-                    .where('eventId', '==', eventId)
-                    .orderBy('createdTime', 'desc')
-                    .get();
-
-                const gallery = document.getElementById('photoGallery');
-                gallery.innerHTML = '';
-
+                // Ambil foto berdasarkan eventId TANPA orderBy server untuk menghindari error index
+                const snapshot = await db.collection('photos').where('eventId', '==', eventId).get();
+                
                 if (snapshot.empty) {
-                    gallery.innerHTML = '<div class="empty-state">Belum ada foto yang diunggah ke album ini.</div>';
+                    container.innerHTML = '<div class="status-msg">Belum ada foto yang diunggah di acara ini.</div>';
                     return;
                 }
 
+                fotoListGlobal = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    fotoDataList.push(data.url);
-                    
-                    const card = document.createElement('div');
-                    card.className = 'photo-card';
-                    card.innerHTML = `<img src="${data.url}" loading="lazy" alt="Foto Tamu">`;
-                    card.onclick = () => bukaLightbox(data.url);
-                    gallery.appendChild(card);
+                    fotoListGlobal.push({
+                        id: doc.id,
+                        url: data.url,
+                        guestName: data.guestName || 'Tamu',
+                        createdTime: data.createdTime ? data.createdTime.toDate() : new Date(0)
+                    });
                 });
 
-            } catch (err) {
-                console.error(err);
-                document.getElementById('photoGallery').innerHTML = '<div class="empty-state">Gagal memuat galeri foto.</div>';
+                // Urutkan secara client-side (terbaru ke terlama)
+                fotoListGlobal.sort((a, b) => b.createdTime - a.createdTime);
+
+                container.innerHTML = '';
+                fotoListGlobal.forEach((foto, index) => {
+                    container.innerHTML += `
+                        <div class="photo-card">
+                            <img src="${foto.url}" class="photo-img" onclick="window.open('${foto.url}', '_blank')">
+                            <div class="photo-info">
+                                <span class="photo-author" title="${foto.guestName}">${foto.guestName}</span>
+                                <span>#${index + 1}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+
+            } catch (error) {
+                console.error(error);
+                container.innerHTML = `<div class="status-msg" style="color: #ff6b6b;">Gagal memuat galeri foto: ${error.message}</div>`;
             }
         }
 
-        function bukaLightbox(url) {
-            document.getElementById('lightboxImg').src = url;
-            document.getElementById('lightbox').style.display = 'flex';
-        }
+        async function unduhSemuaZip() {
+            if (fotoListGlobal.length === 0) {
+                alert("Belum ada foto untuk diunduh.");
+                return;
+            }
 
-        function tutupLightbox() {
-            document.getElementById('lightbox').style.display = 'none';
-        }
-
-        async function unduhZipAlbum() {
-            if (fotoDataList.length === 0) { alert("Tidak ada foto untuk diunduh."); return; }
-            
             const btn = document.getElementById('btnDownloadZip');
             btn.innerText = "Menyiapkan ZIP...";
             btn.disabled = true;
 
             const zip = new JSZip();
-            const folder = zip.folder("TheLastCall_Album");
+            const folder = zip.folder("Album_TheLastCallFilm");
 
-            fotoDataList.forEach((base64Url, index) => {
-                const base64Data = base64Url.replace(/^data:image\/jpeg;base64,/, "");
-                folder.file(`foto_${index + 1}.jpg`, base64Data, {base64: true});
-            });
+            try {
+                let count = 0;
+                for (let i = 0; i < fotoListGlobal.length; i++) {
+                    const foto = fotoListGlobal[i];
+                    try {
+                        const response = await fetch(foto.url);
+                        const blob = await response.blob();
+                        const namaFile = `${i + 1}_${foto.guestName.replace(/[^a-zA-Z0-9]/g, '_')}.jpg`;
+                        folder.file(namaFile, blob);
+                        count++;
+                    } catch (e) {
+                        console.error("Gagal mengunduh gambar ke zip:", e);
+                    }
+                }
 
-            zip.generateAsync({type: "blob"}).then(content => {
-                saveAs(content, "Album_TheLastCallFilm.zip");
+                if (count === 0) {
+                    throw new Error("Tidak ada gambar yang berhasil diunduh.");
+                }
+
+                const content = await zip.generateAsync({ type: "blob" });
+                saveAs(content, "Album_Foto_Acara.zip");
+                alert("Berhasil mengunduh semua foto dalam format ZIP!");
+            } catch (err) {
+                alert("Gagal membuat file ZIP: " + err.message);
+            } finally {
                 btn.innerText = "Unduh Semua (.zip)";
                 btn.disabled = false;
-            }).catch(err => {
-                alert("Gagal membuat file ZIP.");
-                btn.innerText = "Unduh Semua (.zip)";
-                btn.disabled = false;
-            });
+            }
         }
 
         muatAlbum();
