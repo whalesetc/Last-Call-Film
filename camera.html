@@ -102,7 +102,7 @@
         <div class="roll-wrapper">
             <div class="roll-label">Sisa<br>Film</div>
             <div class="roll-container">
-                <div class="roll-number-display" id="sisaFilmDisplay">--</div>
+                <div class="roll-number-display" id="sisaFilm">--</div>
             </div>
         </div>
     </div>
@@ -254,7 +254,7 @@
         function perbaruiUI() {
             let sisa = batasFoto - fotoTerambil;
             if (isNaN(sisa) || sisa < 0) sisa = 0;
-            const display = document.getElementById('sisaFilmDisplay');
+            const display = document.getElementById('sisaFilm');
             if (display) display.innerText = sisa;
 
             if (fotoTerambil >= batasFoto) {
