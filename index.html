@@ -58,7 +58,8 @@
         .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
         .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
-        .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; }
+        .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .form-group { margin-bottom: 25px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
@@ -426,7 +427,7 @@
         let daftarAcaraGlobal = []; 
         let dashboardCountdownInterval = null; 
         const ADMIN_WA = "6285111246036";
-        let pendingPaymentInfo = { type: '', name: '', package: '', price: 0 };
+        let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0 };
         
         const wallpaperDatabase = {
             Wedding: {
@@ -656,8 +657,44 @@
             showSection('paymentSection');
         }
 
+        // Melanjutkan pembayaran jika status masih Pending
+        function lanjutkanPembayaran(eventId) {
+            const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
+            if (!eventObj) return;
+            let kuota = eventObj.quota;
+            let harga = eventObj.price || (kuota === 10 ? 50000 : kuota === 25 ? 85000 : kuota === 50 ? 160000 : kuota === 100 ? 250000 : kuota === 150 ? 350000 : kuota === 200 ? 470000 : (kuota === 9999 ? 800000 : 50000));
+            
+            pendingPaymentInfo = {
+                type: 'Aktivasi Acara Baru',
+                eventId: eventId,
+                name: eventObj.eventName,
+                package: kuota === 9999 ? 'Tak Terbatas' : `${kuota} Orang`,
+                price: harga,
+                addedQuota: 0
+            };
+            tampilkanHalamanPembayaran();
+        }
+
+        function prosesUpgrade() {
+            const val = document.getElementById('upgradePackage').value;
+            if(!val) return alert('Pilih paket tambahan terlebih dahulu!');
+            const parts = val.split('|');
+            const eventId = document.getElementById('editEventId').value;
+            const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
+
+            pendingPaymentInfo = { 
+                type: 'Upgrade Kuota', 
+                eventId: eventId,
+                name: eventObj ? eventObj.eventName : 'Acara', 
+                package: parseInt(parts[0]) === 9999 ? 'Tak Terbatas' : `+ ${parts[0]} Orang`, 
+                price: parseInt(parts[1]),
+                addedQuota: parseInt(parts[0])
+            };
+            tampilkanHalamanPembayaran();
+        }
+
         // ==========================================
-        // INTEGRASI PEMBAYARAN OTOMATIS MIDTRANS (BARU)
+        // INTEGRASI PEMBAYARAN OTOMATIS MIDTRANS
         // ==========================================
         async function prosesPembayaranMidtrans() {
             try {
@@ -678,7 +715,7 @@
 
                 window.snap.pay(snapToken, {
                     onSuccess: function(res){
-                        alert("Pembayaran Berhasil! Acara Anda otomatis diaktifkan.");
+                        alert("Pembayaran Berhasil! Sistem sedang memperbarui status acara Anda.");
                         aktifkanAcaraSetelahBayar();
                     },
                     onPending: function(res){
@@ -700,16 +737,29 @@
 
         async function aktifkanAcaraSetelahBayar() {
             try {
-                const snapshot = await db.collection("events")
-                    .where("ownerId", "==", currentUser.uid)
-                    .where("status", "==", "Pending")
-                    .get();
-                
-                if (!snapshot.empty) {
-                    const docId = snapshot.docs[0].id;
-                    await db.collection("events").doc(docId).update({ status: "Aktif" });
+                if (pendingPaymentInfo.eventId) {
+                    if (pendingPaymentInfo.type === 'Upgrade Kuota') {
+                        const eventRef = db.collection("events").doc(pendingPaymentInfo.eventId);
+                        const doc = await eventRef.get();
+                        if (doc.exists) {
+                            let currentData = doc.data();
+                            let currentQuota = currentData.quota || 0;
+                            let added = pendingPaymentInfo.addedQuota || 0;
+                            let newQuota = added === 9999 ? 9999 : currentQuota + added;
+                            await eventRef.update({
+                                quota: newQuota,
+                                remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
+                            });
+                            alert("Kuota berhasil di-upgrade!");
+                        }
+                    } else {
+                        await db.collection("events").doc(pendingPaymentInfo.eventId).update({ status: "Aktif" });
+                        alert("Acara berhasil diaktifkan!");
+                    }
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error(e);
+            }
             bukaDasbor();
         }
 
@@ -836,12 +886,16 @@
 
             listDiv.innerHTML = '';
             daftarAcaraGlobal.forEach(d => {
+                let statusBadge = d.status === 'Pending' 
+                    ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="Klik untuk bayar">⏳ Pending (Klik Bayar)</span>` 
+                    : `<span class="badge">Aktif</span>`;
+
                 listDiv.innerHTML += `
                     <div class="event-card">
                         <div class="event-info">
                             <h3>${d.eventName}</h3>
                             <p>Tgl: ${d.date} • Kuota: ${d.quota===9999?'Unlimited':d.quota}</p>
-                            <p>${d.status==='Pending'?'<span class="badge-pending">Pending</span>':'<span class="badge">Aktif</span>'}</p>
+                            <p>${statusBadge}</p>
                         </div>
                         <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">Kelola</button>
                     </div>`;
@@ -870,7 +924,7 @@
 
             try {
                 const eventName = document.getElementById('eventName').value;
-                await db.collection("events").add({
+                const docRef = await db.collection("events").add({
                     ownerId: currentUser.uid,
                     eventType: document.getElementById('eventType').value,
                     eventName: eventName,
@@ -887,7 +941,7 @@
                 });
                 if(harga === 0) { alert("Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: 'Aktivasi Acara Baru', name: eventName, package: kuota===9999?'Unlimited':`${kuota} Orang`, price: harga };
+                    pendingPaymentInfo = { type: 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?'Unlimited':`${kuota} Orang`, price: harga, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
             } catch(err) { alert("Gagal: " + err.message); }
