@@ -6,7 +6,6 @@
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Firestore) -->
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
@@ -48,7 +47,7 @@
         @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
 
         .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
-        .overlay-content { background: rgba(0,0,0,0.8); width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; backdrop-filter: blur(8px); }
+        .overlay-content { background: rgba(18,17,15,0.95); border: 1px solid rgba(255,255,255,0.15); width: 90%; max-width: 380px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -67,6 +66,16 @@
 </head>
 <body>
 
+    <!-- MODAL INPUT NAMA TAMU (MUNCUL PERTAMA KALI) -->
+    <div id="nameModal" class="fullscreen-overlay" style="display: none; z-index: 10000;">
+        <div class="overlay-content">
+            <h2 class="font-serif" style="font-size: 1.8rem; margin-bottom: 10px; color: #6ee7b7;">Selamat Datang! 📸</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Silakan masukkan nama Anda terlebih dahulu untuk bergabung ke acara.</p>
+            <input type="text" id="inputGuestName" placeholder="Nama Lengkap / Panggilan" style="width: 100%; padding: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; outline: none; margin-bottom: 15px; font-size: 1rem; text-align: center;">
+            <button onclick="simpanNamaTamu()" style="width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Masuk ke Acara &rarr;</button>
+        </div>
+    </div>
+
     <div id="initScreen" class="fullscreen-overlay">
         <div class="loader"></div>
         <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
@@ -83,6 +92,7 @@
                 <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
                 <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
             </div>
+            <p style="color: #aaa; font-size: 0.75rem; margin-bottom: 15px;">Nama Anda sudah tersimpan. Anda bisa langsung menjepret saat acara mulai!</p>
             <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
         </div>
     </div>
@@ -151,6 +161,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let guestId = '';
+        let guestName = '';
         let fotoTerambil = 0;
         let batasFoto = 28; 
         let countdownTimerInterval = null;
@@ -172,6 +183,13 @@
             if (!guestId) {
                 guestId = 'guest_' + Math.random().toString(36).substr(2, 9);
                 localStorage.setItem(`guest_${eventId}`, guestId);
+            }
+
+            guestName = localStorage.getItem(`guest_name_${eventId}`);
+            if (!guestName) {
+                document.getElementById('initScreen').style.display = 'none';
+                document.getElementById('nameModal').style.display = 'flex';
+                return;
             }
 
             try {
@@ -219,6 +237,29 @@
             } catch (error) {
                 alert("Gagal memuat acara: " + error.message);
             }
+        }
+
+        async function simpanNamaTamu() {
+            const inputVal = document.getElementById('inputGuestName').value.trim();
+            if (!inputVal) {
+                alert("Silakan masukkan nama Anda terlebih dahulu!");
+                return;
+            }
+            guestName = inputVal;
+            localStorage.setItem(`guest_name_${eventId}`, guestName);
+            document.getElementById('nameModal').style.display = 'none';
+            document.getElementById('initScreen').style.display = 'flex';
+
+            try {
+                await db.collection('events').doc(eventId).collection('guests').doc(guestId).set({
+                    name: guestName,
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+            } catch (err) {
+                console.error("Gagal menyimpan nama tamu:", err);
+            }
+
+            initApp();
         }
 
         function tampilkanLayarTunggu(event, startDateTime) {
@@ -346,6 +387,7 @@
             db.collection('photos').add({
                 eventId: eventId,
                 guestId: guestId,
+                guestName: guestName,
                 url: compressedDataUrl,
                 createdTime: firebase.firestore.FieldValue.serverTimestamp()
             }).catch(err => {
