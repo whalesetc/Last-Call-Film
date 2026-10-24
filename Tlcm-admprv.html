@@ -160,6 +160,7 @@
                             <th>NAMA ACARA</th>
                             <th>PEMESAN (EMAIL)</th>
                             <th>STATUS</th>
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyAktif"></tbody>
@@ -177,6 +178,7 @@
                             <th>NAMA ACARA</th>
                             <th>PEMESAN (EMAIL)</th>
                             <th>STATUS</th>
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody id="tbodyNonaktif"></tbody>
@@ -195,6 +197,7 @@
                             <th>PEMESAN (EMAIL)</th>
                             <th>TAGIHAN</th>
                             <th>STATUS</th>
+                            <th>AKSI</th>
                         </tr>
                     </thead>
                     <tbody id="tbodySoon"></tbody>
@@ -354,7 +357,7 @@
                         <td>
                             <div class="btn-group">
                                 ${(st !== 'active' && st !== 'aktif') ? `<button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan QR</button>` : ''}
-                                ${(st !== 'inactive' && st !== 'nonaktif') ? `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Batalkan</button>` : ''}
+                                ${(st !== 'inactive' && st !== 'nonaktif') ? `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Nonaktifkan</button>` : ''}
                                 <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
                             </div>
                         </td>
@@ -363,7 +366,6 @@
             });
         }
 
-        // FUNGSI RENDER MEMBER GABUNGAN (ACARA LAMA + MEMBER BARU)
         function rendertabMembers() {
             const tbody = document.getElementById('tbodyMember');
             if (!tbody) return;
@@ -371,7 +373,6 @@
 
             let memberMap = {};
 
-            // 1. Ambil pendaftar acara terdahulu dari allEvents
             allEvents.forEach(e => {
                 let email = e.userEmail || (e.eventName ? `${e.eventName.replace(/\s+/g, '').toLowerCase()}@custom.com` : 'Pendaftar Lama');
                 if (!memberMap[email]) {
@@ -387,7 +388,6 @@
                 }
             });
 
-            // 2. Gabungkan/Timpa dengan data resmi dari koleksi members
             manualMembers.forEach(m => {
                 let emailKey = m.email || m.id;
                 memberMap[emailKey] = {
@@ -459,6 +459,11 @@
                 return (st === 'active' || st === 'aktif') && (e.eventDate >= today || !e.eventDate);
             });
 
+            if (activeEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Tidak ada acara aktif.</td></tr>';
+                return;
+            }
+
             activeEvents.forEach(e => {
                 tbody.innerHTML += `
                     <tr>
@@ -466,6 +471,12 @@
                         <td><a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${e.eventName}</a></td>
                         <td>${e.userEmail || '-'}</td>
                         <td><span class="badge badge-active">Aktif</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Nonaktifkan</button>
+                                <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -481,6 +492,11 @@
                 return (st === 'inactive' || st === 'nonaktif' || st === 'batal') || (e.eventDate < today && e.eventDate);
             });
 
+            if (inactiveEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Tidak ada acara nonaktif.</td></tr>';
+                return;
+            }
+
             inactiveEvents.forEach(e => {
                 tbody.innerHTML += `
                     <tr>
@@ -488,6 +504,12 @@
                         <td><a class="clickable-title" onclick="bukaModalDetail('${e.id}')">${e.eventName}</a></td>
                         <td>${e.userEmail || '-'}</td>
                         <td><span class="badge badge-inactive">Nonaktif</span></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan</button>
+                                <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -503,8 +525,14 @@
                 return e.eventDate >= today && st !== 'inactive' && st !== 'nonaktif';
             });
 
+            if (soonEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">Tidak ada acara soon.</td></tr>';
+                return;
+            }
+
             soonEvents.forEach(e => {
                 let priceText = (e.price && parseInt(e.price) > 0) ? `Rp ${parseInt(e.price).toLocaleString('id-ID')}` : 'Gratis';
+                let st = (e.status || '').toString().toLowerCase();
                 tbody.innerHTML += `
                     <tr>
                         <td>${e.eventDate || '-'}</td>
@@ -512,6 +540,12 @@
                         <td>${e.userEmail || '-'}</td>
                         <td>${priceText}</td>
                         <td>${getStatusBadge(e.status)}</td>
+                        <td>
+                            <div class="btn-group">
+                                ${(st !== 'active' && st !== 'aktif') ? `<button class="btn-act activate" onclick="ubahStatusOrder('${e.id}', 'active')">Aktifkan</button>` : `<button class="btn-act cancel" onclick="ubahStatusOrder('${e.id}', 'inactive')">Nonaktifkan</button>`}
+                                <button class="btn-act delete" onclick="hapusOrder('${e.id}')">Hapus</button>
+                            </div>
+                        </td>
                     </tr>
                 `;
             });
@@ -550,7 +584,7 @@
         }
 
         async function hapusOrder(id) {
-            if(!confirm("Yakin ingin menghapus pesanan ini secara permanen?")) return;
+            if(!confirm("Yakin ingin menghapus pesanan/acara ini secara permanen?")) return;
             try {
                 await db.collection("events").doc(id).delete();
             } catch(e) {
