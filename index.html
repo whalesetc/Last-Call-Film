@@ -15,6 +15,9 @@
             src="https://app.midtrans.com/snap/snap.js" 
             data-client-key="Mid-client-ALmtDiTXSNASniPP"></script>
 
+    <!-- PayPal SDK Script dengan Client ID Anda -->
+    <script src="https://www.paypal.com/sdk/js?client-id=BAAw-gZzOt07RVd1eugdeVpAZS5aOuJgH_Qzq_CmnteE9FRZ2VhANUEPwlSfqXr3Zi-uBymBB_7beA6Tbc&currency=USD"></script>
+
     <style>
         :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
@@ -374,7 +377,7 @@
     <!-- 5. HALAMAN PEMBAYARAN OTOMATIS & MANUAL -->
     <div id="paymentSection" class="section" style="max-width: 600px; text-align: center;">
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;">Selesaikan Pembayaran</h2>
-        <p style="color: var(--text-muted); margin-bottom: 30px;">Pilih metode pembayaran otomatis di bawah ini.</p>
+        <p style="color: var(--text-muted); margin-bottom: 30px;">Pilih metode pembayaran di bawah ini.</p>
         
         <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
             <p style="font-size: 0.9rem; color: var(--text-muted);">Total Tagihan</p>
@@ -383,8 +386,11 @@
         </div>
 
         <!-- Tombol Pembayaran Otomatis Midtrans -->
-        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;">💳 Bayar Otomatis (QRIS, VA, E-Wallet)</button>
+        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;">💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)</button>
         
+        <!-- Tombol PayPal -->
+        <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
+
         <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">ATAU PEMBAYARAN MANUAL</div>
 
         <button class="btn-wa" id="btnConfirmWA" style="width: 100%;">Pembayaran Manual via WhatsApp</button>
@@ -581,7 +587,6 @@
                 let d = daftarAcaraGlobal[i];
                 let eventEnd = new Date(`${d.date}T${d.endTime || '23:59'}:00`);
                 
-                // Hanya blokir jika status Pending ATAU (status Aktif DAN waktu sekarang belum melewati jam selesai acara)
                 if (d.status === 'Pending' || (d.status === 'Aktif' && sekarang <= eventEnd)) {
                     adaAcaraAktif = true;
                     break;
@@ -707,6 +712,37 @@
             document.getElementById('paymentTotal').innerText = `Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
             document.getElementById('paymentDesc').innerText = `${pendingPaymentInfo.type} - ${pendingPaymentInfo.name} (${pendingPaymentInfo.package})`;
             showSection('paymentSection');
+            renderPayPalButton();
+        }
+
+        function renderPayPalButton() {
+            const container = document.getElementById('paypal-button-container');
+            container.innerHTML = ''; // Bersihkan tombol sebelumnya agar tidak menumpuk
+            
+            if (window.paypal) {
+                paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        let hargaUSD = (pendingPaymentInfo.price / 15000).toFixed(2);
+                        return actions.order.create({
+                            purchase_units: [{
+                                amount: {
+                                    value: hargaUSD
+                                }
+                            }]
+                        });
+                    },
+                    onApprove: function(data, actions) {
+                        return actions.order.capture().then(function(details) {
+                            alert("Pembayaran PayPal Berhasil! Sistem sedang memperbarui status acara Anda.");
+                            aktifkanAcaraSetelahBayar();
+                        });
+                    },
+                    onError: function(err) {
+                        console.error("PayPal Error:", err);
+                        alert("Terjadi kesalahan pada pembayaran PayPal.");
+                    }
+                }).render('#paypal-button-container');
+            }
         }
 
         function lanjutkanPembayaran(eventId) {
