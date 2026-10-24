@@ -494,7 +494,7 @@
         let daftarAcaraGlobal = []; 
         let dashboardCountdownInterval = null; 
         const ADMIN_WA = "6285111246036";
-        let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0 };
+        let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0, targetQuota: 0 };
         
         // Multi-language Dictionary Setup
         let currentLang = 'id';
@@ -998,16 +998,17 @@
         function lanjutkanPembayaran(eventId) {
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
             if (!eventObj) return;
-            let kuota = eventObj.quota;
-            let harga = eventObj.price || (kuota === 10 ? 50000 : kuota === 25 ? 85000 : kuota === 50 ? 160000 : kuota === 100 ? 250000 : kuota === 150 ? 350000 : kuota === 200 ? 470000 : (kuota === 9999 ? 800000 : 50000));
+            let targetQ = eventObj.pendingQuota || eventObj.quota;
+            let harga = eventObj.price || (targetQ === 10 ? 50000 : targetQ === 25 ? 85000 : targetQ === 50 ? 160000 : targetQ === 100 ? 250000 : targetQ === 150 ? 350000 : targetQ === 200 ? 470000 : (targetQ === 9999 ? 800000 : 50000));
             
             const unitStr = currentLang === 'en' ? 'People' : 'Orang';
             pendingPaymentInfo = {
                 type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru',
                 eventId: eventId,
                 name: eventObj.eventName,
-                package: kuota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${kuota} ${unitStr}`,
+                package: targetQ === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${targetQ} ${unitStr}`,
                 price: harga,
+                targetQuota: targetQ,
                 addedQuota: 0
             };
             tampilkanHalamanPembayaran();
@@ -1087,7 +1088,13 @@
                             alert(currentLang === 'en' ? "Quota successfully upgraded after payment confirmation!" : "Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
                         }
                     } else {
-                        await db.collection("events").doc(pendingPaymentInfo.eventId).update({ status: "Aktif" });
+                        let finalQ = pendingPaymentInfo.targetQuota || 5;
+                        await db.collection("events").doc(pendingPaymentInfo.eventId).update({ 
+                            status: "Aktif",
+                            quota: finalQ,
+                            remainingQuota: finalQ,
+                            pendingQuota: 0
+                        });
                         alert(currentLang === 'en' ? "Event successfully activated after payment confirmation!" : "Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
                     }
                 }
@@ -1227,7 +1234,14 @@
                     ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>` 
                     : `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
 
-                let quotaTextDisplay = d.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Unlimited') : d.quota;
+                let quotaTextDisplay = '';
+                if (d.status === 'Pending' && d.pendingQuota && d.pendingQuota > d.quota) {
+                    let curText = d.quota === 9999 ? 'Unlimited' : d.quota;
+                    let targetText = d.pendingQuota === 9999 ? 'Unlimited' : d.pendingQuota;
+                    quotaTextDisplay = `${curText} (Pending upgrade ke ${targetText})`;
+                } else {
+                    quotaTextDisplay = d.quota === 9999 ? 'Unlimited' : d.quota;
+                }
 
                 listDiv.innerHTML += `
                     <div class="event-card">
@@ -1264,6 +1278,10 @@
             let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
             let harga = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
 
+            // Jika berbayar dan status masih Pending, kuota aktif diset 5 (gratis) dulu, sisanya di pendingQuota
+            let initialQuota = harga === 0 ? kuota : 5;
+            let pendingQ = harga === 0 ? 0 : kuota;
+
             try {
                 const eventName = document.getElementById('eventName').value;
                 const unitStr = currentLang === 'en' ? 'People' : 'Orang';
@@ -1277,14 +1295,14 @@
                     endTime: document.getElementById('eventEndTime').value,
                     privacy: document.querySelector('input[name="privacy"]:checked').value,
                     guestPhotoLimit: parseInt(document.getElementById('guestPhotoLimit').value),
-                    quota: kuota, remainingQuota: kuota, price: harga,
+                    quota: initialQuota, remainingQuota: initialQuota, pendingQuota: pendingQ, price: harga,
                     wallpaperUrl: wallpaperFinalUrl,
                     status: harga === 0 ? "Aktif" : "Pending",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
                 if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, addedQuota: 0 };
+                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, targetQuota: kuota, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
             } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
