@@ -194,14 +194,14 @@
             <div class="form-group">
                 <label data-i18n="eventTypeLabel">Jenis Acara</label>
                 <select id="eventType" class="form-control" onchange="gantiJenisAcaraForm()">
-                    <option value="Wedding">Wedding (Pernikahan)</option>
-                    <option value="Birthday">Birthday (Ulang Tahun)</option>
-                    <option value="Event">Event Lainnya (Umum)</option>
+                    <option value="Wedding" data-i18n="typeWedding">Wedding (Pernikahan)</option>
+                    <option value="Birthday" data-i18n="typeBirthday">Birthday (Ulang Tahun)</option>
+                    <option value="Event" data-i18n="typeEvent">Event Lainnya (Umum)</option>
                 </select>
             </div>
             
             <div class="form-group">
-                <label id="labelEventName">Nama Mempelai (Contoh: Romeo & Juliet)</label>
+                <label id="labelEventName" data-i18n="labelEventNameDefault">Nama Mempelai (Contoh: Romeo & Juliet)</label>
                 <input type="text" id="eventName" class="form-control" oninput="updateEventPreview()" required>
             </div>
 
@@ -214,8 +214,8 @@
                 <label data-i18n="wallpaperLabel">Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
-                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong>Portrait</strong></label>
-                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong>Landscape</strong></label>
+                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong data-i18n="portraitOpt">Portrait</strong></label>
+                    <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="landscape" onclick="perbaruiPresetOtomatis()"><strong data-i18n="landscapeOpt">Landscape</strong></label>
                 </div>
 
                 <div class="preset-grid" id="presetWallpaperContainer"></div>
@@ -224,7 +224,7 @@
                     <div class="phone-mockup" id="phonePreviewBox">
                         <div class="phone-screen" id="phoneScreen" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80');">
                             <div class="phone-overlay">
-                                <h4 id="previewEventTitle" class="mockup-title">Nama Acara</h4>
+                                <h4 id="previewEventTitle" class="mockup-title" data-i18n="previewEventTitleDefault">Nama Acara</h4>
                                 <div class="mockup-btn" data-i18n="viewAlbumPreview">Lihat Album &rarr;</div>
                             </div>
                         </div>
@@ -269,13 +269,13 @@
             <div class="form-group">
                 <label data-i18n="packageLabel">Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)</label>
                 <div class="radio-group" id="packageGroup">
-                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 Orang<span class="price-tag" data-i18n="freeTag">Gratis</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="10">10 Orang<span class="price-tag">Rp 50.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="25">25 Orang<span class="price-tag">Rp 85.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="50">50 Orang<span class="price-tag">Rp 160.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="100">100 Orang<span class="price-tag">Rp 250.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="150">150 Orang<span class="price-tag">Rp 350.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="200">200 Orang<span class="price-tag">Rp 470.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" data-i18n="freeTag">Gratis</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="10">10 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 50.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="25">25 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 85.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="50">50 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 160.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="100">100 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 250.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="150">150 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 350.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="200">200 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 470.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="unlimited"><span data-i18n="unlimitedTag">Tak Terbatas</span><span class="price-tag">Rp 800.000</span></label>
                 </div>
             </div>
@@ -292,7 +292,7 @@
         <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="manageSubtitle">Bagikan QR Code ini kepada tamu undangan Anda.</p>
 
         <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
-            <div class="countdown-dash-title" id="dashCountdownStatus">Acara Akan Dimulai Dalam:</div>
+            <div class="countdown-dash-title" id="dashCountdownStatus" data-i18n="countdownStartingIn">Acara Akan Dimulai Dalam:</div>
             <div class="countdown-dash-timer" id="dashCountdownTimer">
                 <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl" data-i18n="hoursLbl">Jam</div></div>
                 <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl" data-i18n="minsLbl">Menit</div></div>
@@ -320,17 +320,17 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
                         <div>
                             <span style="font-size: 0.8rem; color: var(--text-muted); display: block;" data-i18n="currentQuotaLabel">Batas Kuota Saat Ini:</span>
-                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: var(--accent);">5 Orang</strong>
+                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: var(--accent);">5 <span data-i18n="guestsUnit">Orang</span></strong>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <select id="upgradePackage" class="form-control" style="padding: 10px; font-size: 0.85rem; flex: 1;">
                             <option value="" data-i18n="selectAddOpt">-- Pilih Tambahan --</option>
-                            <option value="10|50000">+ 10 Orang (Rp 50.000)</option>
-                            <option value="25|85000">+ 25 Orang (Rp 85.000)</option>
-                            <option value="50|160000">+ 50 Orang (Rp 160.000)</option>
-                            <option value="100|250000">+ 100 Orang (Rp 250.000)</option>
-                            <option value="9999|800000">Jadi Tak Terbatas (Rp 800.000)</option>
+                            <option value="10|50000">+ 10 <span data-i18n="guestsUnit">Orang</span> (Rp 50.000)</option>
+                            <option value="25|85000">+ 25 <span data-i18n="guestsUnit">Orang</span> (Rp 85.000)</option>
+                            <option value="50|160000">+ 50 <span data-i18n="guestsUnit">Orang</span> (Rp 160.000)</option>
+                            <option value="100|250000">+ 100 <span data-i18n="guestsUnit">Orang</span> (Rp 250.000)</option>
+                            <option value="9999|800000" data-i18n="upgradeUnlimitedOpt">Jadi Tak Terbatas (Rp 800.000)</option>
                         </select>
                         <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold;" data-i18n="upgradeBtn">Upgrade</button>
                     </div>
@@ -358,8 +358,8 @@
                             <label style="font-size: 0.85rem;" data-i18n="wallpaperLabel">Pilih Wallpaper Standar atau Unggah</label>
                             
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
-                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="portrait" checked onclick="perbaruiPresetEditOtomatis()"><strong>Portrait</strong></label>
-                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="landscape" onclick="perbaruiPresetEditOtomatis()"><strong>Landscape</strong></label>
+                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="portrait" checked onclick="perbaruiPresetEditOtomatis()"><strong data-i18n="portraitOpt">Portrait</strong></label>
+                                <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="landscape" onclick="perbaruiPresetEditOtomatis()"><strong data-i18n="landscapeOpt">Landscape</strong></label>
                             </div>
 
                             <div class="preset-grid" id="editPresetContainer"></div>
@@ -513,8 +513,15 @@
                 cancelBtn: "&larr; Batal",
                 newEventQueueForm: "Detail Acara Baru",
                 eventTypeLabel: "Jenis Acara",
+                typeWedding: "Wedding (Pernikahan)",
+                typeBirthday: "Birthday (Ulang Tahun)",
+                typeEvent: "Event Lainnya (Umum)",
+                labelEventNameDefault: "Nama Mempelai (Contoh: Romeo & Juliet)",
                 waitingTextLabel: "Teks Sambutan Aesthetic untuk Wallpaper",
                 wallpaperLabel: "Pilih Wallpaper Standar (AI) atau Unggah Sendiri",
+                portraitOpt: "Portrait",
+                landscapeOpt: "Landscape",
+                previewEventTitleDefault: "Nama Acara",
                 viewAlbumPreview: "Lihat Album &rarr;",
                 uploadCustomWallpaper: "✏️ Atau Unggah Wallpaper Sendiri",
                 eventDateLabel: "Tanggal Acara",
@@ -525,11 +532,13 @@
                 publicOpt: "Publik (Visible)",
                 privateOpt: "Privat (Private)",
                 packageLabel: "Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)",
+                guestsUnit: "Orang",
                 freeTag: "Gratis",
                 unlimitedTag: "Tak Terbatas",
                 continueBtn: "Lanjutkan &rarr;",
                 backToEvents: "&larr; Kembali ke Acara Saya",
                 manageSubtitle: "Bagikan QR Code ini kepada tamu undangan Anda.",
+                countdownStartingIn: "Acara Akan Dimulai Dalam:",
                 hoursLbl: "Jam",
                 minsLbl: "Menit",
                 secsLbl: "Detik",
@@ -541,6 +550,7 @@
                 guestQuotaTitle: "Kuota Tamu",
                 currentQuotaLabel: "Batas Kuota Saat Ini:",
                 selectAddOpt: "-- Pilih Tambahan --",
+                upgradeUnlimitedOpt: "Jadi Tak Terbatas (Rp 800.000)",
                 upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Daftar Peserta yang Join",
                 loadingGuests: "Memuat data peserta...",
@@ -579,8 +589,15 @@
                 cancelBtn: "&larr; Cancel",
                 newEventQueueForm: "New Event Details",
                 eventTypeLabel: "Event Type",
+                typeWedding: "Wedding",
+                typeBirthday: "Birthday",
+                typeEvent: "Other Event (General)",
+                labelEventNameDefault: "Couple Names (Ex: Romeo & Juliet)",
                 waitingTextLabel: "Aesthetic Greeting Text for Wallpaper",
                 wallpaperLabel: "Choose Standard Wallpaper (AI) or Upload Custom",
+                portraitOpt: "Portrait",
+                landscapeOpt: "Landscape",
+                previewEventTitleDefault: "Event Name",
                 viewAlbumPreview: "View Album &rarr;",
                 uploadCustomWallpaper: "✏️ Or Upload Custom Wallpaper",
                 eventDateLabel: "Event Date",
@@ -591,11 +608,13 @@
                 publicOpt: "Public (Visible)",
                 privateOpt: "Private",
                 packageLabel: "User Quota Options (Number of Guests with Camera Access)",
+                guestsUnit: "People",
                 freeTag: "Free",
                 unlimitedTag: "Unlimited",
                 continueBtn: "Continue &rarr;",
                 backToEvents: "&larr; Back to My Events",
                 manageSubtitle: "Share this QR Code with your invited guests.",
+                countdownStartingIn: "Event Starts In:",
                 hoursLbl: "Hours",
                 minsLbl: "Mins",
                 secsLbl: "Secs",
@@ -607,6 +626,7 @@
                 guestQuotaTitle: "Guest Quota",
                 currentQuotaLabel: "Current Quota Limit:",
                 selectAddOpt: "-- Select Add-on --",
+                upgradeUnlimitedOpt: "Make Unlimited ($55 / Rp 800.000)",
                 upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Joined Participants List",
                 loadingGuests: "Loading participant data...",
@@ -644,6 +664,12 @@
                     el.innerHTML = translations[lang][key];
                 }
             });
+
+            // Perbarui label dinamis formulir acara saat bahasa diganti
+            gantiJenisAcaraForm();
+            if(document.getElementById('customerDashboard').classList.contains('active-section')) {
+                muatAcaraSaya();
+            }
         }
 
         const wallpaperDatabase = {
@@ -818,7 +844,9 @@
             document.getElementById('editStartTime').value = event.startTime || "00:00";
             document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('editWaitingText').value = event.waitingText || "The Wedding Of";
-            document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${event.quota} ${currentLang === 'en' ? 'People' : 'Orang'}`;
+            
+            const unitStr = currentLang === 'en' ? 'People' : 'Orang';
+            document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${event.quota} ${unitStr}`;
 
             selectedEditWallpaperUrl = event.wallpaperUrl || '';
             perbaruiPresetEditOtomatis();
@@ -971,11 +999,12 @@
             let kuota = eventObj.quota;
             let harga = eventObj.price || (kuota === 10 ? 50000 : kuota === 25 ? 85000 : kuota === 50 ? 160000 : kuota === 100 ? 250000 : kuota === 150 ? 350000 : kuota === 200 ? 470000 : (kuota === 9999 ? 800000 : 50000));
             
+            const unitStr = currentLang === 'en' ? 'People' : 'Orang';
             pendingPaymentInfo = {
                 type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru',
                 eventId: eventId,
                 name: eventObj.eventName,
-                package: kuota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${kuota} ${currentLang === 'en' ? 'People' : 'Orang'}`,
+                package: kuota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${kuota} ${unitStr}`,
                 price: harga,
                 addedQuota: 0
             };
@@ -989,11 +1018,12 @@
             const eventId = document.getElementById('editEventId').value;
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
 
+            const unitStr = currentLang === 'en' ? 'People' : 'Orang';
             pendingPaymentInfo = { 
                 type: currentLang === 'en' ? 'Quota Upgrade' : 'Upgrade Kuota', 
                 eventId: eventId,
                 name: eventObj ? eventObj.eventName : 'Event', 
-                package: parseInt(parts[0]) === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `+ ${parts[0]} ${currentLang === 'en' ? 'People' : 'Orang'}`, 
+                package: parseInt(parts[0]) === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `+ ${parts[0]} ${unitStr}`, 
                 price: parseInt(parts[1]),
                 addedQuota: parseInt(parts[0])
             };
@@ -1095,6 +1125,7 @@
             const eventNameInput = document.getElementById('eventName').value;
             const titleDisplay = document.getElementById('previewEventTitle');
             titleDisplay.innerHTML = eventNameInput || (currentLang === 'en' ? "Event Name" : "Nama Acara");
+            
             if(tipe === "Wedding") label.innerText = currentLang === 'en' ? "Couple Names (Ex: Romeo & Juliet)" : "Nama Mempelai (Contoh: Romeo & Juliet)";
             else if(tipe === "Birthday") label.innerText = currentLang === 'en' ? "Birthday Person's Name" : "Nama yang Ulang Tahun";
             else label.innerText = currentLang === 'en' ? "Event Name" : "Nama Event";
@@ -1193,11 +1224,13 @@
                     ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>` 
                     : `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
 
+                let quotaTextDisplay = d.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Unlimited') : d.quota;
+
                 listDiv.innerHTML += `
                     <div class="event-card">
                         <div class="event-info">
                             <h3>${d.eventName}</h3>
-                            <p>${currentLang === 'en' ? 'Date' : 'Tgl'}: ${d.date} • ${currentLang === 'en' ? 'Quota' : 'Kuota'}: ${d.quota===9999?'Unlimited':d.quota}</p>
+                            <p>${currentLang === 'en' ? 'Date' : 'Tgl'}: ${d.date} • ${currentLang === 'en' ? 'Quota' : 'Kuota'}: ${quotaTextDisplay}</p>
                             <p>${statusBadge}</p>
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -1230,6 +1263,7 @@
 
             try {
                 const eventName = document.getElementById('eventName').value;
+                const unitStr = currentLang === 'en' ? 'People' : 'Orang';
                 const docRef = await db.collection("events").add({
                     ownerId: currentUser.uid,
                     eventType: document.getElementById('eventType').value,
@@ -1247,7 +1281,7 @@
                 });
                 if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?'Unlimited':`${kuota} ${currentLang === 'en' ? 'People' : 'Orang'}`, price: harga, addedQuota: 0 };
+                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
             } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
