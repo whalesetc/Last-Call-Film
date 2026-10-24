@@ -30,7 +30,7 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding-bottom: 40px; }
         .photo-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-        .photo-img { width: 100%; aspect-ratio: 9/16; object-fit: cover; cursor: pointer; background: #000; }
+        .photo-img { width: 100%; aspect-ratio: 9/16; object-fit: cover; background: #000; } /* Perintah klik/buka jendela baru sudah dihapus */
         .photo-info { padding: 10px 12px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
         .photo-author { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
 
@@ -108,7 +108,7 @@
                 fotoListGlobal.forEach((foto, index) => {
                     container.innerHTML += `
                         <div class="photo-card">
-                            <img src="${foto.url}" class="photo-img" onclick="window.open('${foto.url}', '_blank')">
+                            <img src="${foto.url}" class="photo-img">
                             <div class="photo-info">
                                 <span class="photo-author" title="${foto.guestName}">${foto.guestName}</span>
                                 <span>#${index + 1}</span>
