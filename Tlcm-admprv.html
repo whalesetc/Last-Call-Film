@@ -131,7 +131,7 @@
         <!-- TAB 2: LIST MEMBER -->
         <div id="tabMember" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h3 class="font-serif">Daftar Member Terdaftar (Profil & Device ID)</h3>
+                <h3 class="font-serif">Daftar Member Terdaftar (Profil & Waktu Online)</h3>
                 <button class="btn-act activate" onclick="bukaModalMember()" style="padding: 10px 16px;">+ Tambah Member Manual</button>
             </div>
             <div class="table-container">
@@ -141,6 +141,7 @@
                             <th>NAMA & EMAIL MEMBER</th>
                             <th>NO. HP & KOTA</th>
                             <th>DEVICE ID (PERANGKAT)</th>
+                            <th>TERAKHIR ONLINE</th>
                             <th>STATUS AKUN</th>
                             <th>AKSI</th>
                         </tr>
@@ -382,6 +383,7 @@
                         phone: e.userPhone || '-',
                         city: e.userCity || '-',
                         deviceId: e.deviceId || 'Perangkat Lama',
+                        lastOnline: null,
                         isSuspended: false,
                         source: 'events'
                     };
@@ -397,6 +399,7 @@
                     phone: m.phone || memberMap[emailKey]?.phone || '-',
                     city: m.city || memberMap[emailKey]?.city || '-',
                     deviceId: m.deviceId || memberMap[emailKey]?.deviceId || 'Perangkat Baru',
+                    lastOnline: m.lastOnline || null,
                     isSuspended: m.isSuspended === true,
                     source: 'members'
                 };
@@ -406,7 +409,7 @@
             document.getElementById('statTotalMembers').innerText = memberList.length;
 
             if (memberList.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color:#888;">Belum ada member terdaftar.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#888;">Belum ada member terdaftar.</td></tr>';
                 return;
             }
 
@@ -417,6 +420,15 @@
                 let kota = m.city;
                 let deviceId = m.deviceId;
                 let isSuspended = m.isSuspended;
+
+                // Format waktu terakhir online
+                let lastOnlineStr = 'Belum pernah';
+                if (m.lastOnline && typeof m.lastOnline.toMillis === 'function') {
+                    lastOnlineStr = new Date(m.lastOnline.toMillis()).toLocaleString('id-ID', { 
+                        dateStyle: 'medium', 
+                        timeStyle: 'short' 
+                    });
+                }
 
                 let statusBadge = isSuspended 
                     ? `<span class="badge badge-inactive">Di-Suspend</span>` 
@@ -437,6 +449,7 @@
                         <td><b>${nama}</b><br><span style="color:#888;">${email}</span></td>
                         <td>${noHp}<br><span style="color:#888;">${kota}</span></td>
                         <td><span style="font-family:monospace; font-size:0.75rem; color:#aaa;">${deviceId}</span></td>
+                        <td><span style="font-size: 0.8rem; color: #d1d5db;">${lastOnlineStr}</span></td>
                         <td>${statusBadge}</td>
                         <td>
                             <div class="btn-group">
