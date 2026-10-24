@@ -70,11 +70,11 @@
         const eventId = urlParams.get('event');
         let fotoListGlobal = [];
 
-        // Ambil atau buat ID unik perangkat tamu untuk mengenali foto pribadi mereka
-        let guestSessionId = localStorage.getItem('thelastcall_guest_id');
+        // Mengambil guestId yang sinkron dengan halaman kamera (guest_${eventId})
+        let guestSessionId = localStorage.getItem(`guest_${eventId}`);
         if (!guestSessionId) {
             guestSessionId = 'guest_' + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('thelastcall_guest_id', guestSessionId);
+            localStorage.setItem(`guest_${eventId}`, guestSessionId);
         }
 
         async function muatAlbum() {
@@ -85,7 +85,6 @@
             }
 
             try {
-                // Ambil data acara untuk cek ownerId dan privacy
                 const eventDoc = await db.collection('events').doc(eventId).get();
                 if (!eventDoc.exists) {
                     container.innerHTML = '<div class="status-msg">Acara tidak ditemukan.</div>';
@@ -95,7 +94,6 @@
                 const eventData = eventDoc.data();
                 document.getElementById('albumTitle').innerText = `Album • ${eventData.eventName}`;
 
-                // Cek apakah user yang login saat ini adalah pemilik acara
                 const currentUser = auth.currentUser;
                 const isOwner = currentUser && currentUser.uid === eventData.ownerId;
                 const isPrivate = eventData.privacy === 'private';
@@ -104,7 +102,6 @@
                     document.getElementById('albumSubtitle').innerText = "Mode Privat: Anda hanya melihat hasil foto jepretan Anda sendiri.";
                 }
 
-                // Ambil semua foto untuk event ini
                 const snapshot = await db.collection('photos').where('eventId', '==', eventId).get();
                 
                 if (snapshot.empty) {
@@ -124,16 +121,13 @@
                     });
                 });
 
-                // Terapkan aturan privasi
+                // Terapkan aturan privasi: Pemilik acara bisa melihat semua, tamu di mode privat hanya melihat foto miliknya sendiri
                 if (isPrivate && !isOwner) {
-                    // Filter hanya foto milik tamu ini (berdasarkan guestId atau perangkat)
                     fotoListGlobal = allPhotos.filter(f => f.guestId === guestSessionId);
                 } else {
-                    // Pemilik acara atau album publik bisa melihat semua foto
                     fotoListGlobal = allPhotos;
                 }
 
-                // Urutkan dari terbaru ke terlama
                 fotoListGlobal.sort((a, b) => b.createdTime - a.createdTime);
 
                 if (fotoListGlobal.length === 0) {
@@ -203,7 +197,6 @@
             }
         }
 
-        // Tunggu status auth Firebase siap sebelum memuat album agar status owner terdeteksi akurat
         auth.onAuthStateChanged(() => {
             muatAlbum();
         });
