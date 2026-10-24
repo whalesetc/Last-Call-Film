@@ -1,1 +1,250 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan Akun • The Last Call Film</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700&display=swap" rel="stylesheet">
+    
+    <!-- FIREBASE SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
+    <style>
+        :root { --bg-dark: #12110f; --border: rgba(255,255,255,0.1); --accent: #6ee7b7; --warning: #f59e0b; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-dark); color: #fff; min-height: 100vh; padding: 20px; display: flex; justify-content: center; align-items: center; }
+        .card { background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 16px; padding: 30px; width: 100%; max-width: 480px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        h2 { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: 8px; }
+        p.sub { font-size: 0.85rem; color: #aaa; margin-bottom: 25px; }
+        
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 0.8rem; color: #ccc; margin-bottom: 6px; }
+        input { width: 100%; padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 8px; color: #fff; outline: none; font-size: 0.9rem; }
+        input:focus { border-color: var(--accent); }
+        
+        .alert-box { background: rgba(245, 158, 11, 0.1); border: 1px solid var(--warning); color: var(--warning); padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; margin-bottom: 20px; line-height: 1.4; display: none; }
+
+        .btn-save { width: 100%; padding: 12px; background: var(--accent); color: #000; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.2s; }
+        .btn-save:hover { opacity: 0.9; }
+        .btn-back { display: block; text-align: center; color: #aaa; font-size: 0.85rem; text-decoration: none; margin-top: 15px; }
+        .btn-back:hover { color: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>Profil Akun</h2>
+        <p class="sub">Kelola informasi diri dan keamanan akun Anda.</p>
+
+        <div class="alert-box" id="verificationAlert">
+            ⚠️ Mengubah email akan memerlukan verifikasi ulang. Tautan verifikasi telah dikirim ke alamat email baru Anda.
+        </div>
+
+        <form id="profileForm" onsubmit="simpanProfil(event)">
+            <div class="form-group">
+                <label>Alamat Email</label>
+                <input type="email" id="pEmail" placeholder="email@domain.com" required>
+                <small style="color: #888; font-size: 0.72rem; margin-top: 4px; display: block;">Perubahan email wajib diverifikasi melalui kotak masuk.</small>
+            </div>
+
+            <div class="form-group">
+                <label>Nama Lengkap</label>
+                <input type="text" id="pNama" placeholder="Contoh: Budi Santoso" required>
+            </div>
+
+            <div class="form-group">
+                <label>Nomor HP / WhatsApp</label>
+                <input type="tel" id="pNoHp" placeholder="081234567890" required>
+            </div>
+
+            <div class="form-group">
+                <label>Kota / Kabupaten</label>
+                <input type="text" id="pKota" placeholder="Contoh: Jakarta Selatan" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password Baru (Opsional)</label>
+                <input type="password" id="pPassword" placeholder="Kosongkan jika tidak ingin mengubah password">
+            </div>
+
+            <button type="submit" class="btn-save" id="btnSave">Simpan Perubahan</button>
+        </form>
+
+        <a href="index.html" class="btn-back">← Kembali ke Beranda</a>
+    </div>
+
+    <!-- MODAL RE-AUTH (JIKA DIBUTUHKAN UNTUK AKUN MANUAL) -->
+    <div id="reauthModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:999; justify-content:center; align-items:center; padding:20px;">
+        <div style="background:#1a1917; border:1px solid var(--border); padding:25px; border-radius:12px; max-width:400px; width:100%;">
+            <h3 style="font-family:'Playfair Display', serif; margin-bottom:10px;">Konfirmasi Keamanan</h3>
+            <p style="font-size:0.85rem; color:#aaa; margin-bottom:15px;">Demi keamanan, masukkan password lama Anda untuk mengubah email.</p>
+            <input type="password" id="oldPassword" placeholder="Password Lama" style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid var(--border); border-radius:8px; color:#fff; margin-bottom:15px; outline:none;">
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="tutupModalReauth()" style="flex:1; padding:10px; background:transparent; border:1px solid var(--border); color:#fff; border-radius:8px; cursor:pointer;">Batal</button>
+                <button type="button" onclick="prosesReauthDanSimpan()" style="flex:1; padding:10px; background:var(--accent); color:#000; font-weight:bold; border:none; border-radius:8px; cursor:pointer;">Konfirmasi</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
+            authDomain: "the-last-call-film.firebaseapp.com",
+            projectId: "the-last-call-film",
+            appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+
+        let currentUser = null;
+        let pendingData = null;
+
+        // CEK LOGIN & MUAT DATA
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('pEmail').value = user.email || '';
+
+                // Ambil data profil dari Firestore koleksi members berdasarkan UID
+                const doc = await db.collection("members").doc(user.uid).get();
+                if (doc.exists) {
+                    const data = doc.data();
+                    document.getElementById('pNama').value = data.name || user.displayName || '';
+                    document.getElementById('pNoHp').value = data.phone || '';
+                    document.getElementById('pKota').value = data.city || '';
+                } else if (user.displayName) {
+                    document.getElementById('pNama').value = user.displayName;
+                }
+            } else {
+                alert("Silakan login terlebih dahulu.");
+                window.location.href = "index.html";
+            }
+        });
+
+        async function simpanProfil(e) {
+            e.preventDefault();
+            if (!currentUser) return;
+
+            const newEmail = document.getElementById('pEmail').value.trim();
+            const name = document.getElementById('pNama').value.trim();
+            const phone = document.getElementById('pNoHp').value.trim();
+            const city = document.getElementById('pKota').value.trim();
+            const newPassword = document.getElementById('pPassword').value;
+
+            pendingData = { newEmail, name, phone, city, newPassword };
+
+            const btnSave = document.getElementById('btnSave');
+            btnSave.disabled = true;
+            btnSave.innerText = "Memproses...";
+
+            try {
+                // 1. Jika Email Berubah
+                if (newEmail && newEmail !== currentUser.email) {
+                    const providerId = currentUser.providerData[0]?.providerId;
+                    
+                    if (providerId === 'google.com') {
+                        const provider = new firebase.auth.GoogleAuthProvider();
+                        await currentUser.reauthenticateWithPopup(provider);
+                        await eksekusiPerubahanEmail(newEmail);
+                    } else {
+                        document.getElementById('reauthModal').style.display = 'flex';
+                        btnSave.disabled = false;
+                        btnSave.innerText = "Simpan Perubahan";
+                        return;
+                    }
+                }
+
+                // 2. Jika Password Diubah
+                if (newPassword) {
+                    if (newPassword.length < 6) {
+                        throw new Error("Password baru minimal harus 6 karakter.");
+                    }
+                    await currentUser.updatePassword(newPassword);
+                }
+
+                // 3. Simpan Biodata ke Firestore (Langsung terhubung & terbaca di Super Admin Dashboard)
+                await simpanKeFirestore(pendingData.newEmail || currentUser.email, name, phone, city);
+
+                alert("Profil berhasil diperbarui dan tersinkronisasi ke sistem admin!");
+                document.getElementById('pPassword').value = '';
+            } catch (err) {
+                console.error(err);
+                alert("Gagal memperbarui profil: " + (err.message || err));
+            } finally {
+                btnSave.disabled = false;
+                btnSave.innerText = "Simpan Perubahan";
+            }
+        }
+
+        async function eksekusiPerubahanEmail(newEmail) {
+            if (typeof currentUser.verifyBeforeUpdateEmail === 'function') {
+                await currentUser.verifyBeforeUpdateEmail(newEmail);
+                document.getElementById('verificationAlert').style.display = 'block';
+            } else {
+                await currentUser.updateEmail(newEmail);
+                await currentUser.sendEmailVerification();
+                document.getElementById('verificationAlert').style.display = 'block';
+            }
+        }
+
+        async function prosesReauthDanSimpan() {
+            const oldPass = document.getElementById('oldPassword').value;
+            if (!oldPass) {
+                alert("Masukkan password lama Anda.");
+                return;
+            }
+
+            try {
+                const credential = firebase.auth.EmailAuthProvider.credential(currentUser.email, oldPass);
+                await currentUser.reauthenticateWithCredential(credential);
+                
+                tutupModalReauth();
+
+                const btnSave = document.getElementById('btnSave');
+                btnSave.disabled = true;
+                btnSave.innerText = "Menyimpan...";
+
+                if (pendingData.newEmail && pendingData.newEmail !== currentUser.email) {
+                    await eksekusiPerubahanEmail(pendingData.newEmail);
+                }
+
+                if (pendingData.newPassword) {
+                    if (pendingData.newPassword.length < 6) throw new Error("Password minimal 6 karakter.");
+                    await currentUser.updatePassword(pendingData.newPassword);
+                }
+
+                await simpanKeFirestore(pendingData.newEmail || currentUser.email, pendingData.name, pendingData.phone, pendingData.city);
+
+                alert("Profil berhasil diperbarui dan tersinkronisasi! Silakan cek email baru Anda untuk verifikasi.");
+                document.getElementById('oldPassword').value = '';
+                document.getElementById('pPassword').value = '';
+            } catch (err) {
+                console.error(err);
+                alert("Gagal verifikasi/simpan: " + err.message);
+            } finally {
+                document.getElementById('btnSave').disabled = false;
+                document.getElementById('btnSave').innerText = "Simpan Perubahan";
+            }
+        }
+
+        async function simpanKeFirestore(email, name, phone, city) {
+            // Disimpan dengan doc(currentUser.uid) agar data sinkron di Super Admin Dashboard
+            await db.collection("members").doc(currentUser.uid).set({
+                uid: currentUser.uid,
+                email: email,
+                name: name,
+                phone: phone,
+                city: city,
+                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+            }, { merge: true });
+        }
+
+        function tutupModalReauth() {
+            document.getElementById('reauthModal').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
