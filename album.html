@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -30,7 +31,7 @@
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 15px; padding-bottom: 40px; }
         .photo-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.2s; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
-        .photo-img { width: 100%; aspect-ratio: 9/16; object-fit: cover; background: #000; } /* Perintah klik/buka jendela baru sudah dihapus */
+        .photo-img { width: 100%; aspect-ratio: 9/16; object-fit: cover; background: #000; }
         .photo-info { padding: 10px 12px; font-size: 0.8rem; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
         .photo-author { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
 
@@ -42,7 +43,7 @@
     <div class="header">
         <div class="title-area">
             <h1 id="albumTitle">Album • Memuat...</h1>
-            <p>Koleksi kenangan autentik dari para tamu.</p>
+            <p id="albumSubtitle">Koleksi kenangan autentik dari para tamu.</p>
         </div>
         <div class="btn-group">
             <a href="javascript:history.back()" class="btn">&larr; Kembali</a>
@@ -62,11 +63,19 @@
             appId: "1:665352445108:web:3ae79656e3dfcb22254be1"
         };
         firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let fotoListGlobal = [];
+
+        // Ambil atau buat ID unik perangkat tamu untuk mengenali foto pribadi mereka
+        let guestSessionId = localStorage.getItem('thelastcall_guest_id');
+        if (!guestSessionId) {
+            guestSessionId = 'guest_' + Math.random().toString(36).substring(2, 15);
+            localStorage.setItem('thelastcall_guest_id', guestSessionId);
+        }
 
         async function muatAlbum() {
             const container = document.getElementById('galleryContainer');
@@ -76,13 +85,26 @@
             }
 
             try {
-                // Ambil data nama acara
+                // Ambil data acara untuk cek ownerId dan privacy
                 const eventDoc = await db.collection('events').doc(eventId).get();
-                if (eventDoc.exists) {
-                    document.getElementById('albumTitle').innerText = `Album • ${eventDoc.data().eventName}`;
+                if (!eventDoc.exists) {
+                    container.innerHTML = '<div class="status-msg">Acara tidak ditemukan.</div>';
+                    return;
                 }
 
-                // Ambil foto berdasarkan eventId TANPA orderBy server untuk menghindari error index
+                const eventData = eventDoc.data();
+                document.getElementById('albumTitle').innerText = `Album • ${eventData.eventName}`;
+
+                // Cek apakah user yang login saat ini adalah pemilik acara
+                const currentUser = auth.currentUser;
+                const isOwner = currentUser && currentUser.uid === eventData.ownerId;
+                const isPrivate = eventData.privacy === 'private';
+
+                if (isPrivate && !isOwner) {
+                    document.getElementById('albumSubtitle').innerText = "Mode Privat: Anda hanya melihat hasil foto jepretan Anda sendiri.";
+                }
+
+                // Ambil semua foto untuk event ini
                 const snapshot = await db.collection('photos').where('eventId', '==', eventId).get();
                 
                 if (snapshot.empty) {
@@ -90,19 +112,34 @@
                     return;
                 }
 
-                fotoListGlobal = [];
+                let allPhotos = [];
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    fotoListGlobal.push({
+                    allPhotos.push({
                         id: doc.id,
                         url: data.url,
                         guestName: data.guestName || 'Tamu',
+                        guestId: data.guestId || '',
                         createdTime: data.createdTime ? data.createdTime.toDate() : new Date(0)
                     });
                 });
 
-                // Urutkan secara client-side (terbaru ke terlama)
+                // Terapkan aturan privasi
+                if (isPrivate && !isOwner) {
+                    // Filter hanya foto milik tamu ini (berdasarkan guestId atau perangkat)
+                    fotoListGlobal = allPhotos.filter(f => f.guestId === guestSessionId);
+                } else {
+                    // Pemilik acara atau album publik bisa melihat semua foto
+                    fotoListGlobal = allPhotos;
+                }
+
+                // Urutkan dari terbaru ke terlama
                 fotoListGlobal.sort((a, b) => b.createdTime - a.createdTime);
+
+                if (fotoListGlobal.length === 0) {
+                    container.innerHTML = '<div class="status-msg">Belum ada foto pribadi yang Anda jepret di album ini.</div>';
+                    return;
+                }
 
                 container.innerHTML = '';
                 fotoListGlobal.forEach((foto, index) => {
@@ -157,7 +194,7 @@
 
                 const content = await zip.generateAsync({ type: "blob" });
                 saveAs(content, "Album_Foto_Acara.zip");
-                alert("Berhasil mengunduh semua foto dalam format ZIP!");
+                alert("Berhasil mengunduh foto dalam format ZIP!");
             } catch (err) {
                 alert("Gagal membuat file ZIP: " + err.message);
             } finally {
@@ -166,7 +203,10 @@
             }
         }
 
-        muatAlbum();
+        // Tunggu status auth Firebase siap sebelum memuat album agar status owner terdeteksi akurat
+        auth.onAuthStateChanged(() => {
+            muatAlbum();
+        });
     </script>
 </body>
 </html>
