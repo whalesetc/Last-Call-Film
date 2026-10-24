@@ -28,6 +28,13 @@
         .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
         .logo:hover { opacity: 0.8; }
         
+        .nav-right-container { display: flex; align-items: center; gap: 15px; }
+        
+        /* Stylings for Language Selector */
+        .lang-selector { display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px 8px; gap: 4px; font-size: 0.75rem; }
+        .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
+        .lang-btn.active { background: var(--accent); color: #000; }
+
         .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center;}
         .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
         .btn-danger { background: transparent; color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.4); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center; }
@@ -140,42 +147,52 @@
             </svg>
             The Last Call Film
         </div>
-        <div id="navMenu">
-            <button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>
+        
+        <div class="nav-right-container">
+            <!-- Opsi Bahasa (ID / EN) di Pojok Kanan Atas -->
+            <div class="lang-selector">
+                <button class="lang-btn active" id="langIdBtn" onclick="changeLanguage('id')">ID</button>
+                <span style="color: var(--border-color);">|</span>
+                <button class="lang-btn" id="langEnBtn" onclick="changeLanguage('en')">EN</button>
+            </div>
+            
+            <div id="navMenu">
+                <button class="btn-primary" onclick="bukaAuthModal()" data-i18n="loginBtn">Masuk / Daftar</button>
+            </div>
         </div>
     </nav>
 
     <!-- 1. HALAMAN LANDING -->
     <div id="landingPage" class="section active-section">
-        <div class="hero-badge">✧ Digital Disposable Camera untuk Acaramu</div>
-        <h1 class="hero-title font-serif">Kamera di Tangan Tamu.<br><span class="text-accent">Nostalgia di Setiap Jepretan.</span></h1>
-        <p class="hero-subtitle">Hadirkan pengalaman memotret ala <em>disposable camera</em> jadul langsung di ponsel tamu undangan Anda. Cukup scan QR, habiskan batas jepretan, dan ciptakan galeri kenangan autentik tanpa perlu mengunduh aplikasi apa pun.</p>
+        <div class="hero-badge" data-i18n="heroBadge">✧ Digital Disposable Camera untuk Acaramu</div>
+        <h1 class="hero-title font-serif"><span data-i18n="heroTitle1">Kamera di Tangan Tamu.</span><br><span class="text-accent" data-i18n="heroTitle2">Nostalgia di Setiap Jepretan.</span></h1>
+        <p class="hero-subtitle" data-i18n="heroSubtitle">Hadirkan pengalaman memotret ala disposable camera jadul langsung di ponsel tamu undangan Anda. Cukup scan QR, habiskan batas jepretan, dan ciptakan galeri kenangan autentik tanpa perlu mengunduh aplikasi apa pun.</p>
         
         <div style="display: flex; gap: 15px; justify-content: center; margin-top: 10px;">
-            <button class="btn-primary" onclick="bukaAuthModal()" style="font-size: 1rem; padding: 16px 32px;">Buat Acara Sekarang</button>
-            <button class="btn-outline" onclick="alert('Setiap tamu hanya bisa menjepret sesuai kuota yang Anda tentukan!')" style="font-size: 1rem; padding: 16px 32px;">Cara Kerja</button>
+            <button class="btn-primary" onclick="bukaAuthModal()" style="font-size: 1rem; padding: 16px 32px;" data-i18n="createEventBtn">Buat Acara Sekarang</button>
+            <button class="btn-outline" onclick="alert(currentLang === 'en' ? 'Each guest can only take photos up to your specified limit!' : 'Setiap tamu hanya bisa menjepret sesuai kuota yang Anda tentukan!')" style="font-size: 1rem; padding: 16px 32px;" data-i18n="howItWorksBtn">Cara Kerja</button>
         </div>
     </div>
 
     <!-- 2. DASBOR CUSTOMER -->
     <div id="customerDashboard" class="section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 class="font-serif" style="font-size: 2rem;">Acara Saya</h2>
-            <button class="btn-primary" onclick="bukaForm()">+ Buat Baru</button>
+            <h2 class="font-serif" style="font-size: 2rem;" data-i18n="myEventsTitle">Acara Saya</h2>
+            <button class="btn-primary" onclick="bukaForm()" data-i18n="newEventQueueBtn">+ Buat Baru</button>
         </div>
         <div id="eventList">
-            <div style="text-align: center; color: var(--text-muted); padding: 40px 0;">Memuat acara...</div>
+            <div style="text-align: center; color: var(--text-muted); padding: 40px 0;" data-i18n="loadingEvents">Memuat acara...</div>
         </div>
     </div>
 
     <!-- 3. FORMULIR PEMBUATAN ACARA BARU -->
     <div id="createEventForm" class="section" style="max-width: 700px;">
-        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Batal</button>
-        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;">Detail Acara Baru</h2>
+        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;" data-i18n="cancelBtn">&larr; Batal</button>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;" data-i18n="newEventQueueForm">Detail Acara Baru</h2>
         
         <form id="eventForm">
             <div class="form-group">
-                <label>Jenis Acara</label>
+                <label data-i18n="eventTypeLabel">Jenis Acara</label>
                 <select id="eventType" class="form-control" onchange="gantiJenisAcaraForm()">
                     <option value="Wedding">Wedding (Pernikahan)</option>
                     <option value="Birthday">Birthday (Ulang Tahun)</option>
@@ -189,12 +206,12 @@
             </div>
 
             <div class="form-group">
-                <label>Teks Sambutan Aesthetic untuk Wallpaper</label>
+                <label data-i18n="waitingTextLabel">Teks Sambutan Aesthetic untuk Wallpaper</label>
                 <input type="text" id="waitingText" class="form-control" value="The Wedding Of" required>
             </div>
 
             <div class="form-group">
-                <label>Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
+                <label data-i18n="wallpaperLabel">Pilih Wallpaper Standar (AI) atau Unggah Sendiri</label>
                 
                 <div style="display: flex; gap: 10px; margin-bottom: 12px;">
                     <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="wallpaperOrientation" value="portrait" checked onclick="perbaruiPresetOtomatis()"><strong>Portrait</strong></label>
@@ -208,137 +225,137 @@
                         <div class="phone-screen" id="phoneScreen" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80');">
                             <div class="phone-overlay">
                                 <h4 id="previewEventTitle" class="mockup-title">Nama Acara</h4>
-                                <div class="mockup-btn">Lihat Album &rarr;</div>
+                                <div class="mockup-btn" data-i18n="viewAlbumPreview">Lihat Album &rarr;</div>
                             </div>
                         </div>
                     </div>
                     
                     <label class="btn-outline" style="width: 100%; max-width: 300px; padding: 12px; border-radius: 12px; border: 2px dashed rgba(255,255,255,0.3); text-align: center;">
                         <input type="file" id="wallpaperFile" accept="image/*" style="display:none;" onchange="previewFileCustom()">
-                        <span id="fileName">✏️ Atau Unggah Wallpaper Sendiri</span>
+                        <span id="fileName" data-i18n="uploadCustomWallpaper">✏️ Atau Unggah Wallpaper Sendiri</span>
                     </label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Tanggal Acara</label>
+                <label data-i18n="eventDateLabel">Tanggal Acara</label>
                 <input type="date" id="eventDate" class="form-control" required>
             </div>
 
             <div class="time-group" style="margin-bottom: 25px;">
                 <div class="form-group">
-                    <label>Jam Mulai Acara</label>
+                    <label data-i18n="startTimeLabel">Jam Mulai Acara</label>
                     <input type="time" id="eventStartTime" class="form-control" required>
                 </div>
                 <div class="form-group">
-                    <label>Jam Selesai Acara</label>
+                    <label data-i18n="endTimeLabel">Jam Selesai Acara</label>
                     <input type="time" id="eventEndTime" class="form-control" required>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Batas Maksimal Foto per Tamu</label>
+                <label data-i18n="guestLimitLabel">Batas Maksimal Foto per Tamu</label>
                 <input type="number" id="guestPhotoLimit" class="form-control" min="1" max="36" value="15" required>
             </div>
 
             <div class="form-group">
-                <label>Privasi Galeri Foto Tamu</label>
+                <label data-i18n="privacyLabel">Privasi Galeri Foto Tamu</label>
                 <div class="radio-group">
-                    <label class="radio-card"><input type="radio" name="privacy" value="visible" checked><strong>Publik (Visible)</strong></label>
-                    <label class="radio-card"><input type="radio" name="privacy" value="private"><strong>Privat (Private)</strong></label>
+                    <label class="radio-card"><input type="radio" name="privacy" value="visible" checked><strong data-i18n="publicOpt">Publik (Visible)</strong></label>
+                    <label class="radio-card"><input type="radio" name="privacy" value="private"><strong data-i18n="privateOpt">Privat (Private)</strong></label>
                 </div>
             </div>
 
             <div class="form-group">
-                <label>Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)</label>
+                <label data-i18n="packageLabel">Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)</label>
                 <div class="radio-group" id="packageGroup">
-                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 Orang<span class="price-tag">Gratis</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 Orang<span class="price-tag" data-i18n="freeTag">Gratis</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="10">10 Orang<span class="price-tag">Rp 50.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="25">25 Orang<span class="price-tag">Rp 85.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="50">50 Orang<span class="price-tag">Rp 160.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="100">100 Orang<span class="price-tag">Rp 250.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="150">150 Orang<span class="price-tag">Rp 350.000</span></label>
                     <label class="radio-card"><input type="radio" name="package" value="200">200 Orang<span class="price-tag">Rp 470.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="unlimited">Tak Terbatas<span class="price-tag">Rp 800.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="unlimited"><span data-i18n="unlimitedTag">Tak Terbatas</span><span class="price-tag">Rp 800.000</span></label>
                 </div>
             </div>
 
-            <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px; font-size: 1.1rem; padding: 16px;">Lanjutkan &rarr;</button>
+            <button type="submit" id="btnSubmit" class="btn-primary" style="width: 100%; margin-top: 20px; font-size: 1.1rem; padding: 16px;" data-i18n="continueBtn">Lanjutkan &rarr;</button>
         </form>
     </div>
 
     <!-- 4. PENGATURAN ACARA (KELOLA ACARA) -->
     <div id="manageEventSection" class="section">
-        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;">&larr; Kembali ke Acara Saya</button>
+        <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;" data-i18n="backToEvents">&larr; Kembali ke Acara Saya</button>
         
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" id="manageEventTitle">Kelola Acara</h2>
-        <p style="color: var(--text-muted); margin-bottom: 30px;">Bagikan QR Code ini kepada tamu undangan Anda.</p>
+        <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="manageSubtitle">Bagikan QR Code ini kepada tamu undangan Anda.</p>
 
         <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
             <div class="countdown-dash-title" id="dashCountdownStatus">Acara Akan Dimulai Dalam:</div>
             <div class="countdown-dash-timer" id="dashCountdownTimer">
-                <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl">Jam</div></div>
-                <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl">Menit</div></div>
-                <div class="cd-box"><div class="cd-val" id="dashSeconds">00</div><div class="cd-lbl">Detik</div></div>
+                <div class="cd-box"><div class="cd-val" id="dashHours">00</div><div class="cd-lbl" data-i18n="hoursLbl">Jam</div></div>
+                <div class="cd-box"><div class="cd-val" id="dashMinutes">00</div><div class="cd-lbl" data-i18n="minsLbl">Menit</div></div>
+                <div class="cd-box"><div class="cd-val" id="dashSeconds">00</div><div class="cd-lbl" data-i18n="secsLbl">Detik</div></div>
             </div>
         </div>
 
         <div class="admin-panel" style="align-items: start;">
             <div class="dash-card" style="text-align: center;">
-                <h3 style="text-align: left; margin-bottom: 20px;">Akses Kamera Tamu</h3>
+                <h3 style="text-align: left; margin-bottom: 20px;" data-i18n="guestCameraAccess">Akses Kamera Tamu</h3>
                 <img id="qrCodeImageManage" src="" alt="QR Code" style="width: 180px; height: 180px; border: 4px solid #fff; border-radius: 12px; margin: 0 auto 15px;">
-                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Cetak QR ini di meja undangan.</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;" data-i18n="printQrDesc">Cetak QR ini di meja undangan.</p>
                 
                 <div style="display: flex; gap: 8px;">
                     <input type="text" id="cameraLinkInput" class="form-control" style="padding: 10px; font-size: 0.8rem; flex: 1;" readonly>
-                    <button class="btn-primary" onclick="salinLink()" style="padding: 10px 15px; font-size: 0.85rem;">Salin</button>
+                    <button class="btn-primary" onclick="salinLink()" style="padding: 10px 15px; font-size: 0.85rem;" data-i18n="copyBtn">Salin</button>
                 </div>
-                <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;">Buka Kamera di Tab Baru &rarr;</button>
-                <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">Buka Album & Unduh ZIP &darr;</button>
+                <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;" data-i18n="openCameraTab">Buka Kamera di Tab Baru &rarr;</button>
+                <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
             </div>
 
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="dash-card">
-                    <h3>Kuota Tamu</h3>
+                    <h3 data-i18n="guestQuotaTitle">Kuota Tamu</h3>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
                         <div>
-                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;">Batas Kuota Saat Ini:</span>
+                            <span style="font-size: 0.8rem; color: var(--text-muted); display: block;" data-i18n="currentQuotaLabel">Batas Kuota Saat Ini:</span>
                             <strong id="currentQuotaText" style="font-size: 1.2rem; color: var(--accent);">5 Orang</strong>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
                         <select id="upgradePackage" class="form-control" style="padding: 10px; font-size: 0.85rem; flex: 1;">
-                            <option value="">-- Pilih Tambahan --</option>
+                            <option value="" data-i18n="selectAddOpt">-- Pilih Tambahan --</option>
                             <option value="10|50000">+ 10 Orang (Rp 50.000)</option>
                             <option value="25|85000">+ 25 Orang (Rp 85.000)</option>
                             <option value="50|160000">+ 50 Orang (Rp 160.000)</option>
                             <option value="100|250000">+ 100 Orang (Rp 250.000)</option>
                             <option value="9999|800000">Jadi Tak Terbatas (Rp 800.000)</option>
                         </select>
-                        <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold;">Upgrade</button>
+                        <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold;" data-i18n="upgradeBtn">Upgrade</button>
                     </div>
                 </div>
 
                 <!-- KARTU DAFTAR PESERTA YANG JOIN -->
                 <div class="dash-card">
-                    <h3>Daftar Peserta yang Join (<span id="totalGuestsCount">0</span>)</h3>
+                    <h3><span data-i18n="joinedGuestsTitle">Daftar Peserta yang Join</span> (<span id="totalGuestsCount">0</span>)</h3>
                     <div id="guestListContainer" style="max-height: 220px; overflow-y: auto; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
-                        <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Memuat data peserta...</div>
+                        <div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;" data-i18n="loadingGuests">Memuat data peserta...</div>
                     </div>
                 </div>
 
                 <div class="dash-card">
-                    <h3>Pengaturan Waktu & Wallpaper</h3>
+                    <h3 data-i18n="timeWallpaperSettings">Pengaturan Waktu & Wallpaper</h3>
                     <form id="editEventForm">
                         <input type="hidden" id="editEventId">
                         
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Teks Sambutan Aesthetic</label>
+                            <label style="font-size: 0.85rem;" data-i18n="waitingTextLabel">Teks Sambutan Aesthetic</label>
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Pilih Wallpaper Standar atau Unggah</label>
+                            <label style="font-size: 0.85rem;" data-i18n="wallpaperLabel">Pilih Wallpaper Standar atau Unggah</label>
                             
                             <div style="display: flex; gap: 10px; margin-bottom: 10px;">
                                 <label class="radio-card" style="flex:1; padding: 8px;"><input type="radio" name="editOrientation" value="portrait" checked onclick="perbaruiPresetEditOtomatis()"><strong>Portrait</strong></label>
@@ -349,27 +366,27 @@
 
                             <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3); text-align: center; display: block; margin-top: 10px;">
                                 <input type="file" id="editWallpaperFile" accept="image/*" style="display:none;" onchange="previewFileEditCustom()">
-                                <span id="editFileName">✏️ Atau Unggah File Sendiri</span>
+                                <span id="editFileName" data-i18n="uploadCustomFile">✏️ Atau Unggah File Sendiri</span>
                             </label>
                         </div>
 
                         <div class="time-group" style="margin-bottom: 15px;">
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 0.85rem;">Jam Mulai</label>
+                                <label style="font-size: 0.85rem;" data-i18n="startTimeLabel">Jam Mulai</label>
                                 <input type="time" id="editStartTime" class="form-control" style="padding: 10px;" required>
                             </div>
                             <div class="form-group" style="margin-bottom: 0;">
-                                <label style="font-size: 0.85rem;">Jam Selesai</label>
+                                <label style="font-size: 0.85rem;" data-i18n="endTimeLabel">Jam Selesai</label>
                                 <input type="time" id="editEndTime" class="form-control" style="padding: 10px;" required>
                             </div>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
-                            <label style="font-size: 0.85rem;">Batas Jepret per Tamu</label>
+                            <label style="font-size: 0.85rem;" data-i18n="guestLimitLabel">Batas Jepret per Tamu</label>
                             <input type="number" id="editGuestPhotoLimit" class="form-control" min="1" max="36" style="padding: 10px;" required>
                         </div>
 
-                        <button type="submit" id="btnUpdateEvent" class="btn-outline" style="width: 100%; padding: 10px;">Simpan Pengaturan</button>
+                        <button type="submit" id="btnUpdateEvent" class="btn-outline" style="width: 100%; padding: 10px;" data-i18n="saveSettingsBtn">Simpan Pengaturan</button>
                     </form>
                 </div>
             </div>
@@ -378,36 +395,36 @@
 
     <!-- 5. HALAMAN PEMBAYARAN OTOMATIS & MANUAL -->
     <div id="paymentSection" class="section" style="max-width: 600px; text-align: center;">
-        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;">Selesaikan Pembayaran</h2>
-        <p style="color: var(--text-muted); margin-bottom: 30px;">Pilih metode pembayaran di bawah ini.</p>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" data-i18n="completePaymentTitle">Selesaikan Pembayaran</h2>
+        <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="selectPaymentMethod">Pilih metode pembayaran di bawah ini.</p>
         
         <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
-            <p style="font-size: 0.9rem; color: var(--text-muted);">Total Tagihan</p>
+            <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="totalBillLabel">Total Tagihan</p>
             <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.8rem; margin: 10px 0;">Rp 0</h1>
             <p id="paymentDesc" style="font-size: 0.9rem;"></p>
         </div>
 
         <!-- Tombol Pembayaran Otomatis Midtrans -->
-        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;">💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)</button>
+        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)</button>
         
         <!-- Tombol PayPal -->
         <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
 
         <!-- Tombol Pembayaran Crypto -->
-        <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;">🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)</button>
+        <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;" data-i18n="cryptoBtn">🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)</button>
 
-        <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">ATAU PEMBAYARAN MANUAL LOKAL</div>
+        <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;" data-i18n="orManualLocal">ATAU PEMBAYARAN MANUAL LOKAL</div>
 
-        <button class="btn-wa" id="btnConfirmWA" style="width: 100%;">Pembayaran Manual via WhatsApp</button>
-        <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;">Nanti Saja</button>
+        <button class="btn-wa" id="btnConfirmWA" style="width: 100%;" data-i18n="whatsappManualBtn">Pembayaran Manual via WhatsApp</button>
+        <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;" data-i18n="laterBtn">Nanti Saja</button>
     </div>
 
-    <!-- MODAL INFO CRYPTO (DENGAN 4 WALLET ASLI ANDA) -->
+    <!-- MODAL INFO CRYPTO -->
     <div class="auth-modal" id="cryptoModal">
         <div class="auth-box" style="text-align: center;">
             <span class="auth-close" onclick="tutupCryptoModal()">✖</span>
-            <h3 class="font-serif" style="color: #f59e0b; margin-bottom: 15px; font-size: 1.5rem;">Pembayaran Crypto</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:</p>
+            <h3 class="font-serif" style="color: #f59e0b; margin-bottom: 15px; font-size: 1.5rem;" data-i18n="cryptoModalTitle">Pembayaran Crypto</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;" data-i18n="cryptoModalDesc">Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:</p>
             
             <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
                 <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">USDT (BNB Smart Chain):</p>
@@ -429,8 +446,8 @@
                 <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">bc1qm69e49f2hysha0c8lgkkzrec6pa0pqwt9h6242</code>
             </div>
 
-            <button class="btn-wa" onclick="konfirmasiCryptoWA()" style="width: 100%; margin-bottom: 10px; font-size: 0.9rem;">📲 Konfirmasi Transfer Crypto via WhatsApp</button>
-            <button class="btn-outline" onclick="tutupCryptoModal()" style="width: 100%;">Tutup</button>
+            <button class="btn-wa" onclick="konfirmasiCryptoWA()" style="width: 100%; margin-bottom: 10px; font-size: 0.9rem;" data-i18n="confirmCryptoWABtn">📲 Konfirmasi Transfer Crypto via WhatsApp</button>
+            <button class="btn-outline" onclick="tutupCryptoModal()" style="width: 100%;" data-i18n="closeBtn">Tutup</button>
         </div>
     </div>
 
@@ -439,23 +456,23 @@
         <div class="auth-box">
             <span class="auth-close" onclick="tutupAuthModal()">✖</span>
             <div class="auth-tabs">
-                <div class="auth-tab active" onclick="switchAuthTab('login')" id="tabLogin">Masuk</div>
-                <div class="auth-tab" onclick="switchAuthTab('register')" id="tabRegister">Daftar</div>
+                <div class="auth-tab active" onclick="switchAuthTab('login')" id="tabLogin" data-i18n="tabLogin">Masuk</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')" id="tabRegister" data-i18n="tabRegister">Daftar</div>
             </div>
             <div class="auth-form active" id="formLogin">
-                <button class="auth-btn btn-google" onclick="loginDenganGoogle()"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> Masuk dengan Google</button>
-                <div class="auth-divider">ATAU EMAIL</div>
+                <button class="auth-btn btn-google" onclick="loginDenganGoogle()"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> <span data-i18n="googleLogin">Masuk dengan Google</span></button>
+                <div class="auth-divider" data-i18n="orEmail">ATAU EMAIL</div>
                 <input type="email" id="loginEmail" class="auth-input" placeholder="Email">
                 <input type="password" id="loginPass" class="auth-input" placeholder="Kata Sandi">
-                <button class="auth-btn btn-primary" onclick="loginDenganEmail()" style="width:100%;">Masuk</button>
+                <button class="auth-btn btn-primary" onclick="loginDenganEmail()" style="width:100%;" data-i18n="tabLogin">Masuk</button>
             </div>
             <div class="auth-form" id="formRegister">
-                <button class="auth-btn btn-google" onclick="loginDenganGoogle()"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> Daftar dengan Google</button>
-                <div class="auth-divider">ATAU EMAIL</div>
+                <button class="auth-btn btn-google" onclick="loginDenganGoogle()"><img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google"> <span data-i18n="googleRegister">Daftar dengan Google</span></button>
+                <div class="auth-divider" data-i18n="orEmail">ATAU EMAIL</div>
                 <input type="text" id="regNama" class="auth-input" placeholder="Nama Lengkap">
                 <input type="email" id="regEmail" class="auth-input" placeholder="Email">
                 <input type="password" id="regPass" class="auth-input" placeholder="Kata Sandi (Min 6 Karakter)">
-                <button class="auth-btn btn-primary" onclick="daftarDenganEmail()" style="width:100%;">Daftar</button>
+                <button class="auth-btn btn-primary" onclick="daftarDenganEmail()" style="width:100%;" data-i18n="tabRegister">Daftar</button>
             </div>
         </div>
     </div>
@@ -479,6 +496,156 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0 };
         
+        // Multi-language Dictionary Setup
+        let currentLang = 'id';
+        const translations = {
+            id: {
+                loginBtn: "Masuk / Daftar",
+                heroBadge: "✧ Digital Disposable Camera untuk Acaramu",
+                heroTitle1: "Kamera di Tangan Tamu.",
+                heroTitle2: "Nostalgia di Setiap Jepretan.",
+                heroSubtitle: "Hadirkan pengalaman memotret ala disposable camera jadul langsung di ponsel tamu undangan Anda. Cukup scan QR, habiskan batas jepretan, dan ciptakan galeri kenangan autentik tanpa perlu mengunduh aplikasi apa pun.",
+                createEventBtn: "Buat Acara Sekarang",
+                howItWorksBtn: "Cara Kerja",
+                myEventsTitle: "Acara Saya",
+                newEventQueueBtn: "+ Buat Baru",
+                loadingEvents: "Memuat acara...",
+                cancelBtn: "&larr; Batal",
+                newEventQueueForm: "Detail Acara Baru",
+                eventTypeLabel: "Jenis Acara",
+                waitingTextLabel: "Teks Sambutan Aesthetic untuk Wallpaper",
+                wallpaperLabel: "Pilih Wallpaper Standar (AI) atau Unggah Sendiri",
+                viewAlbumPreview: "Lihat Album &rarr;",
+                uploadCustomWallpaper: "✏️ Atau Unggah Wallpaper Sendiri",
+                eventDateLabel: "Tanggal Acara",
+                startTimeLabel: "Jam Mulai Acara",
+                endTimeLabel: "Jam Selesai Acara",
+                guestLimitLabel: "Batas Maksimal Foto per Tamu",
+                privacyLabel: "Privasi Galeri Foto Tamu",
+                publicOpt: "Publik (Visible)",
+                privateOpt: "Privat (Private)",
+                packageLabel: "Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)",
+                freeTag: "Gratis",
+                unlimitedTag: "Tak Terbatas",
+                continueBtn: "Lanjutkan &rarr;",
+                backToEvents: "&larr; Kembali ke Acara Saya",
+                manageSubtitle: "Bagikan QR Code ini kepada tamu undangan Anda.",
+                hoursLbl: "Jam",
+                minsLbl: "Menit",
+                secsLbl: "Detik",
+                guestCameraAccess: "Akses Kamera Tamu",
+                printQrDesc: "Cetak QR ini di meja undangan.",
+                copyBtn: "Salin",
+                openCameraTab: "Buka Kamera di Tab Baru &rarr;",
+                openAlbumZip: "Buka Album & Unduh ZIP &darr;",
+                guestQuotaTitle: "Kuota Tamu",
+                currentQuotaLabel: "Batas Kuota Saat Ini:",
+                selectAddOpt: "-- Pilih Tambahan --",
+                upgradeBtn: "Upgrade",
+                joinedGuestsTitle: "Daftar Peserta yang Join",
+                loadingGuests: "Memuat data peserta...",
+                timeWallpaperSettings: "Pengaturan Waktu & Wallpaper",
+                uploadCustomFile: "✏️ Atau Unggah File Sendiri",
+                saveSettingsBtn: "Simpan Pengaturan",
+                completePaymentTitle: "Selesaikan Pembayaran",
+                selectPaymentMethod: "Pilih metode pembayaran di bawah ini.",
+                totalBillLabel: "Total Tagihan",
+                midtransBtn: "💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)",
+                cryptoBtn: "🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)",
+                orManualLocal: "ATAU PEMBAYARAN MANUAL LOKAL",
+                whatsappManualBtn: "Pembayaran Manual via WhatsApp",
+                laterBtn: "Nanti Saja",
+                cryptoModalTitle: "Pembayaran Crypto",
+                cryptoModalDesc: "Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:",
+                confirmCryptoWABtn: "📲 Konfirmasi Transfer Crypto via WhatsApp",
+                closeBtn: "Tutup",
+                tabLogin: "Masuk",
+                tabRegister: "Daftar",
+                googleLogin: "Masuk dengan Google",
+                googleRegister: "Daftar dengan Google",
+                orEmail: "ATAU EMAIL"
+            },
+            en: {
+                loginBtn: "Sign In / Register",
+                heroBadge: "✧ Digital Disposable Camera for Your Event",
+                heroTitle1: "Cameras in Guests' Hands.",
+                heroTitle2: "Nostalgia in Every Shot.",
+                heroSubtitle: "Bring the vintage disposable camera experience directly to your guests' smartphones. Just scan the QR, use up the shot limit, and create an authentic memory gallery without downloading any app.",
+                createEventBtn: "Create Event Now",
+                howItWorksBtn: "How It Works",
+                myEventsTitle: "My Events",
+                newEventQueueBtn: "+ Create New",
+                loadingEvents: "Loading events...",
+                cancelBtn: "&larr; Cancel",
+                newEventQueueForm: "New Event Details",
+                eventTypeLabel: "Event Type",
+                waitingTextLabel: "Aesthetic Greeting Text for Wallpaper",
+                wallpaperLabel: "Choose Standard Wallpaper (AI) or Upload Custom",
+                viewAlbumPreview: "View Album &rarr;",
+                uploadCustomWallpaper: "✏️ Or Upload Custom Wallpaper",
+                eventDateLabel: "Event Date",
+                startTimeLabel: "Event Start Time",
+                endTimeLabel: "Event End Time",
+                guestLimitLabel: "Max Photos per Guest",
+                privacyLabel: "Guest Photo Gallery Privacy",
+                publicOpt: "Public (Visible)",
+                privateOpt: "Private",
+                packageLabel: "User Quota Options (Number of Guests with Camera Access)",
+                freeTag: "Free",
+                unlimitedTag: "Unlimited",
+                continueBtn: "Continue &rarr;",
+                backToEvents: "&larr; Back to My Events",
+                manageSubtitle: "Share this QR Code with your invited guests.",
+                hoursLbl: "Hours",
+                minsLbl: "Mins",
+                secsLbl: "Secs",
+                guestCameraAccess: "Guest Camera Access",
+                printQrDesc: "Print this QR code on invitation tables.",
+                copyBtn: "Copy",
+                openCameraTab: "Open Camera in New Tab &rarr;",
+                openAlbumZip: "Open Album & Download ZIP &darr;",
+                guestQuotaTitle: "Guest Quota",
+                currentQuotaLabel: "Current Quota Limit:",
+                selectAddOpt: "-- Select Add-on --",
+                upgradeBtn: "Upgrade",
+                joinedGuestsTitle: "Joined Participants List",
+                loadingGuests: "Loading participant data...",
+                timeWallpaperSettings: "Time & Wallpaper Settings",
+                uploadCustomFile: "✏️ Or Upload Custom File",
+                saveSettingsBtn: "Save Settings",
+                completePaymentTitle: "Complete Payment",
+                selectPaymentMethod: "Choose your payment method below.",
+                totalBillLabel: "Total Bill",
+                midtransBtn: "💳 Pay with Midtrans (QRIS, VA, E-Wallet)",
+                cryptoBtn: "🪙 Pay with Crypto (USDT, SOL, ETH, BTC)",
+                orManualLocal: "OR LOCAL MANUAL PAYMENT",
+                whatsappManualBtn: "Manual Payment via WhatsApp",
+                laterBtn: "Later",
+                cryptoModalTitle: "Crypto Payment",
+                cryptoModalDesc: "Please transfer the crypto assets equivalent to the bill to one of the wallets below:",
+                confirmCryptoWABtn: "📲 Confirm Crypto Transfer via WhatsApp",
+                closeBtn: "Close",
+                tabLogin: "Sign In",
+                tabRegister: "Register",
+                googleLogin: "Sign In with Google",
+                googleRegister: "Register with Google",
+                orEmail: "OR EMAIL"
+            }
+        };
+
+        function changeLanguage(lang) {
+            currentLang = lang;
+            document.getElementById('langIdBtn').classList.toggle('active', lang === 'id');
+            document.getElementById('langEnBtn').classList.toggle('active', lang === 'en');
+            
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (translations[lang][key]) {
+                    el.innerHTML = translations[lang][key];
+                }
+            });
+        }
+
         const wallpaperDatabase = {
             Wedding: {
                 portrait: [
@@ -552,7 +719,7 @@
             document.querySelectorAll('.preset-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
             document.getElementById('phoneScreen').style.backgroundImage = `url(${url})`;
-            document.getElementById('fileName').innerText = "✏️ Atau Unggah Wallpaper Sendiri";
+            document.getElementById('fileName').innerText = currentLang === 'en' ? "✏️ Or Upload Custom Wallpaper" : "✏️ Atau Unggah Wallpaper Sendiri";
         }
 
         function previewFileCustom() {
@@ -594,7 +761,7 @@
             document.querySelectorAll('#editPresetContainer .preset-card').forEach(card => card.classList.remove('selected'));
             element.classList.add('selected');
             document.getElementById('editWallpaperFile').value = ""; 
-            document.getElementById('editFileName').innerText = "✏️ Atau Unggah File Sendiri";
+            document.getElementById('editFileName').innerText = currentLang === 'en' ? "✏️ Or Upload Custom File" : "✏️ Atau Unggah File Sendiri";
         }
 
         function previewFileEditCustom() {
@@ -631,7 +798,7 @@
             }
 
             if (adaAcaraAktif) {
-                alert("Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru setelah acara tersebut selesai atau menghapusnya melalui tombol Hapus.");
+                alert(currentLang === 'en' ? "Notice: You still have an active or Pending event. You can only create a new event after the current one ends or by deleting it." : "Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru setelah acara tersebut selesai atau menghapusnya melalui tombol Hapus.");
                 return;
             }
 
@@ -651,7 +818,7 @@
             document.getElementById('editStartTime').value = event.startTime || "00:00";
             document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('editWaitingText').value = event.waitingText || "The Wedding Of";
-            document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? 'Tak Terbatas' : `${event.quota} Orang`;
+            document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${event.quota} ${currentLang === 'en' ? 'People' : 'Orang'}`;
 
             selectedEditWallpaperUrl = event.wallpaperUrl || '';
             perbaruiPresetEditOtomatis();
@@ -668,13 +835,14 @@
         }
 
         async function hapusAcara(eventId) {
-            if (confirm("Apakah Anda yakin ingin menghapus acara ini? Acara yang dihapus akan hilang permanen dan tautan kameranya tidak akan bisa digunakan lagi.")) {
+            const msg = currentLang === 'en' ? "Are you sure you want to delete this event? It will be permanently removed and the camera link will no longer work." : "Apakah Anda yakin ingin menghapus acara ini? Acara yang dihapus akan hilang permanen dan tautan kameranya tidak akan bisa digunakan lagi.";
+            if (confirm(msg)) {
                 try {
                     await db.collection('events').doc(eventId).delete();
-                    alert("Acara berhasil dihapus.");
+                    alert(currentLang === 'en' ? "Event successfully deleted." : "Acara berhasil dihapus.");
                     muatAcaraSaya();
                 } catch (err) {
-                    alert("Gagal menghapus acara: " + err.message);
+                    alert((currentLang === 'en' ? "Failed to delete event: " : "Gagal menghapus acara: ") + err.message);
                 }
             }
         }
@@ -682,21 +850,21 @@
         async function muatDaftarPeserta(eventId) {
             const container = document.getElementById('guestListContainer');
             const countBadge = document.getElementById('totalGuestsCount');
-            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Memuat data peserta...</div>';
+            container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'Loading participant data...' : 'Memuat data peserta...'}</div>`;
             
             try {
                 const snapshot = await db.collection('events').doc(eventId).collection('guests').orderBy('joinedAt', 'desc').get();
                 countBadge.innerText = snapshot.size;
                 
                 if (snapshot.empty) {
-                    container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">Belum ada peserta yang bergabung.</div>';
+                    container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'No participants have joined yet.' : 'Belum ada peserta yang bergabung.'}</div>`;
                     return;
                 }
 
                 container.innerHTML = '';
                 snapshot.forEach(doc => {
                     const data = doc.data();
-                    const waktuJoin = data.joinedAt ? new Date(data.joinedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Baru saja';
+                    const waktuJoin = data.joinedAt ? new Date(data.joinedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (currentLang === 'en' ? 'Just now' : 'Baru saja');
                     container.innerHTML += `
                         <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
                             <span style="font-weight: 500; font-size: 0.9rem; color: #fff;">👤 ${data.name}</span>
@@ -706,7 +874,7 @@
                 });
             } catch (err) {
                 console.error(err);
-                container.innerHTML = '<div style="color: #ff6b6b; font-size: 0.85rem; text-align: center; padding: 15px;">Gagal memuat daftar peserta.</div>';
+                container.innerHTML = `<div style="color: #ff6b6b; font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'Failed to load participant list.' : 'Gagal memuat daftar peserta.'}</div>`;
             }
         }
 
@@ -726,7 +894,7 @@
                 const selisih = start - sekarang;
 
                 if (selisih > 0) {
-                    statusText.innerText = "Acara Akan Dimulai Dalam:";
+                    statusText.innerText = currentLang === 'en' ? "Event Starts In:" : "Acara Akan Dimulai Dalam:";
                     statusText.style.color = "#6ee7b7";
                     timerContainer.style.display = 'flex';
                     const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -736,10 +904,10 @@
                     document.getElementById('dashMinutes').innerText = String(menit).padStart(2, '0');
                     document.getElementById('dashSeconds').innerText = String(detik).padStart(2, '0');
                 } else if (sekarang >= start && sekarang <= end) {
-                    statusText.innerText = "🔴 Acara Sedang Berlangsung";
+                    statusText.innerText = currentLang === 'en' ? "🔴 Event is Live" : "🔴 Acara Sedang Berlangsung";
                     timerContainer.style.display = 'none';
                 } else {
-                    statusText.innerText = "Acara Telah Berakhir";
+                    statusText.innerText = currentLang === 'en' ? "Event Has Ended" : "Acara Telah Berakhir";
                     timerContainer.style.display = 'none';
                 }
             }, 1000);
@@ -770,13 +938,13 @@
                     },
                     onApprove: function(data, actions) {
                         return actions.order.capture().then(function(details) {
-                            alert("Pembayaran PayPal Berhasil! Sistem sedang memperbarui status acara Anda.");
+                            alert(currentLang === 'en' ? "PayPal Payment Successful! System is updating your event status." : "Pembayaran PayPal Berhasil! Sistem sedang memperbarui status acara Anda.");
                             aktifkanAcaraSetelahBayar();
                         });
                     },
                     onError: function(err) {
                         console.error("PayPal Error:", err);
-                        alert("Terjadi kesalahan pada pembayaran PayPal.");
+                        alert(currentLang === 'en' ? "An error occurred with PayPal payment." : "Terjadi kesalahan pada pembayaran PayPal.");
                     }
                 }).render('#paypal-button-container');
             }
@@ -791,7 +959,9 @@
         }
 
         function konfirmasiCryptoWA() {
-            const pesan = `Halo admin The Last Call! 🪙%0A%0ASaya sudah melakukan transfer pembayaran via Crypto:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total Tagihan:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (setara Crypto)%0A%0AMohon verifikasi dan aktifkan acara saya. Terima kasih!`;
+            const pesan = currentLang === 'en' 
+                ? `Hello admin The Last Call! 🪙%0A%0AI have made a crypto payment transfer:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total Bill:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (Crypto equivalent)%0A%0APlease verify and activate my event. Thank you!`
+                : `Halo admin The Last Call! 🪙%0A%0ASaya sudah melakukan transfer pembayaran via Crypto:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total Tagihan:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (setara Crypto)%0A%0AMohon verifikasi dan aktifkan acara saya. Terima kasih!`;
             window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
         }
 
@@ -802,10 +972,10 @@
             let harga = eventObj.price || (kuota === 10 ? 50000 : kuota === 25 ? 85000 : kuota === 50 ? 160000 : kuota === 100 ? 250000 : kuota === 150 ? 350000 : kuota === 200 ? 470000 : (kuota === 9999 ? 800000 : 50000));
             
             pendingPaymentInfo = {
-                type: 'Aktivasi Acara Baru',
+                type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru',
                 eventId: eventId,
                 name: eventObj.eventName,
-                package: kuota === 9999 ? 'Tak Terbatas' : `${kuota} Orang`,
+                package: kuota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${kuota} ${currentLang === 'en' ? 'People' : 'Orang'}`,
                 price: harga,
                 addedQuota: 0
             };
@@ -814,16 +984,16 @@
 
         function prosesUpgrade() {
             const val = document.getElementById('upgradePackage').value;
-            if(!val) return alert('Pilih paket tambahan terlebih dahulu!');
+            if(!val) return alert(currentLang === 'en' ? 'Please select an add-on package first!' : 'Pilih paket tambahan terlebih dahulu!');
             const parts = val.split('|');
             const eventId = document.getElementById('editEventId').value;
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
 
             pendingPaymentInfo = { 
-                type: 'Upgrade Kuota', 
+                type: currentLang === 'en' ? 'Quota Upgrade' : 'Upgrade Kuota', 
                 eventId: eventId,
-                name: eventObj ? eventObj.eventName : 'Acara', 
-                package: parseInt(parts[0]) === 9999 ? 'Tak Terbatas' : `+ ${parts[0]} Orang`, 
+                name: eventObj ? eventObj.eventName : 'Event', 
+                package: parseInt(parts[0]) === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `+ ${parts[0]} ${currentLang === 'en' ? 'People' : 'Orang'}`, 
                 price: parseInt(parts[1]),
                 addedQuota: parseInt(parts[0])
             };
@@ -836,8 +1006,8 @@
                     method: "POST",
                     body: JSON.stringify({
                         price: pendingPaymentInfo.price,
-                        name: currentUser.displayName || "Pelanggan",
-                        email: currentUser.email || "pelanggan@email.com"
+                        name: currentUser.displayName || "Customer",
+                        email: currentUser.email || "customer@email.com"
                     })
                 });
                 
@@ -847,30 +1017,30 @@
 
                 window.snap.pay(snapToken, {
                     onSuccess: function(res){
-                        alert("Pembayaran Berhasil! Sistem sedang memperbarui status acara Anda.");
+                        alert(currentLang === 'en' ? "Payment Successful! System is updating your event status." : "Pembayaran Berhasil! Sistem sedang memperbarui status acara Anda.");
                         aktifkanAcaraSetelahBayar();
                     },
                     onPending: function(res){
-                        alert("Menunggu pembayaran diselesaikan.");
+                        alert(currentLang === 'en' ? "Waiting for payment completion." : "Menunggu pembayaran diselesaikan.");
                     },
                     onError: function(res){
-                        alert("Pembayaran gagal!");
+                        alert(currentLang === 'en' ? "Payment failed!" : "Pembayaran gagal!");
                     },
                     onClose: function(){
-                        alert('Anda menutup jendela pembayaran.');
+                        alert(currentLang === 'en' ? 'You closed the payment window.' : 'Anda menutup jendela pembayaran.');
                     }
                 });
 
             } catch (error) {
                 console.error(error);
-                alert("Gagal memproses pembayaran: " + error.message);
+                alert((currentLang === 'en' ? "Failed to process payment: " : "Gagal memproses pembayaran: ") + error.message);
             }
         }
 
         async function aktifkanAcaraSetelahBayar() {
             try {
                 if (pendingPaymentInfo.eventId) {
-                    if (pendingPaymentInfo.type === 'Upgrade Kuota') {
+                    if (pendingPaymentInfo.type === 'Upgrade Kuota' || pendingPaymentInfo.type === 'Quota Upgrade') {
                         const eventRef = db.collection("events").doc(pendingPaymentInfo.eventId);
                         const doc = await eventRef.get();
                         if (doc.exists) {
@@ -882,11 +1052,11 @@
                                 quota: newQuota,
                                 remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
                             });
-                            alert("Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
+                            alert(currentLang === 'en' ? "Quota successfully upgraded after payment confirmation!" : "Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
                         }
                     } else {
                         await db.collection("events").doc(pendingPaymentInfo.eventId).update({ status: "Aktif" });
-                        alert("Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
+                        alert(currentLang === 'en' ? "Event successfully activated after payment confirmation!" : "Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
                     }
                 }
             } catch(e) {
@@ -896,14 +1066,16 @@
         }
 
         document.getElementById('btnConfirmWA').addEventListener('click', () => {
-            const pesan = `Halo admin The Last Call! 📸%0A%0ASaya sudah melakukan transfer untuk pembayaran:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
+            const pesan = currentLang === 'en'
+                ? `Hello admin The Last Call! 📸%0A%0AI have made a transfer for payment:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`
+                : `Halo admin The Last Call! 📸%0A%0ASaya sudah melakukan transfer untuk pembayaran:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
             window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
         });
 
         function salinLink() {
             const copyText = document.getElementById("cameraLinkInput");
             copyText.select(); navigator.clipboard.writeText(copyText.value);
-            alert("Tautan kamera berhasil disalin!");
+            alert(currentLang === 'en' ? "Camera link copied successfully!" : "Tautan kamera berhasil disalin!");
         }
         function bukaKamera() { window.open(document.getElementById("cameraLinkInput").value, '_blank'); }
         function bukaAlbum() {
@@ -922,10 +1094,10 @@
             const label = document.getElementById('labelEventName');
             const eventNameInput = document.getElementById('eventName').value;
             const titleDisplay = document.getElementById('previewEventTitle');
-            titleDisplay.innerHTML = eventNameInput || "Nama Acara";
-            if(tipe === "Wedding") label.innerText = "Nama Mempelai (Contoh: Romeo & Juliet)";
-            else if(tipe === "Birthday") label.innerText = "Nama yang Ulang Tahun";
-            else label.innerText = "Nama Event";
+            titleDisplay.innerHTML = eventNameInput || (currentLang === 'en' ? "Event Name" : "Nama Acara");
+            if(tipe === "Wedding") label.innerText = currentLang === 'en' ? "Couple Names (Ex: Romeo & Juliet)" : "Nama Mempelai (Contoh: Romeo & Juliet)";
+            else if(tipe === "Birthday") label.innerText = currentLang === 'en' ? "Birthday Person's Name" : "Nama yang Ulang Tahun";
+            else label.innerText = currentLang === 'en' ? "Event Name" : "Nama Event";
         }
 
         function bukaAuthModal() { document.getElementById('authModal').style.display = 'flex'; }
@@ -947,7 +1119,7 @@
         }
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value; const email = document.getElementById('regEmail').value; const pass = document.getElementById('regPass').value;
-            auth.createUserWithEmailAndPassword(email, pass).then(res => { res.user.updateProfile({displayName: nama}); alert("Terdaftar!"); tutupAuthModal(); auth.signOut(); }).catch(err => alert(err.message));
+            auth.createUserWithEmailAndPassword(email, pass).then(res => { res.user.updateProfile({displayName: nama}); alert(currentLang === 'en' ? "Registered successfully!" : "Terdaftar!"); tutupAuthModal(); auth.signOut(); }).catch(err => alert(err.message));
         }
         function simpanMember(user) {
             db.collection('members').doc(user.uid).set({ name: user.displayName, email: user.email }, {merge: true});
@@ -974,7 +1146,7 @@
         function logoutAkun() {
             auth.signOut().then(() => {
                 location.reload();
-            }).catch(err => alert("Gagal keluar: " + err.message));
+            }).catch(err => alert((currentLang === 'en' ? "Failed to sign out: " : "Gagal keluar: ") + err.message));
         }
 
         auth.onAuthStateChanged(user => {
@@ -991,15 +1163,14 @@
                             <span>${displayName}</span>
                         </div>
                         <div class="profile-dropdown" id="profileDropdown">
-                            <button class="dropdown-item" onclick="bukaProfileModal()">Edit Profil</button>
-                            <button class="dropdown-item text-danger" onclick="logoutAkun()">Keluar Akun</button>
+                            <button class="dropdown-item" onclick="bukaProfileModal()">${currentLang === 'en' ? 'Edit Profile' : 'Edit Profil'}</button>
+                            <button class="dropdown-item text-danger" onclick="logoutAkun()">${currentLang === 'en' ? 'Sign Out' : 'Keluar Akun'}</button>
                         </div>
                     </div>
                 `;
                 bukaDasbor();
             } else {
-                navMenu.innerHTML = `<button class="btn-primary" onclick="bukaAuthModal()">Masuk / Daftar</button>`;
-                showSection('landingPage');
+                navMenu.innerHTML = `<button class="btn-primary" onclick="bukaAuthModal()" data-i18n="loginBtn">${currentLang === 'en' ? 'Sign In / Register' : 'Masuk / Daftar'}</button>`;
             }
         });
 
@@ -1007,7 +1178,7 @@
             if(!currentUser) return;
             const listDiv = document.getElementById('eventList');
             const snapshot = await db.collection("events").where("ownerId", "==", currentUser.uid).get();
-            if (snapshot.empty) { listDiv.innerHTML = '<div style="text-align: center; padding: 40px; color: #888;">Belum ada acara.</div>'; return; }
+            if (snapshot.empty) { listDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #888;">${currentLang === 'en' ? 'No events yet.' : 'Belum ada acara.'}</div>`; return; }
             
             daftarAcaraGlobal = [];
             snapshot.forEach(doc => {
@@ -1019,19 +1190,19 @@
             listDiv.innerHTML = '';
             daftarAcaraGlobal.forEach(d => {
                 let statusBadge = d.status === 'Pending' 
-                    ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="Klik untuk bayar">⏳ Pending (Klik Bayar)</span>` 
-                    : `<span class="badge">Aktif</span>`;
+                    ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>` 
+                    : `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
 
                 listDiv.innerHTML += `
                     <div class="event-card">
                         <div class="event-info">
                             <h3>${d.eventName}</h3>
-                            <p>Tgl: ${d.date} • Kuota: ${d.quota===9999?'Unlimited':d.quota}</p>
+                            <p>${currentLang === 'en' ? 'Date' : 'Tgl'}: ${d.date} • ${currentLang === 'en' ? 'Quota' : 'Kuota'}: ${d.quota===9999?'Unlimited':d.quota}</p>
                             <p>${statusBadge}</p>
                         </div>
                         <div style="display: flex; gap: 8px;">
-                            <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">Kelola</button>
-                            <button class="btn-danger" onclick="hapusAcara('${d.id}')">Hapus</button>
+                            <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">${currentLang === 'en' ? 'Manage' : 'Kelola'}</button>
+                            <button class="btn-danger" onclick="hapusAcara('${d.id}')">${currentLang === 'en' ? 'Delete' : 'Hapus'}</button>
                         </div>
                     </div>`;
             });
@@ -1040,7 +1211,7 @@
         document.getElementById('eventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnSubmit');
-            btn.innerText = "Memproses..."; btn.disabled = true;
+            btn.innerText = currentLang === 'en' ? "Processing..." : "Memproses..."; btn.disabled = true;
 
             let wallpaperFinalUrl = selectedWallpaperUrl;
             const fileInput = document.getElementById('wallpaperFile').files[0];
@@ -1074,19 +1245,19 @@
                     status: harga === 0 ? "Aktif" : "Pending",
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-                if(harga === 0) { alert("Berhasil dibuat!"); bukaDasbor(); }
+                if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?'Unlimited':`${kuota} Orang`, price: harga, addedQuota: 0 };
+                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?'Unlimited':`${kuota} ${currentLang === 'en' ? 'People' : 'Orang'}`, price: harga, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
-            } catch(err) { alert("Gagal: " + err.message); }
-            finally { btn.innerText = "Lanjutkan \u2192"; btn.disabled = false; }
+            } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
+            finally { btn.innerText = currentLang === 'en' ? "Continue \u2192" : "Lanjutkan \u2192"; btn.disabled = false; }
         });
 
         document.getElementById('editEventForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnUpdateEvent');
-            btn.innerText = "Menyimpan..."; btn.disabled = true;
+            btn.innerText = currentLang === 'en' ? "Saving..." : "Menyimpan..."; btn.disabled = true;
 
             const eventId = document.getElementById('editEventId').value;
             let updateData = {
@@ -1107,11 +1278,11 @@
 
             try {
                 await db.collection('events').doc(eventId).update(updateData);
-                alert("Pengaturan wallpaper dan waktu berhasil diperbarui!");
+                alert(currentLang === 'en' ? "Wallpaper and time settings successfully updated!" : "Pengaturan wallpaper dan waktu berhasil diperbarui!");
             } catch(err) {
-                alert("Gagal memperbarui: " + err.message);
+                alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
-                btn.innerText = "Simpan Pengaturan";
+                btn.innerText = currentLang === 'en' ? "Save Settings" : "Simpan Pengaturan";
                 btn.disabled = false;
             }
         });
