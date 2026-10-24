@@ -30,7 +30,6 @@
         
         .nav-right-container { display: flex; align-items: center; gap: 15px; }
         
-        /* Stylings for Language Selector */
         .lang-selector { display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px 8px; gap: 4px; font-size: 0.75rem; }
         .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
         .lang-btn.active { background: var(--accent); color: #000; }
@@ -149,7 +148,6 @@
         </div>
         
         <div class="nav-right-container">
-            <!-- Opsi Bahasa (ID / EN) di Pojok Kanan Atas -->
             <div class="lang-selector">
                 <button class="lang-btn active" id="langIdBtn" onclick="changeLanguage('id')">ID</button>
                 <span style="color: var(--border-color);">|</span>
@@ -345,13 +343,22 @@
                 </div>
 
                 <div class="dash-card">
-                    <h3 data-i18n="timeWallpaperSettings">Pengaturan Waktu & Wallpaper</h3>
+                    <h3 data-i18n="timeWallpaperSettings">Pengaturan Waktu, Privasi & Wallpaper</h3>
                     <form id="editEventForm">
                         <input type="hidden" id="editEventId">
                         
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-size: 0.85rem;" data-i18n="waitingTextLabel">Teks Sambutan Aesthetic</label>
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
+                        </div>
+
+                        <!-- Pengaturan Privasi Album di Form Edit -->
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem;" data-i18n="privacyLabel">Privasi Galeri Foto Tamu</label>
+                            <div class="radio-group">
+                                <label class="radio-card" style="padding: 8px;"><input type="radio" name="editPrivacy" value="visible"><strong data-i18n="publicOpt">Publik</strong></label>
+                                <label class="radio-card" style="padding: 8px;"><input type="radio" name="editPrivacy" value="private"><strong data-i18n="privateOpt">Privat</strong></label>
+                            </div>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
@@ -393,7 +400,7 @@
         </div>
     </div>
 
-    <!-- 5. HALAMAN PEMBAYARAN OTOMATIS & MANUAL -->
+    <!-- 5. HALAMAN PEMBAYARAN -->
     <div id="paymentSection" class="section" style="max-width: 600px; text-align: center;">
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" data-i18n="completePaymentTitle">Selesaikan Pembayaran</h2>
         <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="selectPaymentMethod">Pilih metode pembayaran di bawah ini.</p>
@@ -404,13 +411,8 @@
             <p id="paymentDesc" style="font-size: 0.9rem;"></p>
         </div>
 
-        <!-- Tombol Pembayaran Otomatis Midtrans -->
         <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Pay with QRIS, VA, E-Wallet</button>
-        
-        <!-- Tombol PayPal -->
         <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
-
-        <!-- Tombol Pembayaran Crypto -->
         <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;" data-i18n="cryptoBtn">🪙 Pay with Crypto (USDT, SOL, ETH, BTC)</button>
 
         <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;" data-i18n="orManualLocal">ATAU PEMBAYARAN MANUAL LOKAL</div>
@@ -419,7 +421,7 @@
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;" data-i18n="laterBtn">Nanti Saja</button>
     </div>
 
-    <!-- MODAL INFO CRYPTO -->
+    <!-- MODAL CRYPTO -->
     <div class="auth-modal" id="cryptoModal">
         <div class="auth-box" style="text-align: center;">
             <span class="auth-close" onclick="tutupCryptoModal()">✖</span>
@@ -430,22 +432,10 @@
                 <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">USDT (BNB Smart Chain):</p>
                 <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
             </div>
-
             <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
                 <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Solana (SOL):</p>
                 <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">EMGFtB3yUG6rTjJximqnb5QoqUzbcK5c3dBjZ7yfae4D</code>
             </div>
-
-            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
-                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Ethereum (ETH):</p>
-                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
-            </div>
-
-            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 15px; text-align: left;">
-                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Bitcoin (BTC):</p>
-                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">bc1qm69e49f2hysha0c8lgkkzrec6pa0pqwt9h6242</code>
-            </div>
-
             <button class="btn-wa" onclick="konfirmasiCryptoWA()" style="width: 100%; margin-bottom: 10px; font-size: 0.9rem;" data-i18n="confirmCryptoWABtn">📲 Konfirmasi Transfer Crypto via WhatsApp</button>
             <button class="btn-outline" onclick="tutupCryptoModal()" style="width: 100%;" data-i18n="closeBtn">Tutup</button>
         </div>
@@ -496,7 +486,6 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0, targetQuota: 0 };
         
-        // Multi-language Dictionary Setup
         let currentLang = 'id';
         const translations = {
             id: {
@@ -529,8 +518,8 @@
                 endTimeLabel: "Jam Selesai Acara",
                 guestLimitLabel: "Batas Maksimal Foto per Tamu",
                 privacyLabel: "Privasi Galeri Foto Tamu",
-                publicOpt: "Publik (Visible)",
-                privateOpt: "Privat (Private)",
+                publicOpt: "Publik",
+                privateOpt: "Privat",
                 packageLabel: "Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)",
                 guestsUnit: "Orang",
                 freeTag: "Gratis",
@@ -554,7 +543,7 @@
                 upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Daftar Peserta yang Join",
                 loadingGuests: "Memuat data peserta...",
-                timeWallpaperSettings: "Pengaturan Waktu & Wallpaper",
+                timeWallpaperSettings: "Pengaturan Waktu, Privasi & Wallpaper",
                 uploadCustomFile: "✏️ Atau Unggah File Sendiri",
                 saveSettingsBtn: "Simpan Pengaturan",
                 completePaymentTitle: "Selesaikan Pembayaran",
@@ -605,7 +594,7 @@
                 endTimeLabel: "Event End Time",
                 guestLimitLabel: "Max Photos per Guest",
                 privacyLabel: "Guest Photo Gallery Privacy",
-                publicOpt: "Public (Visible)",
+                publicOpt: "Public",
                 privateOpt: "Private",
                 packageLabel: "User Quota Options (Number of Guests with Camera Access)",
                 guestsUnit: "People",
@@ -630,7 +619,7 @@
                 upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Joined Participants List",
                 loadingGuests: "Loading participant data...",
-                timeWallpaperSettings: "Time & Wallpaper Settings",
+                timeWallpaperSettings: "Time, Privacy & Wallpaper Settings",
                 uploadCustomFile: "✏️ Or Upload Custom File",
                 saveSettingsBtn: "Save Settings",
                 completePaymentTitle: "Complete Payment",
@@ -844,6 +833,12 @@
             document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('editWaitingText').value = event.waitingText || "The Wedding Of";
             
+            // Atur radio privacy edit sesuai data acara
+            const editPrivRadios = document.querySelectorAll('input[name="editPrivacy"]');
+            editPrivRadios.forEach(r => {
+                r.checked = (r.value === (event.privacy || 'visible'));
+            });
+
             const unitStr = currentLang === 'en' ? 'People' : 'Orang';
             document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${event.quota} ${unitStr}`;
 
@@ -1278,7 +1273,6 @@
             let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
             let harga = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
 
-            // Jika berbayar dan status masih Pending, kuota aktif diset 5 (gratis) dulu, sisanya di pendingQuota
             let initialQuota = harga === 0 ? kuota : 5;
             let pendingQ = harga === 0 ? 0 : kuota;
 
@@ -1320,6 +1314,7 @@
                 endTime: document.getElementById('editEndTime').value,
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
                 waitingText: document.getElementById('editWaitingText').value,
+                privacy: document.querySelector('input[name="editPrivacy"]:checked').value,
                 wallpaperUrl: selectedEditWallpaperUrl
             };
 
@@ -1333,7 +1328,7 @@
 
             try {
                 await db.collection('events').doc(eventId).update(updateData);
-                alert(currentLang === 'en' ? "Wallpaper and time settings successfully updated!" : "Pengaturan wallpaper dan waktu berhasil diperbarui!");
+                alert(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
             } catch(err) {
                 alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
