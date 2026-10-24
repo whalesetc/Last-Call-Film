@@ -235,6 +235,30 @@
                 </div>
             </div>
 
+            <!-- PENGATURAN FILTER DI PEMBUATAN ACARA -->
+            <div class="form-group">
+                <label data-i18n="defaultFilterLabel">Filter Kamera Default Acara</label>
+                <select id="defaultFilter" class="form-control">
+                    <option value="original">Original (Normal)</option>
+                    <option value="ultramax">Kodak Ultramax 400</option>
+                    <option value="fuji">Fuji Superia 400</option>
+                    <option value="gold">Kodak Gold 200</option>
+                    <option value="agfa">Agfa Vista 200</option>
+                    <option value="portra">Kodak Portra 400</option>
+                    <option value="flash">Disposable Flash</option>
+                    <option value="vintage90">Vintage 90s Warm</option>
+                    <option value="cinematic">Cinematic Cool</option>
+                    <option value="mono">Monokrom Klasik (B&W)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <input type="checkbox" id="allowGuestFilter" checked style="width: 18px; height: 18px;">
+                    <span data-i18n="allowGuestFilterLabel">Izinkan tamu mengganti filter kamera secara bebas</span>
+                </label>
+            </div>
+
             <div class="form-group">
                 <label data-i18n="eventDateLabel">Tanggal Acara</label>
                 <input type="date" id="eventDate" class="form-control" required>
@@ -359,6 +383,30 @@
                                 <label class="radio-card" style="padding: 8px;"><input type="radio" name="editPrivacy" value="visible"><strong data-i18n="publicOpt">Publik</strong></label>
                                 <label class="radio-card" style="padding: 8px;"><input type="radio" name="editPrivacy" value="private"><strong data-i18n="privateOpt">Privat</strong></label>
                             </div>
+                        </div>
+
+                        <!-- EDIT FILTER DEFAULT & IZIN TAMU -->
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem;" data-i18n="defaultFilterLabel">Filter Kamera Default</label>
+                            <select id="editDefaultFilter" class="form-control" style="padding: 10px;">
+                                <option value="original">Original (Normal)</option>
+                                <option value="ultramax">Kodak Ultramax 400</option>
+                                <option value="fuji">Fuji Superia 400</option>
+                                <option value="gold">Kodak Gold 200</option>
+                                <option value="agfa">Agfa Vista 200</option>
+                                <option value="portra">Kodak Portra 400</option>
+                                <option value="flash">Disposable Flash</option>
+                                <option value="vintage90">Vintage 90s Warm</option>
+                                <option value="cinematic">Cinematic Cool</option>
+                                <option value="mono">Monokrom Klasik (B&W)</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem; display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="editAllowGuestFilter" style="width: 16px; height: 16px;">
+                                <span data-i18n="allowGuestFilterLabel">Izinkan tamu mengganti filter kamera</span>
+                            </label>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
@@ -513,6 +561,8 @@
                 previewEventTitleDefault: "Nama Acara",
                 viewAlbumPreview: "Lihat Album &rarr;",
                 uploadCustomWallpaper: "✏️ Atau Unggah Wallpaper Sendiri",
+                defaultFilterLabel: "Filter Kamera Default Acara",
+                allowGuestFilterLabel: "Izinkan tamu mengganti filter kamera secara bebas",
                 eventDateLabel: "Tanggal Acara",
                 startTimeLabel: "Jam Mulai Acara",
                 endTimeLabel: "Jam Selesai Acara",
@@ -589,6 +639,8 @@
                 previewEventTitleDefault: "Event Name",
                 viewAlbumPreview: "View Album &rarr;",
                 uploadCustomWallpaper: "✏️ Or Upload Custom Wallpaper",
+                defaultFilterLabel: "Default Event Camera Filter",
+                allowGuestFilterLabel: "Allow guests to freely change camera filters",
                 eventDateLabel: "Event Date",
                 startTimeLabel: "Event Start Time",
                 endTimeLabel: "Event End Time",
@@ -833,6 +885,10 @@
             document.getElementById('editEndTime').value = event.endTime || "23:59";
             document.getElementById('editWaitingText').value = event.waitingText || "The Wedding Of";
             
+            // Atur nilai filter default & izin tamu pada form edit
+            document.getElementById('editDefaultFilter').value = event.defaultFilter || 'original';
+            document.getElementById('editAllowGuestFilter').checked = event.allowGuestFilter !== false;
+
             // Atur radio privacy edit sesuai data acara
             const editPrivRadios = document.querySelectorAll('input[name="editPrivacy"]');
             editPrivRadios.forEach(r => {
@@ -1288,6 +1344,8 @@
                     startTime: document.getElementById('eventStartTime').value,
                     endTime: document.getElementById('eventEndTime').value,
                     privacy: document.querySelector('input[name="privacy"]:checked').value,
+                    defaultFilter: document.getElementById('defaultFilter').value,
+                    allowGuestFilter: document.getElementById('allowGuestFilter').checked,
                     guestPhotoLimit: parseInt(document.getElementById('guestPhotoLimit').value),
                     quota: initialQuota, remainingQuota: initialQuota, pendingQuota: pendingQ, price: harga,
                     wallpaperUrl: wallpaperFinalUrl,
@@ -1315,6 +1373,8 @@
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
                 waitingText: document.getElementById('editWaitingText').value,
                 privacy: document.querySelector('input[name="editPrivacy"]:checked').value,
+                defaultFilter: document.getElementById('editDefaultFilter').value,
+                allowGuestFilter: document.getElementById('editAllowGuestFilter').checked,
                 wallpaperUrl: selectedEditWallpaperUrl
             };
 
