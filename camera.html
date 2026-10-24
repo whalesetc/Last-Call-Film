@@ -2,67 +2,145 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Kamera Tamu • The Last Call Film</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Kamera • The Last Call Film</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=Playfair+Display:ital,wght@0,600;1,600&display=swap" rel="stylesheet">
     
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
 
     <style>
-        :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #6ee7b7; --border-color: rgba(255, 255, 255, 0.15); }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; overflow-x: hidden; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; user-select: none; }
+        body { background-color: #000; color: #fff; overflow: hidden; height: 100vh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: space-between; }
         .font-serif { font-family: 'Playfair Display', serif; }
-
-        .camera-container { width: 100%; max-width: 400px; height: 80vh; max-height: 750px; border-radius: 24px; overflow: hidden; position: relative; background-size: cover; background-position: center; display: flex; flex-direction: column; justify-content: space-between; padding: 30px 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.6); border: 1px solid var(--border-color); }
-        .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(0,0,0,0.4), rgba(0,0,0,0.8)); z-index: 1; pointer-events: none; }
         
-        .camera-content { position: relative; z-index: 2; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; text-align: center; }
+        .top-bar { position: absolute; top: 0; left: 0; width: 100%; padding: 20px 15px; display: flex; justify-content: space-between; align-items: center; z-index: 10; background: linear-gradient(to bottom, rgba(0,0,0,0.8), transparent); }
+        .btn-album { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; text-decoration: none; backdrop-filter: blur(5px); cursor: pointer; display: inline-block; }
+        .event-name { font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 600; text-align: center; flex: 1; margin: 0 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .roll-wrapper { display: flex; align-items: center; gap: 8px; }
+        .roll-label { font-size: 0.6rem; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 1px; font-weight: bold; text-align: right; line-height: 1.2; }
+        .roll-container { height: 40px; min-width: 40px; padding: 0 10px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); }
+        .roll-number-display { font-family: 'Courier New', Courier, monospace; font-size: 1.2rem; font-weight: bold; color: #fff; }
+
+        .camera-container { position: relative; display: flex; justify-content: center; align-items: center; background: #111; overflow: hidden; margin-top: 65px; margin-bottom: 160px; border-radius: 20px; aspect-ratio: 9 / 16; height: calc(100vh - 235px); max-height: 580px; width: auto; max-width: calc((100vh - 235px) * (9 / 16)); border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        #cameraStream { width: 100%; height: 100%; object-fit: cover; }
         
-        .event-title { font-size: 1.8rem; font-family: 'Playfair Display', serif; text-shadow: 0 2px 8px rgba(0,0,0,0.8); line-height: 1.2; margin-top: 10px; }
-        .waiting-label { font-size: 0.85rem; letter-spacing: 2px; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+        .viewfinder-guide { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; height: 85%; border: 1px dashed rgba(255,255,255,0.3); border-radius: 12px; pointer-events: none; display: flex; justify-content: center; align-items: center; }
+        .viewfinder-guide::after { content: '+'; color: rgba(255,255,255,0.4); font-size: 2rem; font-weight: 300; }
 
-        .shutter-area { display: flex; flex-direction: column; align-items: center; gap: 15px; width: 100%; }
-        .shutter-btn { width: 75px; height: 75px; background: #fff; border-radius: 50%; border: 4px solid rgba(255,255,255,0.4); cursor: pointer; transition: 0.2s; box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
-        .shutter-btn:active { transform: scale(0.92); background: var(--accent); }
+        #flashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        .counter-badge { background: rgba(0,0,0,0.6); border: 1px solid var(--border-color); padding: 6px 16px; border-radius: 20px; font-size: 0.85rem; backdrop-filter: blur(5px); }
+        .bottom-controls { position: absolute; bottom: 75px; left: 0; width: 100%; height: 80px; display: flex; justify-content: center; align-items: center; padding: 0 20px; z-index: 10; }
+        
+        .capture-btn { width: 70px; height: 70px; border-radius: 50%; background: transparent; border: 4px solid #fff; display: flex; justify-content: center; align-items: center; cursor: pointer; transition: 0.1s; padding: 0; position: relative; }
+        .capture-inner { width: 54px; height: 54px; border-radius: 50%; background: #fff; transition: 0.1s; display: flex; justify-content: center; align-items: center; }
+        .capture-btn:active .capture-inner { transform: scale(0.85); background: #ccc; }
+        .capture-btn:disabled { border-color: #555; cursor: not-allowed; }
+        .capture-btn:disabled .capture-inner { background: #555; }
 
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 999; justify-content: center; align-items: center; padding: 20px; }
-        .modal-box { background: var(--bg-dark); border: 1px solid var(--border-color); padding: 30px; border-radius: 16px; width: 100%; max-width: 350px; text-align: center; }
-        .form-control { width: 100%; padding: 12px; margin: 15px 0; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; outline: none; text-align: center; font-size: 1rem; }
-        .btn-primary { background: var(--accent); color: #000; width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer; }
+        .flip-btn { position: absolute; right: 30px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 44px; height: 44px; border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(5px); }
+
+        .thumbnail-strip { position: absolute; bottom: 8px; left: 0; width: 100%; height: 60px; display: flex; gap: 8px; overflow-x: auto; padding: 0 15px; z-index: 10; scroll-behavior: smooth; align-items: center; }
+        .thumbnail-strip::-webkit-scrollbar { display: none; }
+        .thumb-img { width: 38px; height: 55px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,0.5); flex-shrink: 0; opacity: 0; animation: popThumb 0.3s forwards; background: #222; }
+        @keyframes popThumb { from { opacity: 0; transform: scale(0.5); } to { opacity: 1; transform: scale(1); } }
+
+        .fullscreen-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index: 9999; display: flex; flex-direction: column; justify-content: center; align-items: center; background-size: cover; background-position: center; }
+        .overlay-content { background: rgba(18,17,15,0.95); border: 1px solid rgba(255,255,255,0.15); width: 90%; max-width: 380px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; text-align: center; border-radius: 16px; backdrop-filter: blur(12px); box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        
+        .loader { width: 40px; height: 40px; border: 3px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        
+        .cd-timer { display: flex; gap: 12px; margin: 20px 0 30px 0; }
+        .cd-box { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); padding: 12px 16px; border-radius: 12px; min-width: 65px; backdrop-filter: blur(5px); }
+        .cd-val { font-size: 1.6rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
+        .cd-lbl { font-size: 0.65rem; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 4px; letter-spacing: 1px; }
+
+        #outOfQuota { display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index: 50; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px; }
     </style>
 </head>
 <body>
 
-    <div class="camera-container" id="cameraBox" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=600&q=80');">
-        <div class="camera-overlay"></div>
-        <div class="camera-content">
-            <div>
-                <p class="waiting-label" id="waitingText">The Wedding Of</p>
-                <h1 class="event-title" id="eventTitle">Memuat Acara...</h1>
-            </div>
+    <!-- MODAL INPUT NAMA TAMU -->
+    <div id="nameModal" class="fullscreen-overlay" style="display: none; z-index: 10000;">
+        <div class="overlay-content">
+            <h2 class="font-serif" style="font-size: 1.8rem; margin-bottom: 10px; color: #6ee7b7;">Selamat Datang! 📸</h2>
+            <p style="color: #aaa; font-size: 0.85rem; margin-bottom: 20px;">Silakan masukkan nama Anda terlebih dahulu untuk bergabung ke acara.</p>
+            <input type="text" id="inputGuestName" placeholder="Nama Lengkap / Panggilan" style="width: 100%; padding: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); color: #fff; border-radius: 8px; outline: none; margin-bottom: 15px; font-size: 1rem; text-align: center;">
+            <button onclick="simpanNamaTamu()" style="width: 100%; padding: 14px; background: #fff; color: #000; border: none; border-radius: 8px; font-weight: bold; font-size: 1rem; cursor: pointer;">Masuk ke Acara &rarr;</button>
+        </div>
+    </div>
 
-            <div class="shutter-area">
-                <div class="counter-badge" id="shotCounter">Sisa Jepretan: 0 / 0</div>
-                <!-- Input kamera langsung menggunakan capture -->
-                <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display: none;" onchange="prosesFotoJepret(event)">
-                <button class="shutter-btn" onclick="triggerKamera()"></button>
+    <div id="initScreen" class="fullscreen-overlay">
+        <div class="loader"></div>
+        <p style="color: #888; font-size: 0.9rem;">Menyiapkan Kamera...</p>
+    </div>
+
+    <!-- Layar Tunggu -->
+    <div id="waitingOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <p id="waitingTextDisplay" style="color: rgba(255,255,255,0.8); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 8px;">The Wedding Of</p>
+            <h1 id="waitingTitleDisplay" class="font-serif" style="font-size: 2.2rem; margin-bottom: 25px; line-height: 1.2;">Nama Acara</h1>
+            <p style="color: #6ee7b7; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Kamera Akan Terbuka Dalam:</p>
+            <div class="cd-timer">
+                <div class="cd-box"><div class="cd-val" id="cdHours">00</div><div class="cd-lbl">Jam</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdMinutes">00</div><div class="cd-lbl">Menit</div></div>
+                <div class="cd-box"><div class="cd-val" id="cdSeconds">00</div><div class="cd-lbl">Detik</div></div>
+            </div>
+            <p style="color: #aaa; font-size: 0.75rem; margin-bottom: 15px;">Nama Anda sudah tersimpan. Anda bisa langsung menjepret saat acara mulai!</p>
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem;">Lihat Album Foto</a>
+        </div>
+    </div>
+
+    <!-- Layar Selesai -->
+    <div id="endedOverlay" class="fullscreen-overlay" style="display: none;">
+        <div class="overlay-content">
+            <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 10px; color: #ff6b6b;">Acara Telah Selesai</h2>
+            <p style="color: #aaa; font-size: 0.9rem; margin-bottom: 25px; max-width: 300px;">Masa waktu penggunaan kamera untuk acara ini telah berakhir. Silakan lihat hasil foto di album.</p>
+            <a href="#" class="btn-album" onclick="bukaAlbum(event)" style="padding: 12px 24px; font-size: 0.9rem; background: #fff; color: #000; font-weight: bold;">Lihat Album Foto</a>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <a href="#" id="linkAlbum" class="btn-album" onclick="bukaAlbum(event)">Lihat Album</a>
+        <div class="event-name" id="eventNameDisplay">Memuat...</div>
+        <div class="roll-wrapper">
+            <div class="roll-label">Sisa<br>Film</div>
+            <div class="roll-container">
+                <div class="roll-number-display" id="sisaFilm">--</div>
             </div>
         </div>
     </div>
 
-    <!-- MODAL NAMA TAMU -->
-    <div class="modal" id="nameModal">
-        <div class="modal-box">
-            <h3 class="font-serif" style="margin-bottom: 5px;">Masukkan Nama Anda</h3>
-            <p style="font-size: 0.8rem; color: var(--text-muted);">Sebelum mulai menjepret, siapa nama Anda?</p>
-            <input type="text" id="guestNameInput" class="form-control" placeholder="Nama Tamu">
-            <button class="btn-primary" onclick="simpanNamaTamu()">Mulai Menjepret</button>
+    <div class="camera-container">
+        <video id="cameraStream" autoplay playsinline></video>
+        <div class="viewfinder-guide"></div>
+        <div id="flashOverlay"></div>
+        
+        <div id="outOfQuota">
+            <h2 class="font-serif" style="margin-bottom: 10px; color: #6ee7b7;">Film Habis!</h2>
+            <p style="color: #aaa; margin-bottom: 20px; font-size: 0.9rem;">Kamu sudah menggunakan seluruh jatah foto.</p>
+            <button onclick="bukaAlbum(event)" style="background: #fff; color: #000; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer;">Lihat Album Sekarang</button>
         </div>
     </div>
+
+    <div class="bottom-controls">
+        <button class="capture-btn" id="btnCapture" onclick="ambilFoto()">
+            <div class="capture-inner"></div>
+        </button>
+        <button class="flip-btn" onclick="balikKamera()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1 4 1 10 7 10"></polyline>
+                <polyline points="23 20 23 14 17 14"></polyline>
+                <path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10"></path>
+                <path d="M3.51 15A9 9 0 0 0 18.36 18.36L23 14"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div class="thumbnail-strip" id="thumbnailStrip"></div>
+    <canvas id="canvasHidden" style="display: none;"></canvas>
 
     <script>
         const firebaseConfig = {
@@ -73,146 +151,250 @@
         };
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const imgbbApiKey = "e260099c988d57272862b5d72290e82b";
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
+        let guestId = '';
+        let guestName = '';
+        let fotoTerambil = 0;
+        let batasFoto = 15; 
+        let countdownTimerInterval = null;
+        
+        let stream = null;
+        let facingMode = 'environment';
+        const video = document.getElementById('cameraStream');
+        const canvas = document.getElementById('canvasHidden');
+        const btnCapture = document.getElementById('btnCapture');
+        const thumbnailStrip = document.getElementById('thumbnailStrip');
 
-        let eventData = null;
-        let guestName = localStorage.getItem('thelastcall_guest_name');
-        let guestSessionId = localStorage.getItem('thelastcall_guest_id');
+        async function initApp() {
+            if (!eventId) { alert("Tautan tidak valid."); return; }
 
-        if (!guestSessionId) {
-            guestSessionId = 'guest_' + Math.random().toString(36).substring(2, 15);
-            localStorage.setItem('thelastcall_guest_id', guestSessionId);
-        }
+            const domain = window.location.href.split('?')[0].replace('camera.html', '').replace(/\/$/, '');
+            document.getElementById('linkAlbum').href = `${domain}/album.html?event=${eventId}`;
 
-        async function initCamera() {
-            if (!eventId) {
-                alert("ID Acara tidak valid.");
+            guestId = localStorage.getItem(`guest_${eventId}`);
+            if (!guestId) {
+                guestId = 'guest_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem(`guest_${eventId}`, guestId);
+            }
+
+            guestName = localStorage.getItem(`guest_name_${eventId}`);
+            if (!guestName) {
+                document.getElementById('initScreen').style.display = 'none';
+                document.getElementById('nameModal').style.display = 'flex';
                 return;
             }
+
+            let countLokal = parseInt(localStorage.getItem(`count_${eventId}`));
+            if (isNaN(countLokal)) countLokal = 0;
+            fotoTerambil = countLokal;
+
+            muatThumbnailLokal();
+            perbaruiUI();
 
             try {
                 const doc = await db.collection('events').doc(eventId).get();
-                if (!doc.exists) {
-                    alert("Acara tidak ditemukan.");
-                    return;
+                if (doc.exists) {
+                    let currentEvent = doc.data();
+                    document.getElementById('eventNameDisplay').innerText = currentEvent.eventName;
+                    let limit = parseInt(currentEvent.guestPhotoLimit);
+                    if (!isNaN(limit) && limit > 0) batasFoto = limit;
+
+                    perbaruiUI();
+
+                    const sekarang = new Date();
+                    const eventDate = currentEvent.date;
+                    const startTime = currentEvent.startTime || '00:00';
+                    const endTime = currentEvent.endTime || '23:59';
+                    const startDateTime = new Date(`${eventDate}T${startTime}:00`);
+                    const endDateTime = new Date(`${eventDate}T${endTime}:00`);
+
+                    if (sekarang < startDateTime) {
+                        tampilkanLayarTunggu(currentEvent, startDateTime);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    } else if (sekarang > endDateTime) {
+                        tampilkanLayarSelesai(currentEvent);
+                        document.getElementById('initScreen').style.display = 'none';
+                        return;
+                    }
                 }
-                eventData = doc.data();
-                document.getElementById('eventTitle').innerText = eventData.eventName;
-                document.getElementById('waitingText').innerText = eventData.waitingText || "The Wedding Of";
-                if (eventData.wallpaperUrl) {
-                    document.getElementById('cameraBox').style.backgroundImage = `url('${eventData.wallpaperUrl}')`;
-                }
 
-                // Daftarkan tamu ke sub-koleksi guests jika belum ada
-                await daftarKeAcara();
-                hitungSisaJepretan();
+                await mulaiKamera();
+                document.getElementById('initScreen').style.display = 'none';
 
-            } catch (e) {
-                console.error(e);
-            }
-
-            if (!guestName) {
-                document.getElementById('nameModal').style.display = 'flex';
+            } catch (error) {
+                alert("Gagal memuat acara: " + error.message);
             }
         }
 
-        async function daftarKeAcara() {
-            if (!guestName) return;
-            const guestRef = db.collection('events').doc(eventId).collection('guests').doc(guestSessionId);
-            const doc = await guestRef.get();
-            if (!doc.exists) {
-                await guestRef.set({
-                    name: guestName,
-                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+        async function simpanNamaTamu() {
+            const inputVal = document.getElementById('inputGuestName').value.trim();
+            if (!inputVal) {
+                alert("Silakan masukkan nama Anda terlebih dahulu!");
+                return;
             }
-        }
-
-        function simpanNamaTamu() {
-            const val = document.getElementById('guestNameInput').value.trim();
-            if (!val) return alert("Silakan masukkan nama Anda.");
-            guestName = val;
-            localStorage.setItem('thelastcall_guest_name', guestName);
+            guestName = inputVal;
+            localStorage.setItem(`guest_name_${eventId}`, guestName);
             document.getElementById('nameModal').style.display = 'none';
-            daftarKeAcara();
-        }
-
-        function triggerKamera() {
-            if (!guestName) {
-                document.getElementById('nameModal').style.display = 'flex';
-                return;
-            }
-            document.getElementById('cameraInput').click();
-        }
-
-        async function hitungSisaJepretan() {
-            const snapshot = await db.collection('photos')
-                .where('eventId', '==', eventId)
-                .where('guestId', '==', guestSessionId)
-                .get();
-
-            const limit = eventData.guestPhotoLimit || 15;
-            const terpakai = snapshot.size;
-            const sisa = Math.max(0, limit - terpakai);
-
-            document.getElementById('shotCounter').innerText = `Sisa Jepretan: ${sisa} / ${limit}`;
-            if (sisa <= 0) {
-                document.getElementById('cameraInput').disabled = true;
-            }
-        }
-
-        async function prosesFotoJepret(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            // Cek limit sebelum upload
-            const snapshot = await db.collection('photos')
-                .where('eventId', '==', eventId)
-                .where('guestId', '==', guestSessionId)
-                .get();
-
-            const limit = eventData.guestPhotoLimit || 15;
-            if (snapshot.size >= limit) {
-                alert("Batas jepretan Anda untuk acara ini sudah habis.");
-                return;
-            }
-
-            const btn = document.querySelector('.shutter-btn');
-            btn.style.opacity = '0.5';
+            document.getElementById('initScreen').style.display = 'flex';
 
             try {
-                const formData = new FormData();
-                formData.append('image', file);
-                
-                const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, { method: 'POST', body: formData });
-                const r = await res.json();
-                
-                if (!r.success) throw new Error("Gagal mengunggah foto.");
-
-                // Simpan ke Firestore dengan menyertakan guestId agar album privat berfungsi
-                await db.collection('photos').add({
-                    eventId: eventId,
-                    url: r.data.url,
-                    guestName: guestName,
-                    guestId: guestSessionId,
-                    createdTime: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                alert("Foto berhasil diabadikan! 📸");
-                hitungSisaJepretan();
-
+                await db.collection('events').doc(eventId).collection('guests').doc(guestId).set({
+                    name: guestName,
+                    joinedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
             } catch (err) {
-                alert("Terjadi kesalahan: " + err.message);
-            } finally {
-                btn.style.opacity = '1';
-                event.target.value = ''; // Reset input file
+                console.error("Gagal menyimpan nama tamu:", err);
+            }
+
+            initApp();
+        }
+
+        function tampilkanLayarTunggu(event, startDateTime) {
+            document.getElementById('waitingTextDisplay').innerText = event.waitingText || "The Wedding Of";
+            document.getElementById('waitingTitleDisplay').innerText = event.eventName;
+            document.getElementById('waitingOverlay').style.display = 'flex';
+
+            if (countdownTimerInterval) clearInterval(countdownTimerInterval);
+            countdownTimerInterval = setInterval(() => {
+                const sekarang = new Date();
+                const selisih = startDateTime - sekarang;
+
+                if (selisih <= 0) {
+                    clearInterval(countdownTimerInterval);
+                    window.location.reload();
+                    return;
+                }
+
+                const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+
+                document.getElementById('cdHours').innerText = String(jam).padStart(2, '0');
+                document.getElementById('cdMinutes').innerText = String(menit).padStart(2, '0');
+                document.getElementById('cdSeconds').innerText = String(detik).padStart(2, '0');
+            }, 1000);
+        }
+
+        function tampilkanLayarSelesai(event) {
+            document.getElementById('endedOverlay').style.display = 'flex';
+        }
+
+        function perbaruiUI() {
+            let sisa = batasFoto - fotoTerambil;
+            if (isNaN(sisa) || sisa < 0) sisa = 0;
+            const display = document.getElementById('sisaFilm');
+            if (display) display.innerText = sisa;
+
+            if (fotoTerambil >= batasFoto) {
+                btnCapture.disabled = true;
+                document.getElementById('outOfQuota').style.display = 'flex';
+                if(stream) stream.getTracks().forEach(track => track.stop());
+            } else {
+                btnCapture.disabled = false;
+                document.getElementById('outOfQuota').style.display = 'none';
             }
         }
 
-        initCamera();
+        async function mulaiKamera() {
+            if (stream) stream.getTracks().forEach(track => track.stop());
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: facingMode, width: { ideal: 1280 }, height: { ideal: 720 } },
+                    audio: false
+                });
+                video.srcObject = stream;
+                await video.play();
+            } catch (err) { 
+                alert("Gagal mengaktifkan kamera: " + err.message); 
+            }
+        }
+
+        function balikKamera() {
+            facingMode = facingMode === 'environment' ? 'user' : 'environment';
+            mulaiKamera();
+        }
+
+        function muatThumbnailLokal() {
+            thumbnailStrip.innerHTML = '';
+            try {
+                const thumbs = JSON.parse(localStorage.getItem(`session_thumbs_${eventId}`)) || [];
+                thumbs.forEach(url => tambahThumbnailKeLayar(url));
+            } catch (e) {}
+        }
+
+        function tambahThumbnailKeLayar(dataUrl) {
+            const img = document.createElement('img');
+            img.src = dataUrl;
+            img.className = 'thumb-img';
+            thumbnailStrip.appendChild(img);
+            thumbnailStrip.scrollLeft = thumbnailStrip.scrollWidth;
+        }
+
+        function ambilFoto() {
+            if (fotoTerambil >= batasFoto) return;
+            if (!video.videoWidth || !video.videoHeight) {
+                alert("Kamera belum siap, tunggu sebentar.");
+                return;
+            }
+
+            const flash = document.getElementById('flashOverlay');
+            flash.style.opacity = '1';
+            setTimeout(() => { flash.style.opacity = '0'; }, 80);
+
+            const targetRatio = 9 / 16;
+            let srcW = video.videoWidth;
+            let srcH = video.videoHeight;
+            let srcX = 0; let srcY = 0;
+            if (srcW / srcH > targetRatio) {
+                const newWidth = srcH * targetRatio; srcX = (srcW - newWidth) / 2; srcW = newWidth;
+            } else {
+                const newHeight = srcW / targetRatio; srcY = (srcH - newHeight) / 2; srcH = newHeight;
+            }
+
+            canvas.width = 360;
+            canvas.height = 640;
+            const ctx = canvas.getContext('2d');
+            if(facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+            ctx.drawImage(video, srcX, srcY, srcW, srcH, 0, 0, canvas.width, canvas.height);
+            
+            const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.5);
+
+            fotoTerambil++;
+            localStorage.setItem(`count_${eventId}`, fotoTerambil);
+            
+            try {
+                let thumbs = JSON.parse(localStorage.getItem(`session_thumbs_${eventId}`)) || [];
+                thumbs.push(compressedDataUrl);
+                if (thumbs.length > 15) thumbs.shift();
+                localStorage.setItem(`session_thumbs_${eventId}`, JSON.stringify(thumbs));
+            } catch (err) {
+                console.warn("Storage penuh.");
+            }
+            
+            tambahThumbnailKeLayar(compressedDataUrl);
+            perbaruiUI();
+
+            db.collection('photos').add({
+                eventId: eventId,
+                guestId: guestId,
+                guestName: guestName,
+                url: compressedDataUrl,
+                createdTime: firebase.firestore.FieldValue.serverTimestamp()
+            }).catch(err => {
+                console.log("Sinkronisasi latar belakang tertunda.");
+            });
+        }
+
+        function bukaAlbum(e) {
+            if (e) e.preventDefault();
+            const link = document.getElementById('linkAlbum').href;
+            window.location.href = link;
+        }
+
+        initApp();
     </script>
 </body>
 </html>
