@@ -108,8 +108,9 @@
         .filter-cinematic { filter: contrast(1.2) saturate(0.8) hue-rotate(180deg) brightness(0.95); }
         .filter-mono { filter: grayscale(100%) contrast(1.2); }
 
-        .filter-scroll-container { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-behavior: smooth; }
-        .filter-scroll-container::-webkit-scrollbar { height: 6px; }
+        /* KONTAINER SCROLL SAMPING FILTER YANG KOMPAK DAN HEMAT SPACE */
+        .filter-scroll-container { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-behavior: smooth; }
+        .filter-scroll-container::-webkit-scrollbar { height: 5px; }
         .filter-scroll-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
 
         .mockup-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 30px; display: flex; flex-direction: column; align-items: center; gap: 20px; }
@@ -251,7 +252,7 @@
                 </div>
             </div>
 
-            <!-- PEMILIH FILTER DEFAULT DENGAN SCROLL SAMPING & PRATINJAU GAMBAR -->
+            <!-- PEMILIH FILTER DEFAULT DENGAN SCROLL SAMPING KOMPAK -->
             <div class="form-group">
                 <label data-i18n="defaultFilterLabel">Filter Kamera Default Acara</label>
                 <div class="filter-scroll-container" id="filterPresetContainer">
@@ -393,7 +394,7 @@
                             </div>
                         </div>
 
-                        <!-- EDIT FILTER DEFAULT DENGAN SCROLL SAMPING & PRATINJAU GAMBAR -->
+                        <!-- EDIT FILTER DEFAULT DENGAN SCROLL SAMPING KOMPAK -->
                         <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-size: 0.85rem;" data-i18n="defaultFilterLabel">Filter Kamera Default</label>
                             <div class="filter-scroll-container" id="editFilterPresetContainer">
@@ -716,9 +717,9 @@
             filterDatabase.forEach(f => {
                 const isSelected = f.key === selectedKey ? 'selected' : '';
                 container.innerHTML += `
-                    <div class="preset-card filter-card ${isSelected}" style="min-width: 90px; height: 110px; flex-shrink: 0;" onclick="pilihFilterPreset('${f.key}', '${hiddenInputId}', '${containerId}', this)">
-                        <div style="width: 100%; height: 75px; background-image: url('${sampleFilterImg}'); background-size: cover; background-position: center;" class="${f.class}"></div>
-                        <div class="preset-label" style="font-size: 0.6rem; padding: 3px 2px; height: 35px; display: flex; align-items: center; justify-content: center; text-align: center;">${f.name}</div>
+                    <div class="preset-card filter-card ${isSelected}" style="min-width: 80px; width: 80px; height: 100px; flex-shrink: 0;" onclick="pilihFilterPreset('${f.key}', '${hiddenInputId}', '${containerId}', this)">
+                        <div style="width: 100%; height: 65px; background-image: url('${sampleFilterImg}'); background-size: cover; background-position: center;" class="${f.class}"></div>
+                        <div class="preset-label" style="font-size: 0.55rem; padding: 2px; height: 35px; display: flex; align-items: center; justify-content: center; text-align: center;">${f.name}</div>
                     </div>
                 `;
             });
