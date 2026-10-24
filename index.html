@@ -400,18 +400,18 @@
         
         <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
             <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="totalBillLabel">Total Tagihan</p>
-            <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.8rem; margin: 10px 0;">Rp 0</h1>
+            <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.5rem; margin: 10px 0;">Rp 0</h1>
             <p id="paymentDesc" style="font-size: 0.9rem;"></p>
         </div>
 
         <!-- Tombol Pembayaran Otomatis Midtrans -->
-        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)</button>
+        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Pay with QRIS, VA, E-Wallet</button>
         
         <!-- Tombol PayPal -->
         <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
 
         <!-- Tombol Pembayaran Crypto -->
-        <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;" data-i18n="cryptoBtn">🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)</button>
+        <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;" data-i18n="cryptoBtn">🪙 Pay with Crypto (USDT, SOL, ETH, BTC)</button>
 
         <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;" data-i18n="orManualLocal">ATAU PEMBAYARAN MANUAL LOKAL</div>
 
@@ -560,8 +560,8 @@
                 completePaymentTitle: "Selesaikan Pembayaran",
                 selectPaymentMethod: "Pilih metode pembayaran di bawah ini.",
                 totalBillLabel: "Total Tagihan",
-                midtransBtn: "💳 Bayar dengan Midtrans (QRIS, VA, E-Wallet)",
-                cryptoBtn: "🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)",
+                midtransBtn: "💳 Pay with QRIS, VA, E-Wallet",
+                cryptoBtn: "🪙 Pay with Crypto (USDT, SOL, ETH, BTC)",
                 orManualLocal: "ATAU PEMBAYARAN MANUAL LOKAL",
                 whatsappManualBtn: "Pembayaran Manual via WhatsApp",
                 laterBtn: "Nanti Saja",
@@ -636,7 +636,7 @@
                 completePaymentTitle: "Complete Payment",
                 selectPaymentMethod: "Choose your payment method below.",
                 totalBillLabel: "Total Bill",
-                midtransBtn: "💳 Pay with Midtrans (QRIS, VA, E-Wallet)",
+                midtransBtn: "💳 Pay with QRIS, VA, E-Wallet",
                 cryptoBtn: "🪙 Pay with Crypto (USDT, SOL, ETH, BTC)",
                 orManualLocal: "OR LOCAL MANUAL PAYMENT",
                 whatsappManualBtn: "Manual Payment via WhatsApp",
@@ -665,7 +665,6 @@
                 }
             });
 
-            // Perbarui label dinamis formulir acara saat bahasa diganti
             gantiJenisAcaraForm();
             if(document.getElementById('customerDashboard').classList.contains('active-section')) {
                 muatAcaraSaya();
@@ -942,7 +941,9 @@
         }
 
         function tampilkanHalamanPembayaran() {
-            document.getElementById('paymentTotal').innerText = `Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
+            let hargaIDR = pendingPaymentInfo.price;
+            let hargaUSD = (hargaIDR / 15000).toFixed(2);
+            document.getElementById('paymentTotal').innerHTML = `Rp ${hargaIDR.toLocaleString('id-ID')} <span style="font-size: 1.5rem; color: var(--text-muted); font-weight: normal;">($${hargaUSD})</span>`;
             document.getElementById('paymentDesc').innerText = `${pendingPaymentInfo.type} - ${pendingPaymentInfo.name} (${pendingPaymentInfo.package})`;
             showSection('paymentSection');
             renderPayPalButton();
@@ -987,9 +988,10 @@
         }
 
         function konfirmasiCryptoWA() {
+            let hargaUSD = (pendingPaymentInfo.price / 15000).toFixed(2);
             const pesan = currentLang === 'en' 
-                ? `Hello admin The Last Call! 🪙%0A%0AI have made a crypto payment transfer:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total Bill:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (Crypto equivalent)%0A%0APlease verify and activate my event. Thank you!`
-                : `Halo admin The Last Call! 🪙%0A%0ASaya sudah melakukan transfer pembayaran via Crypto:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total Tagihan:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (setara Crypto)%0A%0AMohon verifikasi dan aktifkan acara saya. Terima kasih!`;
+                ? `Hello admin The Last Call! 🪙%0A%0AI have made a crypto payment transfer:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total Bill:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} ($${hargaUSD})%0A%0APlease verify and activate my event. Thank you!`
+                : `Halo admin The Last Call! 🪙%0A%0ASaya sudah melakukan transfer pembayaran via Crypto:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total Tagihan:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} ($${hargaUSD})%0A%0AMohon verifikasi dan aktifkan acara saya. Terima kasih!`;
             window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
         }
 
@@ -1096,9 +1098,10 @@
         }
 
         document.getElementById('btnConfirmWA').addEventListener('click', () => {
+            let hargaUSD = (pendingPaymentInfo.price / 15000).toFixed(2);
             const pesan = currentLang === 'en'
-                ? `Hello admin The Last Call! 📸%0A%0AI have made a transfer for payment:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`
-                : `Halo admin The Last Call! 📸%0A%0ASaya sudah melakukan transfer untuk pembayaran:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')}`;
+                ? `Hello admin The Last Call! 📸%0A%0AI have made a transfer for payment:%0A%0A📌 *Type:* ${pendingPaymentInfo.type}%0A📛 *Event Name:* ${pendingPaymentInfo.name}%0A📦 *Package:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} ($${hargaUSD})`
+                : `Halo admin The Last Call! 📸%0A%0ASaya sudah melakukan transfer untuk pembayaran:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} ($${hargaUSD})`;
             window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
         });
 
