@@ -15,7 +15,7 @@
             src="https://app.midtrans.com/snap/snap.js" 
             data-client-key="Mid-client-ALmtDiTXSNASniPP"></script>
 
-    <!-- PayPal SDK Script dengan Client ID Anda -->
+    <!-- PayPal SDK Script -->
     <script src="https://www.paypal.com/sdk/js?client-id=BAAw-gZzOt07RVd1eugdeVpAZS5aOuJgH_Qzq_CmnteE9FRZ2VhANUEPwlSfqXr3Zi-uBymBB_7beA6Tbc&currency=USD"></script>
 
     <style>
@@ -37,6 +37,8 @@
         .btn-primary:active { transform: scale(0.98); }
         .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-wa:hover { background: #20ba59; }
+        .btn-crypto { background: #f59e0b; color: #000; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-crypto:hover { background: #d97706; color: #fff; }
 
         .profile-container { position: relative; display: inline-block; }
         .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #fff; transition: 0.2s; }
@@ -110,7 +112,7 @@
         .cd-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
 
         .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 400px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
+        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
         .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
         
         .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
@@ -391,10 +393,45 @@
         <!-- Tombol PayPal -->
         <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
 
-        <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">ATAU PEMBAYARAN MANUAL</div>
+        <!-- Tombol Pembayaran Crypto -->
+        <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;">🪙 Bayar dengan Crypto (USDT, SOL, ETH, BTC)</button>
+
+        <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">ATAU PEMBAYARAN MANUAL LOKAL</div>
 
         <button class="btn-wa" id="btnConfirmWA" style="width: 100%;">Pembayaran Manual via WhatsApp</button>
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;">Nanti Saja</button>
+    </div>
+
+    <!-- MODAL INFO CRYPTO (DENGAN 4 WALLET ASLI ANDA) -->
+    <div class="auth-modal" id="cryptoModal">
+        <div class="auth-box" style="text-align: center;">
+            <span class="auth-close" onclick="tutupCryptoModal()">✖</span>
+            <h3 class="font-serif" style="color: #f59e0b; margin-bottom: 15px; font-size: 1.5rem;">Pembayaran Crypto</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:</p>
+            
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
+                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">USDT (BNB Smart Chain):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
+                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Solana (SOL):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">EMGFtB3yUG6rTjJximqnb5QoqUzbcK5c3dBjZ7yfae4D</code>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
+                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Ethereum (ETH):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
+            </div>
+
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 15px; text-align: left;">
+                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Bitcoin (BTC):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">bc1qm69e49f2hysha0c8lgkkzrec6pa0pqwt9h6242</code>
+            </div>
+
+            <button class="btn-wa" onclick="konfirmasiCryptoWA()" style="width: 100%; margin-bottom: 10px; font-size: 0.9rem;">📲 Konfirmasi Transfer Crypto via WhatsApp</button>
+            <button class="btn-outline" onclick="tutupCryptoModal()" style="width: 100%;">Tutup</button>
+        </div>
     </div>
 
     <!-- MODAL AUTH -->
@@ -717,7 +754,7 @@
 
         function renderPayPalButton() {
             const container = document.getElementById('paypal-button-container');
-            container.innerHTML = ''; // Bersihkan tombol sebelumnya agar tidak menumpuk
+            container.innerHTML = ''; 
             
             if (window.paypal) {
                 paypal.Buttons({
@@ -743,6 +780,19 @@
                     }
                 }).render('#paypal-button-container');
             }
+        }
+
+        function tampilkanInfoCrypto() {
+            document.getElementById('cryptoModal').style.display = 'flex';
+        }
+
+        function tutupCryptoModal() {
+            document.getElementById('cryptoModal').style.display = 'none';
+        }
+
+        function konfirmasiCryptoWA() {
+            const pesan = `Halo admin The Last Call! 🪙%0A%0ASaya sudah melakukan transfer pembayaran via Crypto:%0A%0A📌 *Jenis:* ${pendingPaymentInfo.type}%0A📛 *Nama Acara:* ${pendingPaymentInfo.name}%0A📦 *Paket:* ${pendingPaymentInfo.package}%0A💰 *Total Tagihan:* Rp ${pendingPaymentInfo.price.toLocaleString('id-ID')} (setara Crypto)%0A%0AMohon verifikasi dan aktifkan acara saya. Terima kasih!`;
+            window.open(`https://wa.me/${ADMIN_WA}?text=${pesan}`, '_blank');
         }
 
         function lanjutkanPembayaran(eventId) {
