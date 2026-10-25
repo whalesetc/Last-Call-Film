@@ -197,9 +197,8 @@
             }
         }
 
-        auth.onAuthStateChanged(() => {
-            muatAlbum();
-        });
+        // Panggil langsung fungsi muatAlbum tanpa menunggu onAuthStateChanged
+        muatAlbum();
     </script>
 </body>
 </html>
