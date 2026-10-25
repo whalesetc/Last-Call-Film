@@ -255,6 +255,8 @@
                 <label data-i18n="defaultFilterLabel">Filter Kamera Default Acara</label>
                 <div class="filter-scroll-container" id="filterPresetContainer"></div>
                 <input type="hidden" id="defaultFilter" value="original">
+                <!-- TOMBOL TEST FILTER -->
+                <button type="button" class="btn-outline" onclick="bukaTestKameraModal('defaultFilter')" style="margin-top: 8px; width: 100%; font-size: 0.8rem; padding: 8px;" data-i18n="testFilterBtn">📷 Uji Coba Filter Kamera</button>
             </div>
 
             <div class="form-group">
@@ -378,6 +380,11 @@
                         <input type="hidden" id="editEventId">
                         
                         <div class="form-group" style="margin-bottom: 15px;">
+                            <label style="font-size: 0.85rem;" data-i18n="eventDateLabel">Tanggal Acara</label>
+                            <input type="date" id="editEventDate" class="form-control" style="padding: 10px;" required>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom: 15px;">
                             <label style="font-size: 0.85rem;" data-i18n="waitingTextLabel">Teks Sambutan Aesthetic</label>
                             <input type="text" id="editWaitingText" class="form-control" style="padding: 10px;" required>
                         </div>
@@ -394,6 +401,8 @@
                             <label style="font-size: 0.85rem;" data-i18n="defaultFilterLabel">Filter Kamera Default</label>
                             <div class="filter-scroll-container" id="editFilterPresetContainer"></div>
                             <input type="hidden" id="editDefaultFilter" value="original">
+                            <!-- TOMBOL TEST FILTER -->
+                            <button type="button" class="btn-outline" onclick="bukaTestKameraModal('editDefaultFilter')" style="margin-top: 8px; width: 100%; font-size: 0.8rem; padding: 8px;" data-i18n="testFilterBtn">📷 Uji Coba Filter Kamera</button>
                         </div>
 
                         <div class="form-group" style="margin-bottom: 15px;">
@@ -461,6 +470,27 @@
 
         <button class="btn-wa" id="btnConfirmWA" style="width: 100%;" data-i18n="whatsappManualBtn">Pembayaran Manual via WhatsApp</button>
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;" data-i18n="laterBtn">Nanti Saja</button>
+    </div>
+
+    <!-- MODAL TEST KAMERA FILTER -->
+    <div class="auth-modal" id="testCameraModal">
+        <div class="auth-box" style="text-align: center; max-width: 400px;">
+            <span class="auth-close" onclick="tutupTestKameraModal()">✖</span>
+            <h3 class="font-serif" style="color: var(--accent); margin-bottom: 15px; font-size: 1.25rem;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
+            <div style="width: 100%; height: 320px; background: #000; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 15px;">
+                <video id="testVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <canvas id="testCanvas" style="display: none;"></canvas>
+            </div>
+            <div id="testResultContainer" style="display: none; margin-bottom: 15px;">
+                <img id="testResultImg" style="width: 100%; border-radius: 8px; max-height: 250px; object-fit: cover;" alt="Hasil Tes">
+                <p style="font-size: 0.75rem; color: var(--accent); margin-top: 5px;" data-i18n="testPhotoSuccess">Foto berhasil diambil dengan filter terpilih!</p>
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" id="btnCaptureTest" class="btn-primary" onclick="ambilFotoTes()" style="flex: 1; padding: 10px;" data-i18n="captureBtn">📸 Ambil Foto</button>
+                <button type="button" id="btnRetakeTest" class="btn-outline" onclick="ulangFotoTes()" style="display: none; flex: 1; padding: 10px;" data-i18n="retakeBtn">🔄 Ulangi</button>
+                <button type="button" class="btn-outline" onclick="tutupTestKameraModal()" style="padding: 10px;" data-i18n="closeBtn">Tutup</button>
+            </div>
+        </div>
     </div>
 
     <!-- MODAL CRYPTO -->
@@ -556,6 +586,11 @@
                 viewAlbumPreview: "Lihat Album &rarr;",
                 uploadCustomWallpaper: "✏️ Atau Unggah Wallpaper Sendiri",
                 defaultFilterLabel: "Filter Kamera Default Acara",
+                testFilterBtn: "📷 Uji Coba Filter Kamera",
+                testCameraTitle: "Uji Coba Filter Kamera",
+                testPhotoSuccess: "Foto berhasil diambil dengan filter terpilih!",
+                captureBtn: "📸 Ambil Foto",
+                retakeBtn: "🔄 Ulangi",
                 allowGuestFilterLabel: "Izinkan tamu mengganti filter kamera secara bebas",
                 eventDateLabel: "Tanggal Acara",
                 startTimeLabel: "Jam Mulai Acara",
@@ -634,6 +669,11 @@
                 viewAlbumPreview: "View Album &rarr;",
                 uploadCustomWallpaper: "✏️ Or Upload Custom Wallpaper",
                 defaultFilterLabel: "Default Event Camera Filter",
+                testFilterBtn: "📷 Test Camera Filter",
+                testCameraTitle: "Test Camera Filter",
+                testPhotoSuccess: "Photo successfully captured with selected filter!",
+                captureBtn: "📸 Take Photo",
+                retakeBtn: "🔄 Retake",
                 allowGuestFilterLabel: "Allow guests to freely change camera filters",
                 eventDateLabel: "Event Date",
                 startTimeLabel: "Event Start Time",
@@ -701,6 +741,70 @@
             { key: "mono", name: "B&W", class: "filter-mono" }
         ];
         const sampleFilterImg = "https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=300&q=80";
+
+        let activeStream = null;
+        let activeFilterClass = 'filter-original';
+
+        async function bukaTestKameraModal(hiddenInputId) {
+            const filterKey = document.getElementById(hiddenInputId).value;
+            const found = filterDatabase.find(f => f.key === filterKey);
+            activeFilterClass = found ? found.class : 'filter-original';
+
+            const modal = document.getElementById('testCameraModal');
+            modal.style.display = 'flex';
+            
+            document.getElementById('testResultContainer').style.display = 'none';
+            document.getElementById('testVideo').style.display = 'block';
+            document.getElementById('btnCaptureTest').style.display = 'block';
+            document.getElementById('btnRetakeTest').style.display = 'none';
+
+            const video = document.getElementById('testVideo');
+            video.className = '';
+            video.classList.add(activeFilterClass);
+
+            try {
+                activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                video.srcObject = activeStream;
+            } catch (err) {
+                alert(currentLang === 'en' ? "Failed to access camera: " + err.message : "Gagal mengakses kamera: " + err.message);
+                tutupTestKameraModal();
+            }
+        }
+
+        function tutupTestKameraModal() {
+            if (activeStream) {
+                activeStream.getTracks().forEach(track => track.stop());
+                activeStream = null;
+            }
+            document.getElementById('testCameraModal').style.display = 'none';
+        }
+
+        function ambilFotoTes() {
+            const video = document.getElementById('testVideo');
+            const canvas = document.getElementById('testCanvas');
+            canvas.width = video.videoWidth || 640;
+            canvas.height = video.videoHeight || 480;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const dataUrl = canvas.toDataURL('image/jpeg');
+            const resultImg = document.getElementById('testResultImg');
+            resultImg.src = dataUrl;
+            resultImg.className = '';
+            resultImg.classList.add(activeFilterClass);
+
+            video.style.display = 'none';
+            document.getElementById('testResultContainer').style.display = 'block';
+            document.getElementById('btnCaptureTest').style.display = 'none';
+            document.getElementById('btnRetakeTest').style.display = 'block';
+        }
+
+        function ulangFotoTes() {
+            document.getElementById('testResultContainer').style.display = 'none';
+            document.getElementById('testVideo').style.display = 'block';
+            document.getElementById('btnCaptureTest').style.display = 'block';
+            document.getElementById('btnRetakeTest').style.display = 'none';
+        }
 
         function renderFilterPresets(containerId, hiddenInputId, selectedKey) {
             const container = document.getElementById(containerId);
@@ -913,6 +1017,7 @@
 
             document.getElementById('manageEventTitle').innerText = event.eventName;
             document.getElementById('editEventId').value = eventId;
+            document.getElementById('editEventDate').value = event.date || '';
             document.getElementById('editGuestPhotoLimit').value = event.guestPhotoLimit || 15;
             document.getElementById('editStartTime').value = event.startTime || "00:00";
             document.getElementById('editEndTime').value = event.endTime || "23:59";
@@ -1272,12 +1377,10 @@
             }).catch(err => alert((currentLang === 'en' ? "Failed to sign out: " : "Gagal keluar: ") + err.message));
         }
 
-        // PENCATATAN TERAKHIR ONLINE DI DALAM AUTH STATE CHANGED
         auth.onAuthStateChanged(user => {
             currentUser = user;
             const navMenu = document.getElementById('navMenu');
             if (user) {
-                // Catat waktu terakhir online member ke Firestore (terhubung ke Super Admin Dashboard)
                 db.collection('members').doc(user.uid).set({
                     uid: user.uid,
                     email: user.email,
@@ -1408,6 +1511,7 @@
 
             const eventId = document.getElementById('editEventId').value;
             let updateData = {
+                date: document.getElementById('editEventDate').value,
                 startTime: document.getElementById('editStartTime').value,
                 endTime: document.getElementById('editEndTime').value,
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
@@ -1429,6 +1533,7 @@
             try {
                 await db.collection('events').doc(eventId).update(updateData);
                 alert(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
+                muatAcaraSaya();
             } catch(err) {
                 alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
