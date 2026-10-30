@@ -73,7 +73,7 @@
         <div class="header">
             <div>
                 <h1 class="font-serif" style="font-size: 2rem;">Data Pesanan & Member</h1>
-                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, profil member, status akun, dan kelola blokir kecurangan device.</p>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.9rem; margin-top: 4px;">Pantau pesanan, profil member, status akun, dan kelola voucher promo.</p>
             </div>
             <div style="text-align: right;">
                 <p id="adminEmailText" style="font-size: 0.85rem; color: rgba(255,255,255,0.6); margin-bottom: 8px;">thelastcallfilm.co@gmail.com</p>
@@ -103,6 +103,7 @@
         <!-- TABS NAVIGASI -->
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="bukaTab('tabOrderan', this)">Menu Orderan</button>
+            <button class="nav-tab" onclick="bukaTab('tabVoucher', this)">Kelola Voucher</button>
             <button class="nav-tab" onclick="bukaTab('tabMember', this)">List Member</button>
             <button class="nav-tab" onclick="bukaTab('tabAktif', this)">Acara Aktif</button>
             <button class="nav-tab" onclick="bukaTab('tabNonaktif', this)">Acara Nonaktif</button>
@@ -128,7 +129,54 @@
             </div>
         </div>
 
-        <!-- TAB 2: LIST MEMBER -->
+        <!-- TAB 2: KELOLA VOUCHER -->
+        <div id="tabVoucher" class="tab-content">
+            <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 20px; align-items: start;">
+                <!-- Form Buat Voucher -->
+                <div class="stat-card" style="padding: 25px;">
+                    <h3 class="font-serif" style="margin-bottom: 15px; font-size: 1.2rem; color: var(--accent);">🎟️ Buat Kode Voucher / Diskon Baru</h3>
+                    <form id="voucherAdminForm" onsubmit="buatVoucherAdmin(event)">
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: rgba(255,255,255,0.6); display: block; margin-bottom: 5px;">Kode Voucher (Contoh: TLCF50FREE)</label>
+                            <input type="text" id="vAdminCode" class="modal-input" style="margin: 0; text-transform: uppercase;" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: rgba(255,255,255,0.6); display: block; margin-bottom: 5px;">Free Pax (Kuota Tamu Gratis, misal: 10, 50, atau 9999 untuk Unlimited)</label>
+                            <input type="number" id="vAdminFreePax" class="modal-input" style="margin: 0;" value="0" required>
+                        </div>
+                        <div style="margin-bottom: 15px;">
+                            <label style="font-size: 0.8rem; color: rgba(255,255,255,0.6); display: block; margin-bottom: 5px;">Diskon Persen (%) Khusus (Misal: 20 untuk diskon 20%)</label>
+                            <input type="number" id="vAdminDiscount" class="modal-input" style="margin: 0;" min="0" max="100" value="0" required>
+                        </div>
+                        <div style="margin-bottom: 20px;">
+                            <label style="font-size: 0.8rem; color: rgba(255,255,255,0.6); display: block; margin-bottom: 5px;">Maksimal Pengguna / Akun (1 Kode = 1 Akun)</label>
+                            <input type="number" id="vAdminMaxUsage" class="modal-input" style="margin: 0;" value="1" min="1" required>
+                        </div>
+                        <button type="submit" class="btn-act activate" style="width: 100%; padding: 12px; font-size: 0.9rem;">Simpan & Aktifkan Voucher</button>
+                    </form>
+                </div>
+
+                <!-- List Voucher Aktif -->
+                <div class="table-container">
+                    <h3 class="font-serif" style="padding: 15px 20px; border-bottom: 1px solid var(--border); font-size: 1.1rem;">Daftar Voucher Tersedia</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>KODE</th>
+                                <th>FREE PAX / DISKON</th>
+                                <th>TERPAKAI</th>
+                                <th>AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tbodyVoucher">
+                            <tr><td colspan="4" style="text-align: center; color: #888;">Memuat data voucher...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: LIST MEMBER -->
         <div id="tabMember" class="tab-content">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                 <h3 class="font-serif">Daftar Member Terdaftar (Profil & Waktu Online)</h3>
@@ -151,7 +199,7 @@
             </div>
         </div>
 
-        <!-- TAB 3: ACARA AKTIF -->
+        <!-- TAB 4: ACARA AKTIF -->
         <div id="tabAktif" class="tab-content">
             <div class="table-container">
                 <table>
@@ -169,7 +217,7 @@
             </div>
         </div>
 
-        <!-- TAB 4: ACARA NONAKTIF -->
+        <!-- TAB 5: ACARA NONAKTIF -->
         <div id="tabNonaktif" class="tab-content">
             <div class="table-container">
                 <table>
@@ -187,7 +235,7 @@
             </div>
         </div>
 
-        <!-- TAB 5: ACARA SOON -->
+        <!-- TAB 6: ACARA SOON -->
         <div id="tabSoon" class="tab-content">
             <div class="table-container">
                 <table>
@@ -270,6 +318,7 @@
 
         window.onload = async () => {
             muatDataRealtime();
+            muatVoucherRealtime();
         };
 
         function bukaTab(tabId, btn) {
@@ -332,6 +381,69 @@
                 });
                 rendertabMembers();
             });
+        }
+
+        function muatVoucherRealtime() {
+            db.collection("vouchers").onSnapshot(snap => {
+                const tbody = document.getElementById('tbodyVoucher');
+                if(!tbody) return;
+                tbody.innerHTML = '';
+
+                if(snap.empty) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #888;">Belum ada voucher aktif.</td></tr>';
+                    return;
+                }
+
+                snap.forEach(doc => {
+                    let v = doc.data();
+                    let usedCount = (v.usedAccounts || []).length;
+                    let maxLimit = v.maxUsage || 1;
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><b style="color: var(--accent);">${v.code}</b></td>
+                            <td>Free: ${v.freePax || 0} Pax<br>Diskon: ${v.discountPercent || 0}%</td>
+                            <td>${usedCount} / ${maxLimit} Akun</td>
+                            <td>
+                                <button class="btn-act delete" onclick="hapusVoucher('${doc.id}')">Hapus</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+        }
+
+        async function buatVoucherAdmin(e) {
+            e.preventDefault();
+            const code = document.getElementById('vAdminCode').value.trim().toUpperCase();
+            const freePax = parseInt(document.getElementById('vAdminFreePax').value) || 0;
+            const discountPercent = parseInt(document.getElementById('vAdminDiscount').value) || 0;
+            const maxUsage = parseInt(document.getElementById('vAdminMaxUsage').value) || 1;
+
+            try {
+                await db.collection('vouchers').doc(code).set({
+                    code: code,
+                    freePax: freePax,
+                    discountPercent: discountPercent,
+                    maxUsage: maxUsage,
+                    usedAccounts: [],
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                alert("Voucher berhasil dibuat!");
+                document.getElementById('voucherAdminForm').reset();
+            } catch (err) {
+                alert("Gagal membuat voucher: " + err.message);
+            }
+        }
+
+        async function hapusVoucher(codeId) {
+            if(!confirm(`Yakin ingin menghapus voucher ${codeId}?`)) return;
+            try {
+                await db.collection('vouchers').doc(codeId).delete();
+                alert("Voucher berhasil dihapus.");
+            } catch (err) {
+                alert("Gagal menghapus voucher: " + err.message);
+            }
         }
 
         function rendertabOrderan() {
@@ -421,7 +533,6 @@
                 let deviceId = m.deviceId;
                 let isSuspended = m.isSuspended;
 
-                // Format waktu terakhir online
                 let lastOnlineStr = 'Belum pernah';
                 if (m.lastOnline && typeof m.lastOnline.toMillis === 'function') {
                     lastOnlineStr = new Date(m.lastOnline.toMillis()).toLocaleString('id-ID', { 
