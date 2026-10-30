@@ -209,7 +209,6 @@
             <div class="form-group" style="background: rgba(110, 231, 183, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
                 <label style="color: var(--accent); font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <!-- Placeholder dikosongkan tanpa contoh -->
                     <input type="text" id="promoCodeInput" class="form-control" placeholder="" style="text-transform: uppercase;">
                     <button type="button" class="btn-primary" onclick="terapkanPromoCode()" style="padding: 0 20px;" data-i18n="applyPromoBtn">Gunakan</button>
                 </div>
@@ -648,7 +647,7 @@
                 printQrDesc: "Cetak QR ini di meja undangan.",
                 copyBtn: "Salin",
                 openCameraTab: "Buka Kamera di Tab Baru &rarr;",
-                openAlbumZip: "Open Album & Unduh ZIP &darr;",
+                openAlbumZip: "Buka Album & Unduh ZIP &darr;",
                 guestQuotaTitle: "Kuota Tamu",
                 currentQuotaLabel: "Batas Kuota Saat Ini:",
                 selectAddOpt: "-- Pilih Tambahan --",
@@ -824,20 +823,26 @@
                     ? `Promo applied successfully! (Free ${vData.freePax || 0} Pax, Discount ${vData.discountPercent || 0}%)` 
                     : `Promo berhasil digunakan! (Free ${vData.freePax || 0} Orang, Diskon ${vData.discountPercent || 0}%)`;
 
-                // Jika voucher memberikan free pax (misal 10 pax menjadi gratis), ubah teks tag harga di UI
                 let freePaxTarget = vData.freePax || 0;
-                if(freePaxTarget > 0) {
-                    const radios = document.querySelectorAll('input[name="package"]');
-                    radios.forEach(r => {
-                        if(r.value == freePaxTarget || (freePaxTarget >= 9999 && r.value === 'unlimited')) {
-                            r.checked = true;
-                            const priceTagEl = document.getElementById('priceTag' + r.value);
-                            if(priceTagEl) {
-                                priceTagEl.innerText = currentLang === 'en' ? 'Free' : 'Gratis';
-                            }
+                let discountPercent = vData.discountPercent || 0;
+
+                const radios = document.querySelectorAll('input[name="package"]');
+                radios.forEach(r => {
+                    const val = r.value;
+                    const priceTagEl = document.getElementById('priceTag' + val);
+                    if (!priceTagEl) return;
+
+                    if ((freePaxTarget > 0 && (val == freePaxTarget || (freePaxTarget >= 9999 && val === 'unlimited'))) || discountPercent >= 100) {
+                        r.checked = true;
+                        priceTagEl.innerText = currentLang === 'en' ? 'Free' : 'Gratis';
+                    } else if (discountPercent > 0) {
+                        let basePrice = val === "5" ? 0 : (val === "10" ? 50000 : (val === "25" ? 85000 : (val === "50" ? 160000 : (val === "100" ? 250000 : (val === "150" ? 350000 : (val === "200" ? 470000 : (val === "unlimited" ? 800000 : 0)))))));
+                        if (basePrice > 0) {
+                            let newPrice = basePrice - (basePrice * (discountPercent / 100));
+                            priceTagEl.innerText = `Rp ${newPrice.toLocaleString('id-ID')} (${discountPercent}% OFF)`;
                         }
-                    });
-                }
+                    }
+                });
 
             } catch(err) {
                 console.error(err);
@@ -1162,7 +1167,8 @@
             document.getElementById('appliedVoucherDiscount').value = '0';
             document.getElementById('appliedVoucherFreePax').value = '0';
 
-            // Kembalikan teks harga default paket
+            // Reset label harga paket ke nilai awal
+            document.getElementById('priceTag5').innerText = currentLang === 'en' ? 'Free' : 'Gratis';
             document.getElementById('priceTag10').innerText = 'Rp 50.000';
             document.getElementById('priceTag25').innerText = 'Rp 85.000';
             document.getElementById('priceTag50').innerText = 'Rp 160.000';
