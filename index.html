@@ -459,7 +459,7 @@
                         <select id="upgradePackage" class="form-control" style="padding: 10px; font-size: 0.85rem; flex: 1; min-width: 150px;">
                             <option value="" data-i18n="selectAddOpt">-- Pilih Tambahan --</option>
                         </select>
-                        <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold; padding: 10px 16px;" data-i18n="upgradeBtn">Upgrade</button>
+                        <button class="btn-primary" onclick="requestUpgradePaket()" style="font-weight: bold; padding: 10px 16px;" data-i18n="upgradeBtn">Upgrade</button>
                     </div>
                 </div>
 
@@ -758,7 +758,7 @@
                 currentQuotaLabel: "Batas Kuota Saat Ini:",
                 selectAddOpt: "-- Pilih Tambahan --",
                 upgradeUnlimitedOpt: "Jadi Tak Terbatas (Rp 800.000)",
-                upgradeBtn: "Upgrade",
+                upgradeBtn: "Request Upgrade",
                 joinedGuestsTitle: "Daftar Peserta yang Join",
                 loadingGuests: "Memuat data peserta...",
                 timeWallpaperSettings: "Pengaturan Waktu, Privasi & Wallpaper",
@@ -850,7 +850,7 @@
                 currentQuotaLabel: "Current Quota Limit:",
                 selectAddOpt: "-- Select Add-on --",
                 upgradeUnlimitedOpt: "Make Unlimited ($55 / Rp 800.000)",
-                upgradeBtn: "Upgrade",
+                upgradeBtn: "Request Upgrade",
                 joinedGuestsTitle: "Joined Participants List",
                 loadingGuests: "Loading participant data...",
                 timeWallpaperSettings: "Time, Privacy & Wallpaper Settings",
@@ -1632,6 +1632,31 @@
                 addedQuota: parseInt(parts[0])
             };
             tampilkanHalamanPembayaran();
+        }
+
+        // FUNGSI REQUEST UPGRADE KE FIRESTORE (UNTUK ADMIN PANEL TLCM)
+        async function requestUpgradePaket() {
+            const val = document.getElementById('upgradePackage').value;
+            if(!val) {
+                showToast(currentLang === 'en' ? 'Please select an upgrade package first!' : 'Pilih paket upgrade terlebih dahulu!');
+                return;
+            }
+            const parts = val.split('|');
+            const eventId = document.getElementById('editEventId').value;
+            const targetQuota = parseInt(parts[0]);
+            const targetPrice = parseInt(parts[1]);
+
+            try {
+                await db.collection('events').doc(eventId).update({
+                    upgradePending: true,
+                    pendingQuota: targetQuota,
+                    pendingPrice: targetPrice
+                });
+                showToast(currentLang === 'en' ? "Upgrade request sent to admin successfully!" : "Request upgrade berhasil dikirim ke admin!");
+                bukaPengaturan(eventId);
+            } catch (err) {
+                showToast("Gagal mengirim request: " + err.message);
+            }
         }
 
         async function prosesPembayaranMidtrans() {
