@@ -1687,7 +1687,6 @@
             const usedVoucherCode = document.getElementById('appliedVoucherCode').value;
 
             try {
-                // VOUCHER HANYA TEREKAM / TERPAKAI SAAT TOMBOL LANJUTKAN DIBAWAH DITEKAN
                 if(usedVoucherCode) {
                     const vRef = db.collection('vouchers').doc(usedVoucherCode);
                     const vSnap = await vRef.get();
@@ -1761,7 +1760,7 @@
                 await db.collection('events').doc(eventId).update(updateData);
                 alert(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
                 muatAcaraSaya();
-            } catch(err) {
+            }catch(err) {
                 alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
                 btn.innerText = currentLang === 'en' ? "Save Settings" : "Simpan Pengaturan";
