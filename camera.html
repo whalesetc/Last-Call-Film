@@ -63,7 +63,7 @@
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
         /* Tampilan Viewfinder Kamera Aktif */
-        .camera-viewfinder { width: 100%; max-width: 440px; height: 72vh; background: #000; border-radius: 20px; overflow: hidden; position: relative; border: 3px solid var(--mahogany); box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; }
+        .camera-viewfinder { width: 100%; max-width: 440px; height: 68vh; background: #000; border-radius: 20px; overflow: hidden; position: relative; border: 3px solid var(--mahogany); box-shadow: 0 10px 30px rgba(0,0,0,0.8); display: none; }
         
         /* Bingkai Sudut Ala Kamera Analog */
         .viewfinder-corner { position: absolute; width: 25px; height: 25px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
@@ -74,12 +74,22 @@
 
         video, .captured-img-preview { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Panel Bawah Kamera (Shutter & Filter) */
-        .camera-controls-panel { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 10px; display: none; }
+        /* Panel Bawah Kamera (Shutter Pasti di Tengah, Tombol Putar di Kiri) */
+        .camera-controls-panel { width: 100%; max-width: 440px; display: flex; flex-direction: column; gap: 8px; display: none; }
         
-        .shutter-row { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; }
-        .shutter-btn { width: 68px; height: 68px; background: var(--accent); border: 4px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.1s; }
-        .shutter-btn:active { transform: scale(0.92); }
+        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 75px; }
+        
+        /* Tombol Jepret dipastikan berada di tengah menggunakan absolute & transform */
+        .shutter-btn { width: 68px; height: 68px; background: var(--accent); border: 4px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
+        .shutter-btn:active { transform: translateX(-50%) scale(0.92); }
+
+        /* Tombol Putar di Kiri */
+        .btn-flip-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.75rem; position: absolute; left: 0; }
+        .btn-flip-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
+
+        /* Tombol Ulangi di Kiri (menggantikan posisi putar saat hasil foto tampil) */
+        .btn-retake-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.75rem; position: absolute; left: 0; display: none; }
+        .btn-retake-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
         /* Filter Selector Scroll */
         .filter-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 5px 2px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
@@ -159,7 +169,7 @@
             <video id="cameraVideo" autoplay playsinline></video>
             <canvas id="cameraCanvas" style="display: none;"></canvas>
             
-            <div id="resultPreviewWrapper" style="display: none; width: 100%; height: 100%; position: absolute; top:0; left:0; background:#000;">
+            <div id="resultPreviewWrapper" style="display: none; width: 100%; height: 100%; position: absolute; top:0; left:0; background:#000; z-index: 10;">
                 <img id="resultImage" class="captured-img-preview" alt="Hasil Foto">
             </div>
         </div>
@@ -169,9 +179,9 @@
             <div class="filter-scroll" id="filterScrollContainer"></div>
             
             <div class="shutter-row">
-                <button class="btn-custom-outline" onclick="balikKamera()" style="width: auto; padding: 8px 14px; font-size: 0.75rem;" data-i18n="flipBtn">🔄 Putar</button>
+                <button class="btn-flip-left" onclick="balikKamera()" id="btnFlip" data-i18n="flipBtn">🔄 Putar</button>
                 <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
-                <button class="btn-custom-outline" id="btnRetake" onclick="ulangFoto()" style="display: none; width: auto; padding: 8px 14px; font-size: 0.75rem;" data-i18n="retakeBtn">🔄 Ulangi</button>
+                <button class="btn-retake-left" id="btnRetake" onclick="ulangFoto()" data-i18n="retakeBtn">🔄 Ulangi</button>
             </div>
         </div>
 
@@ -209,7 +219,8 @@
         let guestName = localStorage.getItem(`guest_name_${eventId}`) || '';
         let eventInterval = null;
         let activeStream = null;
-        let currentFacingMode = 'user';
+        // Default awal menggunakan kamera belakang ('environment')
+        let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
 
         let currentLang = 'id';
@@ -436,7 +447,12 @@
                 });
                 video.srcObject = activeStream;
             } catch (err) {
-                alert(currentLang === 'en' ? "Camera access error: " + err.message : "Gagal mengakses kamera: " + err.message);
+                if (currentFacingMode === 'environment') {
+                    currentFacingMode = 'user';
+                    startCameraStream();
+                } else {
+                    alert(currentLang === 'en' ? "Camera access error: " + err.message : "Gagal mengakses kamera: " + err.message);
+                }
             }
         }
 
@@ -463,6 +479,7 @@
             video.style.display = 'none';
 
             document.getElementById('btnShutter').style.display = 'none';
+            document.getElementById('btnFlip').style.display = 'none';
             document.getElementById('btnRetake').style.display = 'block';
 
             uploadFotoKeFirebase(dataUrl);
@@ -472,12 +489,12 @@
             document.getElementById('resultPreviewWrapper').style.display = 'none';
             document.getElementById('cameraVideo').style.display = 'block';
             document.getElementById('btnShutter').style.display = 'block';
+            document.getElementById('btnFlip').style.display = 'block';
             document.getElementById('btnRetake').style.display = 'none';
         }
 
         async function uploadFotoKeFirebase(dataUrl) {
             try {
-                // Konversi Base64 ke Blob untuk diunggah ke ImgBB
                 const blob = await fetch(dataUrl).then(res => res.blob());
                 const formData = new FormData();
                 formData.append('image', blob);
