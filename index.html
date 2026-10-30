@@ -102,7 +102,6 @@
         .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(184, 45, 56, 0.4); }
         .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.65rem; padding: 4px; text-align: center; color: #fff; }
 
-        /* PREVIEW MOCKUP */
         .mockup-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px; }
         .phone-mockup { width: 220px; height: 440px; border: 10px solid #222; border-radius: 30px; position: relative; overflow: hidden; background: #111; box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: block; }
         .phone-mockup::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 20px; background: #222; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
@@ -267,7 +266,6 @@
 
                 <div class="preset-grid" id="presetWallpaperContainer"></div>
                 
-                <!-- MOCKUP PREVIEW -->
                 <div class="mockup-container">
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">📱 Preview Tampilan Kartu Sambutan & Countdown Tamu:</p>
                     <div class="phone-mockup">
@@ -462,7 +460,6 @@
 
                             <div class="preset-grid" id="editPresetContainer"></div>
 
-                            <!-- PREVIEW EDIT -->
                             <div class="mockup-container" style="margin-top: 10px;">
                                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px;">📱 Preview Tampilan Wallpaper:</p>
                                 <div class="phone-mockup" style="width: 180px; height: 360px;">
@@ -1643,7 +1640,9 @@
             if (!event.target.closest('.profile-container')) {
                 const dropdowns = document.getElementsByClassName("profile-dropdown");
                 for (let i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('string')) dropdowns[i].classList.remove('show');
+                    if (dropdowns[i].classList.contains('show')) {
+                        dropdowns[i].classList.remove('show');
+                    }
                 }
             }
         }
