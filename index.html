@@ -220,7 +220,38 @@
         
         <div style="display: flex; gap: 12px; justify-content: center; margin-top: 10px; flex-wrap: wrap;">
             <button class="btn-primary" onclick="bukaAuthModal()" style="font-size: 0.95rem; padding: 14px 28px;" data-i18n="createEventBtn">Buat Acara Sekarang</button>
-            <button class="btn-outline" onclick="alert(currentLang === 'en' ? 'Each guest can only take photos up to your specified limit!' : 'Setiap tamu hanya bisa menjepret sesuai kuota yang Anda tentukan!')" style="font-size: 0.95rem; padding: 14px 28px;" data-i18n="howItWorksBtn">Cara Kerja</button>
+            <button class="btn-outline" onclick="bukaCaraKerjaModal()" style="font-size: 0.95rem; padding: 14px 28px;" data-i18n="howItWorksBtn">Cara Kerja</button>
+        </div>
+    </div>
+
+    <!-- MODAL CARA KERJA -->
+    <div class="auth-modal" id="caraKerjaModal">
+        <div class="auth-box" style="max-width: 550px; max-height: 85vh; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
+                <h3 class="font-serif" style="color: #E5D178; font-size: 1.3rem; margin: 0;" data-i18n="howItWorksTitle">Cara Kerja The Last Call Film</h3>
+                <span class="auth-close" style="position: static; font-size: 1.3rem;" onclick="tutupCaraKerjaModal()">✖</span>
+            </div>
+
+            <div style="font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; display: flex; flex-direction: column; gap: 15px;">
+                <p data-i18n="howItWorksDesc">Menghadirkan kembali keseruan kamera disposabel jadul di era digital kini jauh lebih mudah dan tanpa ribet. Cukup ikuti langkah-langkah sederhana berikut:</p>
+                
+                <div style="background: rgba(107, 61, 54, 0.2); border: 1px solid var(--border-color); padding: 12px 15px; border-radius: 10px;">
+                    <strong style="color: var(--accent); display: block; margin-bottom: 4px;" data-i18n="step1Title">1. Untuk Penyelenggara (Host)</strong>
+                    <span style="color: #E5D178;" data-i18n="step1Desc">Daftar atau masuk ke akun Anda, pilih jenis acara dan paket kuota tamu. Kustomisasi teks sambutan serta wallpaper estetik, tentukan waktu acara, lalu cetak QR Code unik untuk ditaruh di meja undangan.</span>
+                </div>
+
+                <div style="background: rgba(99, 128, 115, 0.15); border: 1px solid var(--secondary-accent); padding: 12px 15px; border-radius: 10px;">
+                    <strong style="color: var(--secondary-accent); display: block; margin-bottom: 4px;" data-i18n="step2Title">2. Untuk Tamu Undangan</strong>
+                    <span style="color: #E5D178;" data-i18n="step2Desc">Tamu cukup scan QR Code di meja menggunakan kamera ponsel mereka (tanpa perlu download aplikasi!). Pilih filter klasik favorit, lalu potret momen seru sampai batas jepretan habis.</span>
+                </div>
+
+                <div style="background: rgba(217, 135, 79, 0.1); border: 1px solid var(--accent); padding: 12px 15px; border-radius: 10px;">
+                    <strong style="color: var(--accent); display: block; margin-bottom: 4px;" data-i18n="step3Title">3. Kenangan Abadi untuk Anda</strong>
+                    <span style="color: #E5D178;" data-i18n="step3Desc">Semua foto autentik terkumpul otomatis di galeri digital Anda. Pantau daftar peserta dan unduh seluruh kenangan dalam format ZIP kapan saja!</span>
+                </div>
+            </div>
+
+            <button class="btn-primary" onclick="tutupCaraKerjaModal()" style="width: 100%; margin-top: 20px; font-size: 0.95rem; padding: 12px;" data-i18n="closeBtn">Mengerti & Tutup</button>
         </div>
     </div>
 
@@ -654,6 +685,14 @@
                 heroSubtitle: "Hadirkan pengalaman memotret ala disposable camera jadul langsung di ponsel tamu undangan Anda. Cukup scan QR, habiskan batas jepretan, dan ciptakan galeri kenangan autentik tanpa perlu mengunduh aplikasi apa pun.",
                 createEventBtn: "Buat Acara Sekarang",
                 howItWorksBtn: "Cara Kerja",
+                howItWorksTitle: "Cara Kerja The Last Call Film",
+                howItWorksDesc: "Menghadirkan kembali keseruan kamera disposabel jadul di era digital kini jauh lebih mudah dan tanpa ribet. Cukup ikuti langkah-langkah sederhana berikut:",
+                step1Title: "1. Untuk Penyelenggara (Host)",
+                step1Desc: "Daftar atau masuk ke akun Anda, pilih jenis acara dan paket kuota tamu. Kustomisasi teks sambutan serta wallpaper estetik, tentukan waktu acara, lalu cetak QR Code unik untuk ditaruh di meja undangan.",
+                step2Title: "2. Untuk Tamu Undangan",
+                step2Desc: "Tamu cukup scan QR Code di meja menggunakan kamera ponsel mereka (tanpa perlu download aplikasi!). Pilih filter klasik favorit, lalu potret momen seru sampai batas jepretan habis.",
+                step3Title: "3. Kenangan Abadi untuk Anda",
+                step3Desc: "Semua foto autentik terkumpul otomatis di galeri digital Anda. Pantau daftar peserta dan unduh seluruh kenangan dalam format ZIP kapan saja!",
                 myEventsTitle: "Acara Saya",
                 newEventQueueBtn: "+ Buat Baru",
                 loadingEvents: "Memuat acara...",
@@ -738,6 +777,14 @@
                 heroSubtitle: "Bring the vintage disposable camera experience directly to your guests' smartphones. Just scan the QR, use up the shot limit, and create an authentic memory gallery without downloading any app.",
                 createEventBtn: "Create Event Now",
                 howItWorksBtn: "How It Works",
+                howItWorksTitle: "How The Last Call Film Works",
+                howItWorksDesc: "Bringing back the excitement of vintage disposable cameras in the digital era is now much easier. Just follow these simple steps:",
+                step1Title: "1. For Hosts",
+                step1Desc: "Sign up or log in, choose your event type and guest quota package. Customize your greeting text and aesthetic wallpaper, set the event schedule, and print your unique QR code for the tables.",
+                step2Title: "2. For Guests",
+                step2Desc: "Guests simply scan the QR code on the table using their phone camera (no app download required!). Pick a favorite classic filter and snap fun moments until the shot limit runs out.",
+                step3Title: "3. Timeless Memories for You",
+                step3Desc: "All authentic photos are automatically gathered in your digital gallery. Monitor participants and download all memories in a ZIP format anytime!",
                 myEventsTitle: "My Events",
                 newEventQueueBtn: "+ Create New",
                 loadingEvents: "Loading events...",
@@ -762,7 +809,7 @@
                 testPhotoSuccess: "Photo successfully captured with selected filter!",
                 captureBtn: "📸 Take Photo",
                 retakeBtn: "🔄 Retake",
-                closeBtn: "Close",
+                closeBtn: "Got it & Close",
                 allowGuestFilterLabel: "Allow guests to freely change camera filters",
                 eventDateLabel: "Event Date",
                 startTimeLabel: "Event Start Time",
@@ -815,6 +862,14 @@
                 orEmail: "OR EMAIL"
             }
         };
+
+        function bukaCaraKerjaModal() {
+            document.getElementById('caraKerjaModal').style.display = 'flex';
+        }
+
+        function tutupCaraKerjaModal() {
+            document.getElementById('caraKerjaModal').style.display = 'none';
+        }
 
         const filterDatabase = [
             { key: "original", name: "Original", class: "filter-original" },
@@ -1860,7 +1915,6 @@
                 alert(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
                 muatAcaraSaya();
             } catch(err) {
-                errR = err;
                 alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
                 btn.innerText = currentLang === 'en' ? "Save Settings" : "Simpan Pengaturan";
