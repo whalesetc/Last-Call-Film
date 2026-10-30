@@ -19,12 +19,18 @@
     <script src="https://www.paypal.com/sdk/js?client-id=BAAw-gZzOt07RVd1eugdeVpAZS5aOuJgH_Qzq_CmnteE9FRZ2VhANUEPwlSfqXr3Zi-uBymBB_7beA6Tbc&currency=USD"></script>
 
     <style>
-        :root { --bg-dark: #12110f; --text-light: #ffffff; --text-muted: rgba(255, 255, 255, 0.55); --accent: #d4af37; --border-color: rgba(255, 255, 255, 0.15); }
+        :root { 
+            --bg-dark: #121010; 
+            --text-light: #ffffff; 
+            --text-muted: rgba(255, 255, 255, 0.55); 
+            --accent: #b82d38; /* Burgundy / Dark Red Elegan */
+            --border-color: rgba(255, 255, 255, 0.15); 
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
-        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.8); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(18,16,16,0.85); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
         .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
         .logo:hover { opacity: 0.8; }
         
@@ -32,7 +38,7 @@
         
         .lang-selector { display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px 8px; gap: 4px; font-size: 0.75rem; }
         .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
-        .lang-btn.active { background: var(--accent); color: #000; }
+        .lang-btn.active { background: var(--accent); color: #fff; }
 
         .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center;}
         .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
@@ -49,7 +55,7 @@
         .profile-container { position: relative; display: inline-block; }
         .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #fff; transition: 0.2s; }
         .profile-btn:hover { background: rgba(255,255,255,0.1); }
-        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
         .profile-dropdown { display: none; position: absolute; right: 0; top: 120%; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 160px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 200; }
         .profile-dropdown.show { display: block; }
         .dropdown-item { padding: 12px 15px; cursor: pointer; color: #fff; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s; text-align: left; width: 100%; background: transparent; border: none; font-family: inherit; }
@@ -61,17 +67,17 @@
         .active-section { display: block; }
 
         #landingPage { text-align: center; padding-top: 80px; position: relative; overflow: hidden; }
-        #landingPage::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, rgba(0,0,0,0) 60%); z-index: -1; pointer-events: none;}
+        #landingPage::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(circle, rgba(184, 45, 56, 0.12) 0%, rgba(0,0,0,0) 60%); z-index: -1; pointer-events: none;}
         
-        .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 25px; color: var(--accent); letter-spacing: 1px; text-transform: uppercase;}
+        .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 25px; color: #e65c65; letter-spacing: 1px; text-transform: uppercase;}
         .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 20px; line-height: 1.15; text-shadow: 0 4px 20px rgba(0,0,0,0.5);}
-        .text-accent { color: var(--accent); font-style: italic; }
+        .text-accent { color: #e65c65; font-style: italic; }
         .hero-subtitle { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 40px auto; line-height: 1.7; }
         
         .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
         .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
-        .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        .badge { background: var(--accent); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
@@ -86,17 +92,17 @@
         .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
         .radio-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: 0.2s; background: rgba(255,255,255,0.02); }
         .radio-card input { display: none; }
-        .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(212, 175, 55, 0.1); }
-        .price-tag { font-weight: 700; color: var(--accent); display: block; margin-top: 5px; }
+        .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(184, 45, 56, 0.12); }
+        .price-tag { font-weight: 700; color: #e65c65; display: block; margin-top: 5px; }
 
         .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         @media(min-width: 600px) { .preset-grid { grid-template-columns: repeat(4, 1fr); } }
         .preset-card { border: 2px solid var(--border-color); border-radius: 10px; overflow: hidden; cursor: pointer; height: 100px; position: relative; transition: 0.2s; background-size: cover; background-position: center; }
         .preset-card:hover { transform: scale(1.02); }
-        .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(212, 175, 55, 0.4); }
+        .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(184, 45, 56, 0.4); }
         .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.65rem; padding: 4px; text-align: center; color: #fff; }
 
-        /* PREVIEW MOCKUP DENGAN LATAR BLUR ESTETIK */
+        /* PREVIEW MOCKUP */
         .mockup-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px; }
         .phone-mockup { width: 220px; height: 440px; border: 10px solid #222; border-radius: 30px; position: relative; overflow: hidden; background: #111; box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: block; }
         .phone-mockup::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 20px; background: #222; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
@@ -106,11 +112,11 @@
             content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
             background: inherit; filter: blur(6px); -webkit-filter: blur(6px); transform: scale(1.1); z-index: 1;
         }
-        .phone-bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 2; }
+        .phone-bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 2; }
         
         .phone-preview-card {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 86%; background: rgba(18, 17, 15, 0.85); border: 1px solid rgba(255,255,255,0.15);
+            width: 86%; background: rgba(18, 16, 16, 0.88); border: 1px solid rgba(255,255,255,0.15);
             backdrop-filter: blur(8px); padding: 12px 8px; border-radius: 12px; text-align: center; z-index: 5; color: #fff;
         }
         .preview-timer { display: flex; justify-content: center; gap: 6px; margin: 6px 0; }
@@ -139,8 +145,8 @@
         .dash-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; }
         .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
         
-        .countdown-dashboard-card { background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
-        .countdown-dash-title { font-size: 0.85rem; color: #d4af37; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
+        .countdown-dashboard-card { background: rgba(184, 45, 56, 0.06); border: 1px solid rgba(184, 45, 56, 0.3); border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
+        .countdown-dash-title { font-size: 0.85rem; color: #e65c65; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
         .countdown-dash-timer { display: flex; justify-content: center; align-items: center; gap: 10px; }
         .cd-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; min-width: 60px; text-align: center; }
         .cd-val { font-size: 1.4rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
@@ -219,13 +225,13 @@
         
         <form id="eventForm">
             <!-- KOLOM PROMO CODE -->
-            <div class="form-group" style="background: rgba(212, 175, 55, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
-                <label style="color: var(--accent); font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
+            <div class="form-group" style="background: rgba(184, 45, 56, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
+                <label style="color: #e65c65; font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
                     <input type="text" id="promoCodeInput" class="form-control" placeholder="" style="text-transform: uppercase;">
                     <button type="button" class="btn-primary" onclick="terapkanPromoCode()" style="padding: 0 20px;" data-i18n="applyPromoBtn">Gunakan</button>
                 </div>
-                <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: var(--accent); display: none;"></p>
+                <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: #e65c65; display: none;"></p>
             </div>
 
             <input type="hidden" id="appliedVoucherCode" value="">
@@ -261,7 +267,7 @@
 
                 <div class="preset-grid" id="presetWallpaperContainer"></div>
                 
-                <!-- KOTAK MOCKUP PREVIEW DI FORM BUAT ACARA -->
+                <!-- MOCKUP PREVIEW -->
                 <div class="mockup-container">
                     <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 2px;">📱 Preview Tampilan Kartu Sambutan & Countdown Tamu:</p>
                     <div class="phone-mockup">
@@ -270,7 +276,7 @@
                             <div class="phone-preview-card">
                                 <div id="previewWaitingText" style="font-size: 0.45rem; letter-spacing: 1px; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 2px;">THE WEDDING OF</div>
                                 <h4 id="previewEventTitle" class="font-serif" style="font-size: 0.95rem; color: #fff; margin-bottom: 4px;">Nama Acara</h4>
-                                <div style="font-size: 0.5rem; color: #d4af37; font-weight: 600; margin-bottom: 4px;">KAMERA AKAN TERBUKA:</div>
+                                <div style="font-size: 0.5rem; color: #e65c65; font-weight: 600; margin-bottom: 4px;">KAMERA AKAN TERBUKA:</div>
                                 <div class="preview-timer">
                                     <div class="preview-box"><div class="preview-val">00</div><div class="preview-lbl">Jam</div></div>
                                     <div class="preview-box"><div class="preview-val">50</div><div class="preview-lbl">Menit</div></div>
@@ -376,7 +382,7 @@
                         <button class="btn-primary" onclick="salinLink()" style="padding: 10px 15px; font-size: 0.85rem;" data-i18n="copyBtn">Salin</button>
                     </div>
                     <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;" data-i18n="openCameraTab">Buka Kamera di Tab Baru &rarr;</button>
-                    <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #000; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
+                    <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
                 </div>
 
                 <div class="dash-card">
@@ -393,7 +399,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
                         <div>
                             <span style="font-size: 0.8rem; color: var(--text-muted); display: block;" data-i18n="currentQuotaLabel">Batas Kuota Saat Ini:</span>
-                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: var(--accent);">5 <span data-i18n="guestsUnit">Orang</span></strong>
+                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: #e65c65;">5 <span data-i18n="guestsUnit">Orang</span></strong>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
@@ -456,7 +462,7 @@
 
                             <div class="preset-grid" id="editPresetContainer"></div>
 
-                            <!-- MOCKUP PREVIEW DI FORM EDIT ACARA -->
+                            <!-- PREVIEW EDIT -->
                             <div class="mockup-container" style="margin-top: 10px;">
                                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2px;">📱 Preview Tampilan Wallpaper:</p>
                                 <div class="phone-mockup" style="width: 180px; height: 360px;">
@@ -511,7 +517,7 @@
         
         <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
             <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="totalBillLabel">Total Tagihan</p>
-            <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.5rem; margin: 10px 0;">Rp 0</h1>
+            <h1 id="paymentTotal" style="color: #e65c65; font-size: 2.5rem; margin: 10px 0;">Rp 0</h1>
             <p id="paymentDesc" style="font-size: 0.9rem;"></p>
         </div>
 
@@ -529,7 +535,7 @@
     <div class="auth-modal" id="testCameraModal">
         <div class="auth-box" style="text-align: center; max-width: 420px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 class="font-serif" style="color: var(--accent); font-size: 1.1rem; margin: 0;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
+                <h3 class="font-serif" style="color: #e65c65; font-size: 1.1rem; margin: 0;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button type="button" class="btn-outline" onclick="balikKameraTes()" style="padding: 4px 8px; font-size: 0.75rem;" title="Ubah Kamera Depan/Belakang">🔄 <span data-i18n="flipCameraBtn">Kamera</span></button>
                     <span class="auth-close" style="position: static; font-size: 1.2rem;" onclick="tutupTestKameraModal()">✖</span>
@@ -854,7 +860,7 @@
             }
 
             msgEl.style.display = 'block';
-            msgEl.style.color = 'var(--accent)';
+            msgEl.style.color = '#e65c65';
             msgEl.innerText = currentLang === 'en' ? "Checking promo code..." : "Memeriksa kode promo...";
 
             try {
@@ -889,7 +895,7 @@
                 document.getElementById('appliedVoucherDiscount').value = vData.discountPercent || 0;
                 document.getElementById('appliedVoucherFreePax').value = vData.freePax || 0;
 
-                msgEl.style.color = 'var(--accent)';
+                msgEl.style.color = '#e65c65';
                 msgEl.innerText = currentLang === 'en' 
                     ? `Promo applied successfully! (Free ${vData.freePax || 0} Pax, Discount ${vData.discountPercent || 0}%)` 
                     : `Promo berhasil digunakan! (Free ${vData.freePax || 0} Orang, Diskon ${vData.discountPercent || 0}%)`;
@@ -1397,7 +1403,7 @@
 
                 if (selisih > 0) {
                     statusText.innerText = currentLang === 'en' ? "Event Starts In:" : "Acara Akan Dimulai Dalam:";
-                    statusText.style.color = "#d4af37";
+                    statusText.style.color = "#e65c65";
                     timerContainer.style.display = 'flex';
                     const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
@@ -1637,7 +1643,7 @@
             if (!event.target.closest('.profile-container')) {
                 const dropdowns = document.getElementsByClassName("profile-dropdown");
                 for (let i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('show');
+                    if (dropdowns[i].classList.contains('show')) dropdowns[i].classList.remove('string')) dropdowns[i].classList.remove('show');
                 }
             }
         }
