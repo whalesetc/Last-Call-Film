@@ -73,6 +73,7 @@
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
         .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
+        .badge-ended { background: #6b7280; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .form-group { margin-bottom: 25px; }
@@ -986,24 +987,6 @@
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         
         function bukaForm() { 
-            let adaAcaraAktif = false;
-            const sekarang = new Date();
-
-            for (let i = 0; i < daftarAcaraGlobal.length; i++) {
-                let d = daftarAcaraGlobal[i];
-                let eventEnd = new Date(`${d.date}T${d.endTime || '23:59'}:00`);
-                
-                if (d.status === 'Pending' || (d.status === 'Aktif' && sekarang <= eventEnd)) {
-                    adaAcaraAktif = true;
-                    break;
-                }
-            }
-
-            if (adaAcaraAktif) {
-                alert(currentLang === 'en' ? "Notice: You still have an active or Pending event. You can only create a new event after the current one ends or by deleting it." : "Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru setelah acara tersebut selesai atau menghapusnya melalui tombol Hapus.");
-                return;
-            }
-
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
             perbaruiPresetOtomatis();
@@ -1265,12 +1248,11 @@
                         const doc = await eventRef.get();
                         if (doc.exists) {
                             let currentData = doc.data();
-                            let currentQuota = currentData.quota || 0;
-                            let added = pendingPaymentInfo.addedQuota || 0;
-                            let newQuota = added === 9999 ? 9999 : currentQuota + added;
+                            let targetQ = currentData.pendingQuota || (currentData.quota + pendingPaymentInfo.addedQuota);
                             await eventRef.update({
-                                quota: newQuota,
-                                remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
+                                quota: targetQ,
+                                remainingQuota: targetQ,
+                                pendingQuota: targetQ
                             });
                             alert(currentLang === 'en' ? "Quota successfully upgraded after payment confirmation!" : "Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
                         }
@@ -1280,7 +1262,7 @@
                             status: "Aktif",
                             quota: finalQ,
                             remainingQuota: finalQ,
-                            pendingQuota: 0
+                            pendingQuota: finalQ
                         });
                         alert(currentLang === 'en' ? "Event successfully activated after payment confirmation!" : "Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
                     }
@@ -1416,26 +1398,33 @@
             if (snapshot.empty) { listDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #888;">${currentLang === 'en' ? 'No events yet.' : 'Belum ada acara.'}</div>`; return; }
             
             daftarAcaraGlobal = [];
+            const sekarang = new Date();
+
             snapshot.forEach(doc => {
                 let eventData = doc.data();
                 eventData.id = doc.id;
+
+                // Cek apakah waktu acara sudah berakhir
+                let eventEnd = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:00`);
+                if (eventData.status === 'Aktif' && sekarang > eventEnd) {
+                    eventData.status = 'Berakhir';
+                }
+
                 daftarAcaraGlobal.push(eventData);
             });
 
             listDiv.innerHTML = '';
             daftarAcaraGlobal.forEach(d => {
-                let statusBadge = d.status === 'Pending' 
-                    ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>` 
-                    : `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
-
-                let quotaTextDisplay = '';
-                if (d.status === 'Pending' && d.pendingQuota && d.pendingQuota > d.quota) {
-                    let curText = d.quota === 9999 ? 'Unlimited' : d.quota;
-                    let targetText = d.pendingQuota === 9999 ? 'Unlimited' : d.pendingQuota;
-                    quotaTextDisplay = `${curText} (Pending upgrade ke ${targetText})`;
+                let statusBadge = '';
+                if (d.status === 'Pending') {
+                    statusBadge = `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>`;
+                } else if (d.status === 'Berakhir') {
+                    statusBadge = `<span class="badge-ended">${currentLang === 'en' ? 'Ended' : 'Telah Berakhir'}</span>`;
                 } else {
-                    quotaTextDisplay = d.quota === 9999 ? 'Unlimited' : d.quota;
+                    statusBadge = `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
                 }
+
+                let quotaTextDisplay = d.quota === 9999 ? 'Unlimited' : d.quota;
 
                 listDiv.innerHTML += `
                     <div class="event-card">
@@ -1448,7 +1437,7 @@
                             <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">${currentLang === 'en' ? 'Manage' : 'Kelola'}</button>
                             <button class="btn-danger" onclick="hapusAcara('${d.id}')">${currentLang === 'en' ? 'Delete' : 'Hapus'}</button>
                         </div>
-                    </div>`;
+                    `;
             });
         }
 
@@ -1469,11 +1458,12 @@
             }
 
             const packageVal = document.querySelector('input[name="package"]:checked').value;
-            let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
-            let harga = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
+            let kuotaPilihan = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
+            let harga = packageVal === "unlimited" ? 800000 : (kuotaPilihan === 10 ? 50000 : (kuotaPilihan === 25 ? 85000 : (kuotaPilihan === 50 ? 160000 : (kuotaPilihan === 100 ? 250000 : (kuotaPilihan === 150 ? 350000 : (kuotaPilihan === 200 ? 470000 : 0))))));
 
-            let initialQuota = harga === 0 ? kuota : 5;
-            let pendingQ = harga === 0 ? 0 : kuota;
+            // Jika berbayar, kuota awal aktif adalah 5 (atau standar gratis), target kuota disimpan di pendingQuota
+            let initialQuota = (harga === 0 || kuotaPilihan === 5) ? kuotaPilihan : 5;
+            let pendingQ = kuotaPilihan;
 
             try {
                 const eventName = document.getElementById('eventName').value;
@@ -1497,7 +1487,7 @@
                 });
                 if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, targetQuota: kuota, addedQuota: 0 };
+                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuotaPilihan===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuotaPilihan} ${unitStr}`, price: harga, targetQuota: kuotaPilihan, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
             } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
