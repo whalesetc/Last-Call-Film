@@ -782,10 +782,45 @@
         let activeFilterClass = 'filter-original';
         let currentFacingMode = 'user';
 
+        function resetHargaPaket() {
+            document.getElementById('appliedVoucherCode').value = '';
+            document.getElementById('appliedVoucherDiscount').value = '0';
+            document.getElementById('appliedVoucherFreePax').value = '0';
+
+            document.getElementById('priceTag5').innerText = currentLang === 'en' ? 'Free' : 'Gratis';
+            document.getElementById('priceTag10').innerText = 'Rp 50.000';
+            document.getElementById('priceTag25').innerText = 'Rp 85.000';
+            document.getElementById('priceTag50').innerText = 'Rp 160.000';
+            document.getElementById('priceTag100').innerText = 'Rp 250.000';
+            document.getElementById('priceTag150').innerText = 'Rp 350.000';
+            document.getElementById('priceTag200').innerText = 'Rp 470.000';
+            document.getElementById('priceTagUnlimited').innerText = 'Rp 800.000';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const promoInput = document.getElementById('promoCodeInput');
+            if (promoInput) {
+                promoInput.addEventListener('input', () => {
+                    const msgEl = document.getElementById('promoMessage');
+                    if (promoInput.value.trim() === '') {
+                        msgEl.style.display = 'none';
+                        resetHargaPaket();
+                    }
+                });
+            }
+        });
+
         async function terapkanPromoCode() {
             const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
             const msgEl = document.getElementById('promoMessage');
-            if(!code) return;
+            
+            if(!code) {
+                msgEl.style.display = 'block';
+                msgEl.style.color = '#ff6b6b';
+                msgEl.innerText = currentLang === 'en' ? "Please enter a promo code!" : "Silakan masukkan kode promo terlebih dahulu!";
+                resetHargaPaket();
+                return;
+            }
 
             msgEl.style.display = 'block';
             msgEl.style.color = 'var(--accent)';
@@ -795,7 +830,8 @@
                 const docRef = await db.collection('vouchers').doc(code).get();
                 if(!docRef.exists) {
                     msgEl.style.color = '#ff6b6b';
-                    msgEl.innerText = currentLang === 'en' ? "Invalid or expired promo code!" : "Kode promo tidak valid atau sudah kedaluwarsa!";
+                    msgEl.innerText = currentLang === 'en' ? "Invalid or expired promo code!" : "Kode promo tidak valid atau salah!";
+                    resetHargaPaket();
                     return;
                 }
 
@@ -805,14 +841,18 @@
                 if(usedAccounts.includes(currentUser.uid)) {
                     msgEl.style.color = '#ff6b6b';
                     msgEl.innerText = currentLang === 'en' ? "You have already used this promo code!" : "Anda sudah pernah menggunakan kode promo ini!";
+                    resetHargaPaket();
                     return;
                 }
 
                 if(vData.maxUsage && usedAccounts.length >= vData.maxUsage) {
                     msgEl.style.color = '#ff6b6b';
                     msgEl.innerText = currentLang === 'en' ? "Promo code usage limit has been reached!" : "Batas maksimal penggunaan kode promo ini sudah habis!";
+                    resetHargaPaket();
                     return;
                 }
+
+                resetHargaPaket();
 
                 document.getElementById('appliedVoucherCode').value = code;
                 document.getElementById('appliedVoucherDiscount').value = vData.discountPercent || 0;
@@ -848,6 +888,7 @@
                 console.error(err);
                 msgEl.style.color = '#ff6b6b';
                 msgEl.innerText = currentLang === 'en' ? "Error checking code." : "Gagal memeriksa kode.";
+                resetHargaPaket();
             }
         }
 
@@ -1163,19 +1204,7 @@
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
             document.getElementById('promoMessage').style.display = 'none';
-            document.getElementById('appliedVoucherCode').value = '';
-            document.getElementById('appliedVoucherDiscount').value = '0';
-            document.getElementById('appliedVoucherFreePax').value = '0';
-
-            // Reset label harga paket ke nilai awal
-            document.getElementById('priceTag5').innerText = currentLang === 'en' ? 'Free' : 'Gratis';
-            document.getElementById('priceTag10').innerText = 'Rp 50.000';
-            document.getElementById('priceTag25').innerText = 'Rp 85.000';
-            document.getElementById('priceTag50').innerText = 'Rp 160.000';
-            document.getElementById('priceTag100').innerText = 'Rp 250.000';
-            document.getElementById('priceTag150').innerText = 'Rp 350.000';
-            document.getElementById('priceTag200').innerText = 'Rp 470.000';
-            document.getElementById('priceTagUnlimited').innerText = 'Rp 800.000';
+            resetHargaPaket();
 
             perbaruiPresetOtomatis();
             renderFilterPresets('filterPresetContainer', 'defaultFilter', 'original');
@@ -1658,6 +1687,7 @@
             const usedVoucherCode = document.getElementById('appliedVoucherCode').value;
 
             try {
+                // VOUCHER HANYA TEREKAM / TERPAKAI SAAT TOMBOL LANJUTKAN DIBAWAH DITEKAN
                 if(usedVoucherCode) {
                     const vRef = db.collection('vouchers').doc(usedVoucherCode);
                     const vSnap = await vRef.get();
