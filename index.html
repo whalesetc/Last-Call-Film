@@ -209,7 +209,8 @@
             <div class="form-group" style="background: rgba(110, 231, 183, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
                 <label style="color: var(--accent); font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                    <input type="text" id="promoCodeInput" class="form-control" placeholder="Contoh: TLCF50FREE" style="text-transform: uppercase;">
+                    <!-- Placeholder dikosongkan tanpa contoh -->
+                    <input type="text" id="promoCodeInput" class="form-control" placeholder="" style="text-transform: uppercase;">
                     <button type="button" class="btn-primary" onclick="terapkanPromoCode()" style="padding: 0 20px;" data-i18n="applyPromoBtn">Gunakan</button>
                 </div>
                 <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: var(--accent); display: none;"></p>
@@ -312,14 +313,14 @@
             <div class="form-group">
                 <label data-i18n="packageLabel">Pilihan Kuota Pengguna (Jumlah Tamu Yang Bisa Akses Kamera)</label>
                 <div class="radio-group" id="packageGroup">
-                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" data-i18n="freeTag">Gratis</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="10">10 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 50.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="25">25 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 85.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="50">50 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 160.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="100">100 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 250.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="150">150 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 350.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="200">200 <span data-i18n="guestsUnit">Orang</span><span class="price-tag">Rp 470.000</span></label>
-                    <label class="radio-card"><input type="radio" name="package" value="unlimited"><span data-i18n="unlimitedTag">Tak Terbatas</span><span class="price-tag">Rp 800.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="5" required>5 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag5" data-i18n="freeTag">Gratis</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="10">10 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag10">Rp 50.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="25">25 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag25">Rp 85.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="50">50 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag50">Rp 160.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="100">100 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag100">Rp 250.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="150">150 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag150">Rp 350.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="200">200 <span data-i18n="guestsUnit">Orang</span><span class="price-tag" id="priceTag200">Rp 470.000</span></label>
+                    <label class="radio-card"><input type="radio" name="package" value="unlimited"><span data-i18n="unlimitedTag">Tak Terbatas</span><span class="price-tag" id="priceTagUnlimited">Rp 800.000</span></label>
                 </div>
             </div>
 
@@ -647,7 +648,7 @@
                 printQrDesc: "Cetak QR ini di meja undangan.",
                 copyBtn: "Salin",
                 openCameraTab: "Buka Kamera di Tab Baru &rarr;",
-                openAlbumZip: "Buka Album & Unduh ZIP &darr;",
+                openAlbumZip: "Open Album & Unduh ZIP &darr;",
                 guestQuotaTitle: "Kuota Tamu",
                 currentQuotaLabel: "Batas Kuota Saat Ini:",
                 selectAddOpt: "-- Pilih Tambahan --",
@@ -802,21 +803,18 @@
                 const vData = docRef.data();
                 const usedAccounts = vData.usedAccounts || [];
 
-                // Cek apakah 1 akun hanya boleh 1 kali pakai voucher ini
                 if(usedAccounts.includes(currentUser.uid)) {
                     msgEl.style.color = '#ff6b6b';
                     msgEl.innerText = currentLang === 'en' ? "You have already used this promo code!" : "Anda sudah pernah menggunakan kode promo ini!";
                     return;
                 }
 
-                // Cek maksimal user / batasan total pemakai
                 if(vData.maxUsage && usedAccounts.length >= vData.maxUsage) {
                     msgEl.style.color = '#ff6b6b';
                     msgEl.innerText = currentLang === 'en' ? "Promo code usage limit has been reached!" : "Batas maksimal penggunaan kode promo ini sudah habis!";
                     return;
                 }
 
-                // Simpan data voucher yang berhasil diaplikasikan
                 document.getElementById('appliedVoucherCode').value = code;
                 document.getElementById('appliedVoucherDiscount').value = vData.discountPercent || 0;
                 document.getElementById('appliedVoucherFreePax').value = vData.freePax || 0;
@@ -826,12 +824,17 @@
                     ? `Promo applied successfully! (Free ${vData.freePax || 0} Pax, Discount ${vData.discountPercent || 0}%)` 
                     : `Promo berhasil digunakan! (Free ${vData.freePax || 0} Orang, Diskon ${vData.discountPercent || 0}%)`;
 
-                // Jika voucher memberikan free pax, otomatis pilih paket atau atur kuota paket
-                if(vData.freePax > 0) {
+                // Jika voucher memberikan free pax (misal 10 pax menjadi gratis), ubah teks tag harga di UI
+                let freePaxTarget = vData.freePax || 0;
+                if(freePaxTarget > 0) {
                     const radios = document.querySelectorAll('input[name="package"]');
                     radios.forEach(r => {
-                        if(r.value == vData.freePax || (vData.freePax >= 9999 && r.value === 'unlimited')) {
+                        if(r.value == freePaxTarget || (freePaxTarget >= 9999 && r.value === 'unlimited')) {
                             r.checked = true;
+                            const priceTagEl = document.getElementById('priceTag' + r.value);
+                            if(priceTagEl) {
+                                priceTagEl.innerText = currentLang === 'en' ? 'Free' : 'Gratis';
+                            }
                         }
                     });
                 }
@@ -1158,6 +1161,15 @@
             document.getElementById('appliedVoucherCode').value = '';
             document.getElementById('appliedVoucherDiscount').value = '0';
             document.getElementById('appliedVoucherFreePax').value = '0';
+
+            // Kembalikan teks harga default paket
+            document.getElementById('priceTag10').innerText = 'Rp 50.000';
+            document.getElementById('priceTag25').innerText = 'Rp 85.000';
+            document.getElementById('priceTag50').innerText = 'Rp 160.000';
+            document.getElementById('priceTag100').innerText = 'Rp 250.000';
+            document.getElementById('priceTag150').innerText = 'Rp 350.000';
+            document.getElementById('priceTag200').innerText = 'Rp 470.000';
+            document.getElementById('priceTagUnlimited').innerText = 'Rp 800.000';
 
             perbaruiPresetOtomatis();
             renderFilterPresets('filterPresetContainer', 'defaultFilter', 'original');
@@ -1625,9 +1637,13 @@
             let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
             let hargaDasar = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
 
-            // Perhitungan Diskon Berdasarkan Voucher / Promo Code
             let diskonPercent = parseFloat(document.getElementById('appliedVoucherDiscount').value) || 0;
+            let freePaxTarget = parseInt(document.getElementById('appliedVoucherFreePax').value) || 0;
+
             let harga = hargaDasar - (hargaDasar * (diskonPercent / 100));
+            if(freePaxTarget > 0 && (kuota === freePaxTarget || freePaxTarget >= 9999)) {
+                harga = 0;
+            }
             if(harga < 0) harga = 0;
 
             let initialQuota = harga === 0 ? kuota : (hargaDasar === 0 ? kuota : 5);
@@ -1636,7 +1652,6 @@
             const usedVoucherCode = document.getElementById('appliedVoucherCode').value;
 
             try {
-                // Update penggunaan voucher di database (1 kode = 1 akun, cek max usage)
                 if(usedVoucherCode) {
                     const vRef = db.collection('vouchers').doc(usedVoucherCode);
                     const vSnap = await vRef.get();
