@@ -29,31 +29,31 @@
         .camera-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: blur(12px); -webkit-filter: blur(12px); transform: scale(1.1); z-index: 1; }
         .camera-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 28, 23, 0.75); z-index: 2; }
 
-        /* Konten Utama di atas Background (Menggunakan padding pas agar tidak terpotong) */
-        .camera-wrapper { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 12px 15px; }
+        /* Konten Utama di atas Background */
+        .camera-wrapper { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px 15px; }
 
         /* Top Bar & Selector Bahasa */
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 440px; margin-bottom: 5px; }
+        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 420px; margin-bottom: 2px; }
         .brand-mini { font-size: 0.8rem; font-weight: 700; color: var(--text-light); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
         
-        .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.25); border: 1px solid var(--border-color); border-radius: 20px; padding: 3px 8px; gap: 4px; font-size: 0.65rem; }
-        .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
+        .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.25); border: 1px solid var(--border-color); border-radius: 20px; padding: 2px 6px; gap: 4px; font-size: 0.65rem; }
+        .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
         .lang-btn.active { background: var(--accent); color: #261C17; }
 
         /* Kartu Hitung Mundur / Status Acara */
-        .status-card-container { width: 100%; max-width: 400px; background: rgba(50, 37, 32, 0.9); border: 1.5px solid var(--border-color); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(10px); margin: auto; }
+        .status-card-container { width: 100%; max-width: 380px; background: rgba(50, 37, 32, 0.9); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 18px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(10px); margin: auto; }
         
-        .waiting-subtitle { font-size: 0.6rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 5px; }
-        .event-title-display { font-size: 1.4rem; color: var(--text-light); margin-bottom: 12px; font-weight: 700; word-break: break-word; }
+        .waiting-subtitle { font-size: 0.6rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
+        .event-title-display { font-size: 1.3rem; color: var(--text-light); margin-bottom: 10px; font-weight: 700; word-break: break-word; }
         
-        .countdown-status-label { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .countdown-status-label { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
         
-        .countdown-boxes { display: flex; justify-content: center; gap: 6px; margin-bottom: 15px; }
-        .c-box { background: var(--mahogany); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; min-width: 50px; }
-        .c-val { font-size: 1.1rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; }
-        .c-lbl { font-size: 0.5rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
+        .countdown-boxes { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
+        .c-box { background: var(--mahogany); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 8px; min-width: 45px; }
+        .c-val { font-size: 1rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; }
+        .c-lbl { font-size: 0.45rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
 
-        .info-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 15px; }
+        .info-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px; }
 
         .btn-custom-primary { background: var(--accent); color: #261C17; width: 100%; padding: 10px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: block; text-align: center; text-decoration: none; }
         .btn-custom-primary:hover { background: #e09867; }
@@ -61,41 +61,50 @@
         .btn-custom-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.8rem; margin-top: 8px; display: block; text-align: center; text-decoration: none; }
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Tampilan Viewfinder Kamera Aktif (Tinggi disesuaikan agar pas di layar tanpa terpotong) */
-        .camera-viewfinder { width: 100%; max-width: 420px; height: 55vh; background: #000; border-radius: 16px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 8px 25px rgba(0,0,0,0.8); display: none; }
+        /* Tampilan Viewfinder Kamera Aktif */
+        .camera-viewfinder { width: 100%; max-width: 380px; height: 46vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); display: none; }
         
         /* Bingkai Sudut Ala Kamera Analog */
-        .viewfinder-corner { position: absolute; width: 20px; height: 20px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
-        .corner-tl { top: 12px; left: 12px; border-width: 2.5px 0 0 2.5px; }
-        .corner-tr { top: 12px; right: 12px; border-width: 2.5px 2.5px 0 0; }
-        .corner-bl { bottom: 12px; left: 12px; border-width: 0 0 2.5px 2.5px; }
-        .corner-br { bottom: 12px; right: 12px; border-width: 0 2.5px 2.5px 0; }
+        .viewfinder-corner { position: absolute; width: 18px; height: 18px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
+        .corner-tl { top: 10px; left: 10px; border-width: 2.5px 0 0 2.5px; }
+        .corner-tr { top: 10px; right: 10px; border-width: 2.5px 2.5px 0 0; }
+        .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 2.5px 2.5px; }
+        .corner-br { bottom: 10px; right: 10px; border-width: 0 2.5px 2.5px 0; }
 
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Panel Bawah Kamera (Shutter di Tengah, Tombol Putar di Kiri) */
-        .camera-controls-panel { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 6px; display: none; }
+        /* Panel Bawah Kamera */
+        .camera-controls-panel { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 4px; display: none; }
         
-        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 60px; }
+        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 50px; }
         
         /* Tombol Jepret di Tengah */
-        .shutter-btn { width: 60px; height: 60px; background: var(--accent); border: 3.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
+        .shutter-btn { width: 50px; height: 50px; background: var(--accent); border: 3px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
 
-        /* Tombol Putar di Kiri */
-        .btn-flip-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.75rem; position: absolute; left: 0; }
-        .btn-flip-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
+        /* Tombol Aksi di Kiri (Putar & Album) */
+        .left-actions { position: absolute; left: 0; display: flex; gap: 5px; }
+        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 5px 9px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.65rem; text-decoration: none; display: flex; align-items: center; gap: 3px; }
+        .btn-action-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Efek Kilat / Flash Screen saat Shutter Ditekan */
+        /* Efek Kilat Flash saat Shutter Ditekan */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
         /* Filter Selector Scroll */
-        .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 3px 2px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .filter-scroll::-webkit-scrollbar { height: 3px; }
         .filter-scroll::-webkit-scrollbar-thumb { background: var(--secondary-accent); border-radius: 2px; }
         
-        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 5px 10px; border-radius: 15px; font-size: 0.7rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .f-pill.active { background: var(--secondary-accent); border-color: var(--text-light); font-weight: bold; }
+
+        /* Baris Preview Thumbnail Foto di Bawah */
+        .recent-photos-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; min-height: 40px; align-items: center; }
+        .recent-photos-scroll::-webkit-scrollbar { height: 3px; }
+        .recent-photos-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+        .thumbnail-item { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
         /* Filter CSS Classes */
         .filter-original { filter: none; }
@@ -169,17 +178,23 @@
             <canvas id="cameraCanvas" style="display: none;"></canvas>
         </div>
 
-        <!-- Kontrol Kamera Bawah (Tanpa jeda, langsung jepret & unggah di background) -->
+        <!-- Kontrol Kamera Bawah (Tombol Putar & Album di Kiri, Shutter di Tengah) -->
         <div class="camera-controls-panel" id="cameraControls">
             <div class="filter-scroll" id="filterScrollContainer"></div>
             
             <div class="shutter-row">
-                <button class="btn-flip-left" onclick="balikKamera()" id="btnFlip" data-i18n="flipBtn">🔄 Putar</button>
+                <div class="left-actions">
+                    <button class="btn-action-left" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
+                    <a href="#" id="btnInCameraAlbum" class="btn-action-left" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
+                </div>
                 <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
             </div>
+
+            <!-- Baris Preview Foto yang Baru Dijepret (Berjejer ke Samping) -->
+            <div class="recent-photos-scroll" id="recentPhotosContainer"></div>
         </div>
 
-        <div style="font-size: 0.6rem; color: var(--text-muted); text-align: center; margin-top: 2px;">
+        <div style="font-size: 0.55rem; color: var(--text-muted); text-align: center;">
             The Last Call Film • Vintage Disposable Experience
         </div>
     </div>
@@ -213,7 +228,6 @@
         let guestName = localStorage.getItem(`guest_name_${eventId}`) || '';
         let eventInterval = null;
         let activeStream = null;
-        // Default pertama kali menggunakan kamera belakang ('environment')
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
 
@@ -225,6 +239,7 @@
                 secsLbl: "Detik",
                 viewAlbumBtn: "Lihat Album Foto &darr;",
                 flipBtn: "🔄 Putar",
+                albumBtn: "🖼️ Album",
                 welcomeGuestTitle: "Selamat Datang!",
                 welcomeGuestDesc: "Masukkan nama panggilan Anda agar pengantin tahu siapa yang mengambil foto:",
                 startCameraBtn: "Mulai Memotret &rarr;",
@@ -239,6 +254,7 @@
                 secsLbl: "Secs",
                 viewAlbumBtn: "View Photo Album &darr;",
                 flipBtn: "🔄 Flip",
+                albumBtn: "🖼️ Album",
                 welcomeGuestTitle: "Welcome!",
                 welcomeGuestDesc: "Enter your name so the couple knows who took the photos:",
                 startCameraBtn: "Start Shooting &rarr;",
@@ -296,10 +312,17 @@
                 }
 
                 if (currentEventData.privacy === 'visible') {
-                    const albumBtn = document.getElementById('btnAlbumLink');
                     const domainClean = window.location.href.split('?')[0].replace('camera.html', '');
+                    
+                    // Tombol di kartu hitung mundur
+                    const albumBtn = document.getElementById('btnAlbumLink');
                     albumBtn.href = `${domainClean}album.html?event=${eventId}`;
                     albumBtn.style.display = 'block';
+
+                    // Tombol di panel bawah kamera aktif
+                    const inCameraAlbumBtn = document.getElementById('btnInCameraAlbum');
+                    inCameraAlbumBtn.href = `${domainClean}album.html?event=${eventId}`;
+                    inCameraAlbumBtn.style.display = 'flex';
                 }
 
                 renderFilterPills(currentEventData.defaultFilter || 'original');
@@ -404,7 +427,6 @@
                 timerGroup.style.display = 'none';
                 guestInfo.innerText = currentLang === 'en' ? `Ready, ${guestName}! Capture your best moments.` : `Siap, ${guestName}! Abadikan momen terbaikmu.`;
 
-                // Tampilkan Kamera
                 statusCard.style.display = 'none';
                 viewfinder.style.display = 'block';
                 controls.style.display = 'flex';
@@ -453,7 +475,6 @@
             startCameraStream();
         }
 
-        // Fungsi jepret tanpa jeda (smooth, langsung unggah di background & kilat flash kilat)
         function ambilFoto() {
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
@@ -462,12 +483,13 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // Efek kilat flash putih cepat
             const flash = document.getElementById('cameraFlashOverlay');
-            flash.style.opacity = '0.8';
-            setTimeout(() => { flash.style.opacity = '0'; }, 120);
+            flash.style.opacity = '0.7';
+            setTimeout(() => { flash.style.opacity = '0'; }, 100);
 
-            // Ambil data gambar dan kirim ke Firebase di background tanpa menghentikan kamera
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            tambahThumbnailKeLayar(dataUrl);
+
             canvas.toBlob(async (blob) => {
                 try {
                     const formData = new FormData();
@@ -492,6 +514,14 @@
                     console.error("Gagal mengunggah foto:", err);
                 }
             }, 'image/jpeg', 0.85);
+        }
+
+        function tambahThumbnailKeLayar(url) {
+            const container = document.getElementById('recentPhotosContainer');
+            const img = document.createElement('img');
+            img.src = url;
+            img.className = 'thumbnail-item';
+            container.prepend(img);
         }
     </script>
 </body>
