@@ -459,7 +459,7 @@
                         <select id="upgradePackage" class="form-control" style="padding: 10px; font-size: 0.85rem; flex: 1; min-width: 150px;">
                             <option value="" data-i18n="selectAddOpt">-- Pilih Tambahan --</option>
                         </select>
-                        <button class="btn-primary" onclick="requestUpgradePaket()" style="font-weight: bold; padding: 10px 16px;" data-i18n="upgradeBtn">Upgrade</button>
+                        <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold; padding: 10px 16px;" data-i18n="upgradeBtn">Upgrade</button>
                     </div>
                 </div>
 
@@ -758,7 +758,7 @@
                 currentQuotaLabel: "Batas Kuota Saat Ini:",
                 selectAddOpt: "-- Pilih Tambahan --",
                 upgradeUnlimitedOpt: "Jadi Tak Terbatas (Rp 800.000)",
-                upgradeBtn: "Request Upgrade",
+                upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Daftar Peserta yang Join",
                 loadingGuests: "Memuat data peserta...",
                 timeWallpaperSettings: "Pengaturan Waktu, Privasi & Wallpaper",
@@ -850,7 +850,7 @@
                 currentQuotaLabel: "Current Quota Limit:",
                 selectAddOpt: "-- Select Add-on --",
                 upgradeUnlimitedOpt: "Make Unlimited ($55 / Rp 800.000)",
-                upgradeBtn: "Request Upgrade",
+                upgradeBtn: "Upgrade",
                 joinedGuestsTitle: "Joined Participants List",
                 loadingGuests: "Loading participant data...",
                 timeWallpaperSettings: "Time, Privacy & Wallpaper Settings",
@@ -1612,7 +1612,8 @@
             tampilkanHalamanPembayaran();
         }
 
-        function prosesUpgrade() {
+        // FUNGSI PROSES UPGRADE (MUNCULKAN HALAMAN PEMBAYARAN & CATAT REQUEST KE FIRESTORE SEKALIGUS)
+        async function prosesUpgrade() {
             const val = document.getElementById('upgradePackage').value;
             if(!val) {
                 showToast(currentLang === 'en' ? 'Please select an add-on package first!' : 'Pilih paket tambahan terlebih dahulu!');
@@ -1621,42 +1622,33 @@
             const parts = val.split('|');
             const eventId = document.getElementById('editEventId').value;
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
-
-            const unitStr = currentLang === 'en' ? 'People' : 'Orang';
-            pendingPaymentInfo = { 
-                type: currentLang === 'en' ? 'Quota Upgrade' : 'Upgrade Kuota', 
-                eventId: eventId,
-                name: eventObj ? eventObj.eventName : 'Event', 
-                package: parseInt(parts[0]) === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `+ ${parts[0]} ${unitStr}`, 
-                price: parseInt(parts[1]),
-                addedQuota: parseInt(parts[0])
-            };
-            tampilkanHalamanPembayaran();
-        }
-
-        // FUNGSI REQUEST UPGRADE KE FIRESTORE (UNTUK ADMIN PANEL TLCM)
-        async function requestUpgradePaket() {
-            const val = document.getElementById('upgradePackage').value;
-            if(!val) {
-                showToast(currentLang === 'en' ? 'Please select an upgrade package first!' : 'Pilih paket upgrade terlebih dahulu!');
-                return;
-            }
-            const parts = val.split('|');
-            const eventId = document.getElementById('editEventId').value;
+            
             const targetQuota = parseInt(parts[0]);
             const targetPrice = parseInt(parts[1]);
 
+            // 1. Catat request ke Firestore agar otomatis masuk ke tab "Request Upgrade" Admin TLCM
             try {
                 await db.collection('events').doc(eventId).update({
                     upgradePending: true,
                     pendingQuota: targetQuota,
                     pendingPrice: targetPrice
                 });
-                showToast(currentLang === 'en' ? "Upgrade request sent to admin successfully!" : "Request upgrade berhasil dikirim ke admin!");
-                bukaPengaturan(eventId);
             } catch (err) {
-                showToast("Gagal mengirim request: " + err.message);
+                console.error("Gagal mencatat request upgrade:", err);
             }
+
+            // 2. Munculkan halaman pembayaran seperti biasa
+            const unitStr = currentLang === 'en' ? 'People' : 'Orang';
+            pendingPaymentInfo = { 
+                type: currentLang === 'en' ? 'Quota Upgrade' : 'Upgrade Kuota', 
+                eventId: eventId,
+                name: eventObj ? eventObj.eventName : 'Event', 
+                package: targetQuota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `+ ${targetQuota} ${unitStr}`, 
+                price: targetPrice,
+                addedQuota: targetQuota
+            };
+            
+            tampilkanHalamanPembayaran();
         }
 
         async function prosesPembayaranMidtrans() {
@@ -1709,7 +1701,10 @@
                             let newQuota = added === 9999 ? 9999 : currentQuota + added;
                             await eventRef.update({
                                 quota: newQuota,
-                                remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
+                                remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota,
+                                upgradePending: false,
+                                pendingQuota: 0,
+                                pendingPrice: 0
                             });
                             showToast(currentLang === 'en' ? "Quota successfully upgraded!" : "Kuota berhasil di-upgrade!");
                         }
