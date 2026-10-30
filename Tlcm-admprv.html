@@ -103,6 +103,7 @@
         <!-- TABS NAVIGASI -->
         <div class="nav-tabs">
             <button class="nav-tab active" onclick="bukaTab('tabOrderan', this)">Menu Orderan</button>
+            <button class="nav-tab" onclick="bukaTab('tabUpgrade', this)">Request Upgrade ⏳ <span id="adminUpgradeBadge" style="background:var(--accent); color:#000; padding:2px 6px; border-radius:10px; font-size:0.7rem; font-weight:bold;">0</span></button>
             <button class="nav-tab" onclick="bukaTab('tabVoucher', this)">Kelola Voucher</button>
             <button class="nav-tab" onclick="bukaTab('tabMember', this)">List Member</button>
             <button class="nav-tab" onclick="bukaTab('tabAktif', this)">Acara Aktif</button>
@@ -125,6 +126,31 @@
                         </tr>
                     </thead>
                     <tbody id="tbodyOrderan"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- TAB 1.5: REQUEST UPGRADE -->
+        <div id="tabUpgrade" class="tab-content">
+            <div style="margin-bottom: 15px;">
+                <h3 class="font-serif" style="font-size: 1.2rem; margin-bottom: 5px;">Daftar Permintaan Upgrade Paket</h3>
+                <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem;">Terima atau tolak permintaan kenaikan kuota/paket yang diajukan oleh customer.</p>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NAMA ACARA</th>
+                            <th>PEMESAN (EMAIL)</th>
+                            <th>KUOTA SAAT INI</th>
+                            <th>REQUEST UPGRADE KE</th>
+                            <th>ESTIMASI BIAYA</th>
+                            <th>AKSI</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tbodyUpgrade">
+                        <tr><td colspan="6" style="text-align: center; color: #888;">Tidak ada request upgrade.</td></tr>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -347,6 +373,7 @@
                 allEvents = [];
                 let totalPendapatan = 0;
                 let pendingCount = 0;
+                let upgradePendingCount = 0;
 
                 snap.forEach(doc => {
                     let d = doc.data();
@@ -358,13 +385,19 @@
 
                     let st = (d.status || '').toString().toLowerCase();
                     if(st === 'pending' || st === 'menunggu' || st === '') pendingCount++;
+
+                    if(d.upgradePending === true) {
+                        upgradePendingCount++;
+                    }
                 });
 
                 document.getElementById('statTotalEvents').innerText = allEvents.length;
                 document.getElementById('statPending').innerText = pendingCount;
                 document.getElementById('statIncome').innerText = "Rp " + totalPendapatan.toLocaleString('id-ID');
+                document.getElementById('adminUpgradeBadge').innerText = upgradePendingCount;
 
                 rendertabOrderan();
+                rendertabUpgradeRequests();
                 rendertabMembers();
                 rendertabAktif();
                 rendertabNonaktif();
@@ -477,6 +510,71 @@
                     </tr>
                 `;
             });
+        }
+
+        function rendertabUpgradeRequests() {
+            const tbody = document.getElementById('tbodyUpgrade');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            let upgradeEvents = allEvents.filter(e => e.upgradePending === true);
+
+            if(upgradeEvents.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #888;">Tidak ada request upgrade saat ini.</td></tr>';
+                return;
+            }
+
+            upgradeEvents.forEach(e => {
+                let currentQuotaText = e.quota === 9999 ? 'Tak Terbatas' : `${e.quota} Orang`;
+                let targetQuotaText = e.pendingQuota === 9999 ? 'Tak Terbatas' : `${e.pendingQuota} Orang`;
+                let targetPriceText = e.pendingPrice ? `Rp ${parseInt(e.pendingPrice).toLocaleString('id-ID')}` : 'Rp 0';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${e.eventName || 'Acara'}</b></td>
+                        <td>${e.userEmail || '-'}</td>
+                        <td>${currentQuotaText}</td>
+                        <td><strong style="color: var(--accent);">${targetQuotaText}</strong></td>
+                        <td><b>${targetPriceText}</b></td>
+                        <td>
+                            <div class="btn-group">
+                                <button class="btn-act activate" onclick="adminTerimaUpgrade('${e.id}', ${e.pendingQuota})">Terima & Aktifkan</button>
+                                <button class="btn-act cancel" onclick="adminTolakUpgrade('${e.id}')">Tolak</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        async function adminTerimaUpgrade(eventId, newQuota) {
+            try {
+                await db.collection('events').doc(eventId).update({
+                    quota: newQuota,
+                    remainingQuota: newQuota,
+                    upgradePending: false,
+                    pendingQuota: 0,
+                    pendingPrice: 0,
+                    status: 'Aktif'
+                });
+                alert("Upgrade berhasil disetujui dan diaktifkan!");
+            } catch(e) {
+                alert("Gagal menerima upgrade: " + e.message);
+            }
+        }
+
+        async function adminTolakUpgrade(eventId) {
+            if(!confirm("Yakin ingin menolak request upgrade ini?")) return;
+            try {
+                await db.collection('events').doc(eventId).update({
+                    upgradePending: false,
+                    pendingQuota: 0,
+                    pendingPrice: 0
+                });
+                alert("Request upgrade ditolak.");
+            } catch(e) {
+                alert("Gagal menolak: " + e.message);
+            }
         }
 
         function rendertabMembers() {
