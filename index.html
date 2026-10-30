@@ -26,7 +26,7 @@
             --text-muted: rgba(229, 209, 120, 0.65); 
             --accent: #D9874F; /* Funky Apricot */
             --secondary-accent: #638073; /* Minted Moss */
-            --border-color: rgba(107, 61, 54, 0.5); /* Mahogany Groove border */
+            --border-color: rgba(107, 61, 54, 0.5); 
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; }
@@ -65,6 +65,10 @@
         .dropdown-item:last-child { border-bottom: none; }
         .dropdown-item:hover { background: rgba(107,61,54,0.3); }
         .text-danger { color: #D9874F; }
+
+        /* Custom Toast Notification untuk Gantikan alert() */
+        #customToast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: #322520; border: 1.5px solid var(--accent); color: #E5D178; padding: 14px 24px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); z-index: 99999; transition: transform 0.3s ease, opacity 0.3s ease; opacity: 0; font-size: 0.9rem; text-align: center; max-width: 90%; }
+        #customToast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 
         .section { display: none; padding: 30px 4%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; box-sizing: border-box; }
         .active-section { display: block; }
@@ -172,7 +176,6 @@
         .auth-divider { text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.8rem; display: flex; align-items: center; }
         .auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); margin: 0 10px; }
 
-        /* Media Queries Khusus Mobile/Ponsel */
         @media(max-width: 768px) {
             nav { padding: 12px 4%; }
             .logo { font-size: 1.1rem; }
@@ -189,6 +192,9 @@
     </style>
 </head>
 <body>
+
+    <!-- Elemen Toast untuk Pengganti Alert -->
+    <div id="customToast"></div>
 
     <nav>
         <div class="logo font-serif" onclick="location.reload()">
@@ -863,6 +869,16 @@
             }
         };
 
+        // Fungsi Toast Pengganti alert() agar Safari tidak memunculkan 'Suppress dialogs'
+        function showToast(message) {
+            const toast = document.getElementById('customToast');
+            toast.innerText = message;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
         function bukaCaraKerjaModal() {
             document.getElementById('caraKerjaModal').style.display = 'flex';
         }
@@ -1034,7 +1050,7 @@
                 });
                 video.srcObject = activeStream;
             } catch (err) {
-                alert(currentLang === 'en' ? "Failed to access camera: " + err.message : "Gagal mengakses kamera: " + err.message);
+                showToast(currentLang === 'en' ? "Failed to access camera: " + err.message : "Gagal mengakses kamera: " + err.message);
             }
         }
 
@@ -1352,7 +1368,7 @@
             }
 
             if (adaAcaraAktif) {
-                alert(currentLang === 'en' ? "Notice: You still have an active or Pending event. You can only create a new event after the current one ends or by deleting it." : "Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru setelah acara tersebut selesai atau menghapusnya melalui tombol Hapus.");
+                showToast(currentLang === 'en' ? "Notice: You still have an active or Pending event." : "Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending.");
                 return;
             }
 
@@ -1413,14 +1429,14 @@
         }
 
         async function hapusAcara(eventId) {
-            const msg = currentLang === 'en' ? "Are you sure you want to delete this event? It will be permanently removed and the camera link will no longer work." : "Apakah Anda yakin ingin menghapus acara ini? Acara yang dihapus akan hilang permanen dan tautan kameranya tidak akan bisa digunakan lagi.";
+            const msg = currentLang === 'en' ? "Are you sure you want to delete this event?" : "Apakah Anda yakin ingin menghapus acara ini?";
             if (confirm(msg)) {
                 try {
                     await db.collection('events').doc(eventId).delete();
-                    alert(currentLang === 'en' ? "Event successfully deleted." : "Acara berhasil dihapus.");
+                    showToast(currentLang === 'en' ? "Event successfully deleted." : "Acara berhasil dihapus.");
                     muatAcaraSaya();
                 } catch (err) {
-                    alert((currentLang === 'en' ? "Failed to delete event: " : "Gagal menghapus acara: ") + err.message);
+                    showToast((currentLang === 'en' ? "Failed to delete event: " : "Gagal menghapus acara: ") + err.message);
                 }
             }
         }
@@ -1518,13 +1534,13 @@
                     },
                     onApprove: function(data, actions) {
                         return actions.order.capture().then(function(details) {
-                            alert(currentLang === 'en' ? "PayPal Payment Successful! System is updating your event status." : "Pembayaran PayPal Berhasil! Sistem sedang memperbarui status acara Anda.");
+                            showToast(currentLang === 'en' ? "PayPal Payment Successful!" : "Pembayaran PayPal Berhasil!");
                             aktifkanAcaraSetelahBayar();
                         });
                     },
                     onError: function(err) {
                         console.error("PayPal Error:", err);
-                        alert(currentLang === 'en' ? "An error occurred with PayPal payment." : "Terjadi kesalahan pada pembayaran PayPal.");
+                        showToast(currentLang === 'en' ? "An error occurred with PayPal payment." : "Terjadi kesalahan pada pembayaran PayPal.");
                     }
                 }).render('#paypal-button-container');
             }
@@ -1567,7 +1583,10 @@
 
         function prosesUpgrade() {
             const val = document.getElementById('upgradePackage').value;
-            if(!val) return alert(currentLang === 'en' ? 'Please select an add-on package first!' : 'Pilih paket tambahan terlebih dahulu!');
+            if(!val) {
+                showToast(currentLang === 'en' ? 'Please select an add-on package first!' : 'Pilih paket tambahan terlebih dahulu!');
+                return;
+            }
             const parts = val.split('|');
             const eventId = document.getElementById('editEventId').value;
             const eventObj = daftarAcaraGlobal.find(e => e.id === eventId);
@@ -1601,23 +1620,23 @@
 
                 window.snap.pay(snapToken, {
                     onSuccess: function(res){
-                        alert(currentLang === 'en' ? "Payment Successful! System is updating your event status." : "Pembayaran Berhasil! Sistem sedang memperbarui status acara Anda.");
+                        showToast(currentLang === 'en' ? "Payment Successful!" : "Pembayaran Berhasil!");
                         aktifkanAcaraSetelahBayar();
                     },
                     onPending: function(res){
-                        alert(currentLang === 'en' ? "Waiting for payment completion." : "Menunggu pembayaran diselesaikan.");
+                        showToast(currentLang === 'en' ? "Waiting for payment completion." : "Menunggu pembayaran diselesaikan.");
                     },
                     onError: function(res){
-                        alert(currentLang === 'en' ? "Payment failed!" : "Pembayaran gagal!");
+                        showToast(currentLang === 'en' ? "Payment failed!" : "Pembayaran gagal!");
                     },
                     onClose: function(){
-                        alert(currentLang === 'en' ? 'You closed the payment window.' : 'Anda menutup jendela pembayaran.');
+                        showToast(currentLang === 'en' ? 'You closed the payment window.' : 'Anda menutup jendela pembayaran.');
                     }
                 });
 
             } catch (error) {
                 console.error(error);
-                alert((currentLang === 'en' ? "Failed to process payment: " : "Gagal memproses pembayaran: ") + error.message);
+                showToast((currentLang === 'en' ? "Failed to process payment: " : "Gagal memproses pembayaran: ") + error.message);
             }
         }
 
@@ -1636,7 +1655,7 @@
                                 quota: newQuota,
                                 remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
                             });
-                            alert(currentLang === 'en' ? "Quota successfully upgraded after payment confirmation!" : "Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
+                            showToast(currentLang === 'en' ? "Quota successfully upgraded!" : "Kuota berhasil di-upgrade!");
                         }
                     } else {
                         let finalQ = pendingPaymentInfo.targetQuota || 5;
@@ -1646,7 +1665,7 @@
                             remainingQuota: finalQ,
                             pendingQuota: 0
                         });
-                        alert(currentLang === 'en' ? "Event successfully activated after payment confirmation!" : "Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
+                        showToast(currentLang === 'en' ? "Event successfully activated!" : "Acara berhasil diaktifkan!");
                     }
                 }
             } catch(e) {
@@ -1666,7 +1685,7 @@
         function salinLink() {
             const copyText = document.getElementById("cameraLinkInput");
             copyText.select(); navigator.clipboard.writeText(copyText.value);
-            alert(currentLang === 'en' ? "Camera link copied successfully!" : "Tautan kamera berhasil disalin!");
+            showToast(currentLang === 'en' ? "Camera link copied successfully!" : "Tautan kamera berhasil disalin!");
         }
         function bukaKamera() { window.open(document.getElementById("cameraLinkInput").value, '_blank'); }
         function bukaAlbum() {
@@ -1691,15 +1710,15 @@
 
         function loginDenganGoogle() {
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).then((res) => { simpanMember(res.user); tutupAuthModal(); }).catch(err => alert(err.message));
+            auth.signInWithPopup(provider).then((res) => { simpanMember(res.user); tutupAuthModal(); }).catch(err => showToast(err.message));
         }
         function loginDenganEmail() {
             const email = document.getElementById('loginEmail').value; const pass = document.getElementById('loginPass').value;
-            auth.signInWithEmailAndPassword(email, pass).then(() => tutupAuthModal()).catch(err => alert(err.message));
+            auth.signInWithEmailAndPassword(email, pass).then(() => tutupAuthModal()).catch(err => showToast(err.message));
         }
         function daftarDenganEmail() {
             const nama = document.getElementById('regNama').value; const email = document.getElementById('regEmail').value; const pass = document.getElementById('regPass').value;
-            auth.createUserWithEmailAndPassword(email, pass).then(res => { res.user.updateProfile({displayName: nama}); alert(currentLang === 'en' ? "Registered successfully!" : "Terdaftar!"); tutupAuthModal(); auth.signOut(); }).catch(err => alert(err.message));
+            auth.createUserWithEmailAndPassword(email, pass).then(res => { res.user.updateProfile({displayName: nama}); showToast(currentLang === 'en' ? "Registered successfully!" : "Terdaftar!"); tutupAuthModal(); auth.signOut(); }).catch(err => showToast(err.message));
         }
         function simpanMember(user) {
             db.collection('members').doc(user.uid).set({ name: user.displayName, email: user.email }, {merge: true});
@@ -1728,7 +1747,7 @@
         function logoutAkun() {
             auth.signOut().then(() => {
                 location.reload();
-            }).catch(err => alert((currentLang === 'en' ? "Failed to sign out: " : "Gagal keluar: ") + err.message));
+            }).catch(err => showToast((currentLang === 'en' ? "Failed to sign out: " : "Gagal keluar: ") + err.message));
         }
 
         auth.onAuthStateChanged(user => {
@@ -1875,13 +1894,19 @@
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
-                else {
+                if(harga === 0) { 
+                    showToast(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); 
+                    bukaDasbor(); 
+                } else {
                     pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, targetQuota: kuota, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
-            } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
-            finally { btn.innerText = currentLang === 'en' ? "Continue \u2192" : "Lanjutkan \u2192"; btn.disabled = false; }
+            } catch(err) { 
+                showToast((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); 
+            } finally { 
+                btn.innerText = currentLang === 'en' ? "Continue \u2192" : "Lanjutkan \u2192"; 
+                btn.disabled = false; 
+            }
         });
 
         document.getElementById('editEventForm').addEventListener('submit', async (e) => {
@@ -1912,10 +1937,10 @@
 
             try {
                 await db.collection('events').doc(eventId).update(updateData);
-                alert(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
+                showToast(currentLang === 'en' ? "Settings successfully updated!" : "Pengaturan berhasil diperbarui!");
                 muatAcaraSaya();
             } catch(err) {
-                alert((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
+                showToast((currentLang === 'en' ? "Failed to update: " : "Gagal memperbarui: ") + err.message);
             } finally {
                 btn.innerText = currentLang === 'en' ? "Save Settings" : "Simpan Pengaturan";
                 btn.disabled = false;
