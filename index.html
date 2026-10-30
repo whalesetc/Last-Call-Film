@@ -73,7 +73,6 @@
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
         .badge { background: var(--accent); color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
-        .badge-ended { background: #6b7280; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .form-group { margin-bottom: 25px; }
@@ -135,7 +134,7 @@
         .cd-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
 
         .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 450px; padding: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
+        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
         .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
         
         .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
@@ -475,21 +474,35 @@
 
     <!-- MODAL TEST KAMERA FILTER -->
     <div class="auth-modal" id="testCameraModal">
-        <div class="auth-box" style="text-align: center; max-width: 400px;">
-            <span class="auth-close" onclick="tutupTestKameraModal()">✖</span>
-            <h3 class="font-serif" style="color: var(--accent); margin-bottom: 15px; font-size: 1.25rem;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
-            <div style="width: 100%; height: 320px; background: #000; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 15px;">
+        <div class="auth-box" style="text-align: center; max-width: 420px; padding: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <h3 class="font-serif" style="color: var(--accent); font-size: 1.1rem; margin: 0;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button type="button" class="btn-outline" onclick="balikKameraTes()" style="padding: 4px 8px; font-size: 0.75rem;" title="Ubah Kamera Depan/Belakang">🔄 <span data-i18n="flipCameraBtn">Kamera</span></button>
+                    <span class="auth-close" style="position: static; font-size: 1.2rem;" onclick="tutupTestKameraModal()">✖</span>
+                </div>
+            </div>
+
+            <!-- TAMPILAN KAMERA / VIDEO -->
+            <div style="width: 100%; height: 280px; background: #000; border-radius: 12px; overflow: hidden; position: relative; margin-bottom: 10px;">
                 <video id="testVideo" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
                 <canvas id="testCanvas" style="display: none;"></canvas>
+                <div id="testResultContainer" style="display: none; position: absolute; top:0; left:0; width:100%; height:100%; background:#000;">
+                    <img id="testResultImg" style="width: 100%; height: 100%; object-fit: cover;" alt="Hasil Tes">
+                </div>
             </div>
-            <div id="testResultContainer" style="display: none; margin-bottom: 15px;">
-                <img id="testResultImg" style="width: 100%; border-radius: 8px; max-height: 250px; object-fit: cover;" alt="Hasil Tes">
-                <p style="font-size: 0.75rem; color: var(--accent); margin-top: 5px;" data-i18n="testPhotoSuccess">Foto berhasil diambil dengan filter terpilih!</p>
+
+            <!-- SCROLLABLE FILTER PRESETS DI DALAM MODAL -->
+            <div style="margin-bottom: 12px; text-align: left;">
+                <label style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px; display: block;" data-i18n="selectFilterTest">Pilih & Bandingkan Filter:</label>
+                <div class="filter-scroll-container" id="testModalFilterContainer" style="max-height: 90px;"></div>
             </div>
-            <div style="display: flex; gap: 10px;">
-                <button type="button" id="btnCaptureTest" class="btn-primary" onclick="ambilFotoTes()" style="flex: 1; padding: 10px;" data-i18n="captureBtn">📸 Ambil Foto</button>
-                <button type="button" id="btnRetakeTest" class="btn-outline" onclick="ulangFotoTes()" style="display: none; flex: 1; padding: 10px;" data-i18n="retakeBtn">🔄 Ulangi</button>
-                <button type="button" class="btn-outline" onclick="tutupTestKameraModal()" style="padding: 10px;" data-i18n="closeBtn">Tutup</button>
+            <input type="hidden" id="activeTestHiddenId" value="">
+
+            <div style="display: flex; gap: 8px;">
+                <button type="button" id="btnCaptureTest" class="btn-primary" onclick="ambilFotoTes()" style="flex: 1; padding: 10px; font-size: 0.85rem;" data-i18n="captureBtn">📸 Ambil Foto</button>
+                <button type="button" id="btnRetakeTest" class="btn-outline" onclick="ulangFotoTes()" style="display: none; flex: 1; padding: 10px; font-size: 0.85rem;" data-i18n="retakeBtn">🔄 Ulangi</button>
+                <button type="button" class="btn-outline" onclick="tutupTestKameraModal()" style="padding: 10px 15px; font-size: 0.85rem;" data-i18n="closeBtn">Tutup</button>
             </div>
         </div>
     </div>
@@ -589,9 +602,12 @@
                 defaultFilterLabel: "Filter Kamera Default Acara",
                 testFilterBtn: "📷 Uji Coba Filter Kamera",
                 testCameraTitle: "Uji Coba Filter Kamera",
+                flipCameraBtn: "Kamera",
+                selectFilterTest: "Pilih & Bandingkan Filter:",
                 testPhotoSuccess: "Foto berhasil diambil dengan filter terpilih!",
                 captureBtn: "📸 Ambil Foto",
                 retakeBtn: "🔄 Ulangi",
+                closeBtn: "Tutup",
                 allowGuestFilterLabel: "Izinkan tamu mengganti filter kamera secara bebas",
                 eventDateLabel: "Tanggal Acara",
                 startTimeLabel: "Jam Mulai Acara",
@@ -637,7 +653,6 @@
                 cryptoModalTitle: "Pembayaran Crypto",
                 cryptoModalDesc: "Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:",
                 confirmCryptoWABtn: "📲 Konfirmasi Transfer Crypto via WhatsApp",
-                closeBtn: "Tutup",
                 tabLogin: "Masuk",
                 tabRegister: "Daftar",
                 googleLogin: "Masuk dengan Google",
@@ -672,9 +687,12 @@
                 defaultFilterLabel: "Default Event Camera Filter",
                 testFilterBtn: "📷 Test Camera Filter",
                 testCameraTitle: "Test Camera Filter",
+                flipCameraBtn: "Camera",
+                selectFilterTest: "Select & Compare Filters:",
                 testPhotoSuccess: "Photo successfully captured with selected filter!",
                 captureBtn: "📸 Take Photo",
                 retakeBtn: "🔄 Retake",
+                closeBtn: "Close",
                 allowGuestFilterLabel: "Allow guests to freely change camera filters",
                 eventDateLabel: "Event Date",
                 startTimeLabel: "Event Start Time",
@@ -720,7 +738,6 @@
                 cryptoModalTitle: "Crypto Payment",
                 cryptoModalDesc: "Please transfer the crypto assets equivalent to the bill to one of the wallets below:",
                 confirmCryptoWABtn: "📲 Confirm Crypto Transfer via WhatsApp",
-                closeBtn: "Close",
                 tabLogin: "Sign In",
                 tabRegister: "Register",
                 googleLogin: "Sign In with Google",
@@ -745,10 +762,13 @@
 
         let activeStream = null;
         let activeFilterClass = 'filter-original';
+        let currentFacingMode = 'user'; // 'user' atau 'environment'
 
         async function bukaTestKameraModal(hiddenInputId) {
-            const filterKey = document.getElementById(hiddenInputId).value;
-            const found = filterDatabase.find(f => f.key === filterKey);
+            document.getElementById('activeTestHiddenId').value = hiddenInputId;
+            const currentFilterKey = document.getElementById(hiddenInputId).value || 'original';
+            
+            const found = filterDatabase.find(f => f.key === currentFilterKey);
             activeFilterClass = found ? found.class : 'filter-original';
 
             const modal = document.getElementById('testCameraModal');
@@ -759,17 +779,69 @@
             document.getElementById('btnCaptureTest').style.display = 'block';
             document.getElementById('btnRetakeTest').style.display = 'none';
 
+            // Render filter scroll di dalam modal tes kamera
+            renderTestModalFilters(currentFilterKey);
+            await startTestCameraStream();
+        }
+
+        async function startTestCameraStream() {
+            if (activeStream) {
+                activeStream.getTracks().forEach(track => track.stop());
+            }
+
             const video = document.getElementById('testVideo');
             video.className = '';
             video.classList.add(activeFilterClass);
 
             try {
-                activeStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+                activeStream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: currentFacingMode }, 
+                    audio: false 
+                });
                 video.srcObject = activeStream;
             } catch (err) {
                 alert(currentLang === 'en' ? "Failed to access camera: " + err.message : "Gagal mengakses kamera: " + err.message);
-                tutupTestKameraModal();
             }
+        }
+
+        function balikKameraTes() {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            startTestCameraStream();
+        }
+
+        function renderTestModalFilters(selectedKey) {
+            const container = document.getElementById('testModalFilterContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            
+            filterDatabase.forEach(f => {
+                const isSelected = f.key === selectedKey ? 'selected' : '';
+                container.innerHTML += `
+                    <div class="preset-card filter-card ${isSelected}" style="min-width: 65px; width: 65px; height: 80px; flex-shrink: 0;" onclick="pilihFilterTestModal('${f.key}', this)">
+                        <div style="width: 100%; height: 50px; background-image: url('${sampleFilterImg}'); background-size: cover; background-position: center;" class="${f.class}"></div>
+                        <div class="preset-label" style="font-size: 0.5rem; padding: 2px; height: 30px; display: flex; align-items: center; justify-content: center; text-align: center;">${f.name}</div>
+                    </div>
+                `;
+            });
+        }
+
+        function pilihFilterTestModal(key, element) {
+            const found = filterDatabase.find(f => f.key === key);
+            if (found) {
+                activeFilterClass = found.class;
+                const video = document.getElementById('testVideo');
+                video.className = '';
+                video.classList.add(activeFilterClass);
+
+                // Update juga nilai di hidden input aslinya
+                const targetHiddenId = document.getElementById('activeTestHiddenId').value;
+                if (targetHiddenId) {
+                    document.getElementById(targetHiddenId).value = key;
+                }
+            }
+
+            document.querySelectorAll('#testModalFilterContainer .preset-card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
         }
 
         function tutupTestKameraModal() {
@@ -794,7 +866,6 @@
             resultImg.className = '';
             resultImg.classList.add(activeFilterClass);
 
-            video.style.display = 'none';
             document.getElementById('testResultContainer').style.display = 'block';
             document.getElementById('btnCaptureTest').style.display = 'none';
             document.getElementById('btnRetakeTest').style.display = 'block';
@@ -802,7 +873,6 @@
 
         function ulangFotoTes() {
             document.getElementById('testResultContainer').style.display = 'none';
-            document.getElementById('testVideo').style.display = 'block';
             document.getElementById('btnCaptureTest').style.display = 'block';
             document.getElementById('btnRetakeTest').style.display = 'none';
         }
@@ -987,6 +1057,24 @@
         function bukaDasbor() { showSection('customerDashboard'); muatAcaraSaya(); }
         
         function bukaForm() { 
+            let adaAcaraAktif = false;
+            const sekarang = new Date();
+
+            for (let i = 0; i < daftarAcaraGlobal.length; i++) {
+                let d = daftarAcaraGlobal[i];
+                let eventEnd = new Date(`${d.date}T${d.endTime || '23:59'}:00`);
+                
+                if (d.status === 'Pending' || (d.status === 'Aktif' && sekarang <= eventEnd)) {
+                    adaAcaraAktif = true;
+                    break;
+                }
+            }
+
+            if (adaAcaraAktif) {
+                alert(currentLang === 'en' ? "Notice: You still have an active or Pending event. You can only create a new event after the current one ends or by deleting it." : "Pemberitahuan: Anda masih memiliki acara yang sedang aktif atau Pending (belum dibayar). Anda baru bisa membuat acara baru setelah acara tersebut selesai atau menghapusnya melalui tombol Hapus.");
+                return;
+            }
+
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
             perbaruiPresetOtomatis();
@@ -1248,11 +1336,12 @@
                         const doc = await eventRef.get();
                         if (doc.exists) {
                             let currentData = doc.data();
-                            let targetQ = currentData.pendingQuota || (currentData.quota + pendingPaymentInfo.addedQuota);
+                            let currentQuota = currentData.quota || 0;
+                            let added = pendingPaymentInfo.addedQuota || 0;
+                            let newQuota = added === 9999 ? 9999 : currentQuota + added;
                             await eventRef.update({
-                                quota: targetQ,
-                                remainingQuota: targetQ,
-                                pendingQuota: targetQ
+                                quota: newQuota,
+                                remainingQuota: currentData.remainingQuota !== undefined ? currentData.remainingQuota + (added === 9999 ? 0 : added) : newQuota
                             });
                             alert(currentLang === 'en' ? "Quota successfully upgraded after payment confirmation!" : "Kuota berhasil di-upgrade setelah pembayaran dikonfirmasi!");
                         }
@@ -1262,7 +1351,7 @@
                             status: "Aktif",
                             quota: finalQ,
                             remainingQuota: finalQ,
-                            pendingQuota: finalQ
+                            pendingQuota: 0
                         });
                         alert(currentLang === 'en' ? "Event successfully activated after payment confirmation!" : "Acara berhasil diaktifkan setelah pembayaran dikonfirmasi!");
                     }
@@ -1398,33 +1487,26 @@
             if (snapshot.empty) { listDiv.innerHTML = `<div style="text-align: center; padding: 40px; color: #888;">${currentLang === 'en' ? 'No events yet.' : 'Belum ada acara.'}</div>`; return; }
             
             daftarAcaraGlobal = [];
-            const sekarang = new Date();
-
             snapshot.forEach(doc => {
                 let eventData = doc.data();
                 eventData.id = doc.id;
-
-                // Cek apakah waktu acara sudah berakhir
-                let eventEnd = new Date(`${eventData.date}T${eventData.endTime || '23:59'}:00`);
-                if (eventData.status === 'Aktif' && sekarang > eventEnd) {
-                    eventData.status = 'Berakhir';
-                }
-
                 daftarAcaraGlobal.push(eventData);
             });
 
             listDiv.innerHTML = '';
             daftarAcaraGlobal.forEach(d => {
-                let statusBadge = '';
-                if (d.status === 'Pending') {
-                    statusBadge = `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>`;
-                } else if (d.status === 'Berakhir') {
-                    statusBadge = `<span class="badge-ended">${currentLang === 'en' ? 'Ended' : 'Telah Berakhir'}</span>`;
-                } else {
-                    statusBadge = `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
-                }
+                let statusBadge = d.status === 'Pending' 
+                    ? `<span class="badge-pending" onclick="lanjutkanPembayaran('${d.id}')" title="${currentLang === 'en' ? 'Click to pay' : 'Klik untuk bayar'}">${currentLang === 'en' ? '⏳ Pending (Click to Pay)' : '⏳ Pending (Klik Bayar)'}</span>` 
+                    : `<span class="badge">${currentLang === 'en' ? 'Active' : 'Aktif'}</span>`;
 
-                let quotaTextDisplay = d.quota === 9999 ? 'Unlimited' : d.quota;
+                let quotaTextDisplay = '';
+                if (d.status === 'Pending' && d.pendingQuota && d.pendingQuota > d.quota) {
+                    let curText = d.quota === 9999 ? 'Unlimited' : d.quota;
+                    let targetText = d.pendingQuota === 9999 ? 'Unlimited' : d.pendingQuota;
+                    quotaTextDisplay = `${curText} (Pending upgrade ke ${targetText})`;
+                } else {
+                    quotaTextDisplay = d.quota === 9999 ? 'Unlimited' : d.quota;
+                }
 
                 listDiv.innerHTML += `
                     <div class="event-card">
@@ -1437,7 +1519,7 @@
                             <button class="btn-outline" onclick="bukaPengaturan('${d.id}')">${currentLang === 'en' ? 'Manage' : 'Kelola'}</button>
                             <button class="btn-danger" onclick="hapusAcara('${d.id}')">${currentLang === 'en' ? 'Delete' : 'Hapus'}</button>
                         </div>
-                    `;
+                    </div>`;
             });
         }
 
@@ -1458,12 +1540,11 @@
             }
 
             const packageVal = document.querySelector('input[name="package"]:checked').value;
-            let kuotaPilihan = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
-            let harga = packageVal === "unlimited" ? 800000 : (kuotaPilihan === 10 ? 50000 : (kuotaPilihan === 25 ? 85000 : (kuotaPilihan === 50 ? 160000 : (kuotaPilihan === 100 ? 250000 : (kuotaPilihan === 150 ? 350000 : (kuotaPilihan === 200 ? 470000 : 0))))));
+            let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
+            let harga = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
 
-            // Jika berbayar, kuota awal aktif adalah 5 (atau standar gratis), target kuota disimpan di pendingQuota
-            let initialQuota = (harga === 0 || kuotaPilihan === 5) ? kuotaPilihan : 5;
-            let pendingQ = kuotaPilihan;
+            let initialQuota = harga === 0 ? kuota : 5;
+            let pendingQ = harga === 0 ? 0 : kuota;
 
             try {
                 const eventName = document.getElementById('eventName').value;
@@ -1487,7 +1568,7 @@
                 });
                 if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
-                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuotaPilihan===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuotaPilihan} ${unitStr}`, price: harga, targetQuota: kuotaPilihan, addedQuota: 0 };
+                    pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, targetQuota: kuota, addedQuota: 0 };
                     tampilkanHalamanPembayaran();
                 }
             } catch(err) { alert((currentLang === 'en' ? "Failed: " : "Gagal: ") + err.message); }
