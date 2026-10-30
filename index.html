@@ -205,6 +205,20 @@
         <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;" data-i18n="newEventQueueForm">Detail Acara Baru</h2>
         
         <form id="eventForm">
+            <!-- KOLOM PROMO CODE -->
+            <div class="form-group" style="background: rgba(110, 231, 183, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
+                <label style="color: var(--accent); font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
+                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                    <input type="text" id="promoCodeInput" class="form-control" placeholder="Contoh: TLCF50FREE" style="text-transform: uppercase;">
+                    <button type="button" class="btn-primary" onclick="terapkanPromoCode()" style="padding: 0 20px;" data-i18n="applyPromoBtn">Gunakan</button>
+                </div>
+                <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: var(--accent); display: none;"></p>
+            </div>
+
+            <input type="hidden" id="appliedVoucherCode" value="">
+            <input type="hidden" id="appliedVoucherDiscount" value="0">
+            <input type="hidden" id="appliedVoucherFreePax" value="0">
+
             <div class="form-group">
                 <label data-i18n="eventTypeLabel">Jenis Acara</label>
                 <select id="eventType" class="form-control" onchange="gantiJenisAcaraForm()">
@@ -587,6 +601,8 @@
                 loadingEvents: "Memuat acara...",
                 cancelBtn: "&larr; Batal",
                 newEventQueueForm: "Detail Acara Baru",
+                promoCodeLabel: "🎟️ Punya Promo Code / Voucher Khusus?",
+                applyPromoBtn: "Gunakan",
                 eventTypeLabel: "Jenis Acara",
                 typeWedding: "Wedding (Pernikahan)",
                 typeBirthday: "Birthday (Ulang Tahun)",
@@ -672,6 +688,8 @@
                 loadingEvents: "Loading events...",
                 cancelBtn: "&larr; Cancel",
                 newEventQueueForm: "New Event Details",
+                promoCodeLabel: "🎟️ Have a Promo Code / Special Voucher?",
+                applyPromoBtn: "Apply",
                 eventTypeLabel: "Event Type",
                 typeWedding: "Wedding",
                 typeBirthday: "Birthday",
@@ -762,7 +780,68 @@
 
         let activeStream = null;
         let activeFilterClass = 'filter-original';
-        let currentFacingMode = 'user'; // 'user' atau 'environment'
+        let currentFacingMode = 'user';
+
+        async function terapkanPromoCode() {
+            const code = document.getElementById('promoCodeInput').value.trim().toUpperCase();
+            const msgEl = document.getElementById('promoMessage');
+            if(!code) return;
+
+            msgEl.style.display = 'block';
+            msgEl.style.color = 'var(--accent)';
+            msgEl.innerText = currentLang === 'en' ? "Checking promo code..." : "Memeriksa kode promo...";
+
+            try {
+                const docRef = await db.collection('vouchers').doc(code).get();
+                if(!docRef.exists) {
+                    msgEl.style.color = '#ff6b6b';
+                    msgEl.innerText = currentLang === 'en' ? "Invalid or expired promo code!" : "Kode promo tidak valid atau sudah kedaluwarsa!";
+                    return;
+                }
+
+                const vData = docRef.data();
+                const usedAccounts = vData.usedAccounts || [];
+
+                // Cek apakah 1 akun hanya boleh 1 kali pakai voucher ini
+                if(usedAccounts.includes(currentUser.uid)) {
+                    msgEl.style.color = '#ff6b6b';
+                    msgEl.innerText = currentLang === 'en' ? "You have already used this promo code!" : "Anda sudah pernah menggunakan kode promo ini!";
+                    return;
+                }
+
+                // Cek maksimal user / batasan total pemakai
+                if(vData.maxUsage && usedAccounts.length >= vData.maxUsage) {
+                    msgEl.style.color = '#ff6b6b';
+                    msgEl.innerText = currentLang === 'en' ? "Promo code usage limit has been reached!" : "Batas maksimal penggunaan kode promo ini sudah habis!";
+                    return;
+                }
+
+                // Simpan data voucher yang berhasil diaplikasikan
+                document.getElementById('appliedVoucherCode').value = code;
+                document.getElementById('appliedVoucherDiscount').value = vData.discountPercent || 0;
+                document.getElementById('appliedVoucherFreePax').value = vData.freePax || 0;
+
+                msgEl.style.color = 'var(--accent)';
+                msgEl.innerText = currentLang === 'en' 
+                    ? `Promo applied successfully! (Free ${vData.freePax || 0} Pax, Discount ${vData.discountPercent || 0}%)` 
+                    : `Promo berhasil digunakan! (Free ${vData.freePax || 0} Orang, Diskon ${vData.discountPercent || 0}%)`;
+
+                // Jika voucher memberikan free pax, otomatis pilih paket atau atur kuota paket
+                if(vData.freePax > 0) {
+                    const radios = document.querySelectorAll('input[name="package"]');
+                    radios.forEach(r => {
+                        if(r.value == vData.freePax || (vData.freePax >= 9999 && r.value === 'unlimited')) {
+                            r.checked = true;
+                        }
+                    });
+                }
+
+            } catch(err) {
+                console.error(err);
+                msgEl.style.color = '#ff6b6b';
+                msgEl.innerText = currentLang === 'en' ? "Error checking code." : "Gagal memeriksa kode.";
+            }
+        }
 
         async function bukaTestKameraModal(hiddenInputId) {
             document.getElementById('activeTestHiddenId').value = hiddenInputId;
@@ -779,7 +858,6 @@
             document.getElementById('btnCaptureTest').style.display = 'block';
             document.getElementById('btnRetakeTest').style.display = 'none';
 
-            // Render filter scroll di dalam modal tes kamera
             renderTestModalFilters(currentFilterKey);
             await startTestCameraStream();
         }
@@ -833,7 +911,6 @@
                 video.className = '';
                 video.classList.add(activeFilterClass);
 
-                // Update juga nilai di hidden input aslinya
                 const targetHiddenId = document.getElementById('activeTestHiddenId').value;
                 if (targetHiddenId) {
                     document.getElementById(targetHiddenId).value = key;
@@ -1077,6 +1154,11 @@
 
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
+            document.getElementById('promoMessage').style.display = 'none';
+            document.getElementById('appliedVoucherCode').value = '';
+            document.getElementById('appliedVoucherDiscount').value = '0';
+            document.getElementById('appliedVoucherFreePax').value = '0';
+
             perbaruiPresetOtomatis();
             renderFilterPresets('filterPresetContainer', 'defaultFilter', 'original');
             updateEventPreview();
@@ -1541,12 +1623,33 @@
 
             const packageVal = document.querySelector('input[name="package"]:checked').value;
             let kuota = packageVal === "unlimited" ? 9999 : parseInt(packageVal);
-            let harga = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
+            let hargaDasar = packageVal === "unlimited" ? 800000 : (kuota === 10 ? 50000 : (kuota === 25 ? 85000 : (kuota === 50 ? 160000 : (kuota === 100 ? 250000 : (kuota === 150 ? 350000 : (kuota === 200 ? 470000 : 0))))));
 
-            let initialQuota = harga === 0 ? kuota : 5;
+            // Perhitungan Diskon Berdasarkan Voucher / Promo Code
+            let diskonPercent = parseFloat(document.getElementById('appliedVoucherDiscount').value) || 0;
+            let harga = hargaDasar - (hargaDasar * (diskonPercent / 100));
+            if(harga < 0) harga = 0;
+
+            let initialQuota = harga === 0 ? kuota : (hargaDasar === 0 ? kuota : 5);
             let pendingQ = harga === 0 ? 0 : kuota;
 
+            const usedVoucherCode = document.getElementById('appliedVoucherCode').value;
+
             try {
+                // Update penggunaan voucher di database (1 kode = 1 akun, cek max usage)
+                if(usedVoucherCode) {
+                    const vRef = db.collection('vouchers').doc(usedVoucherCode);
+                    const vSnap = await vRef.get();
+                    if(vSnap.exists) {
+                        let vData = vSnap.data();
+                        let usedAccs = vData.usedAccounts || [];
+                        if(!usedAccs.includes(currentUser.uid)) {
+                            usedAccs.push(currentUser.uid);
+                            await vRef.update({ usedAccounts: usedAccs });
+                        }
+                    }
+                }
+
                 const eventName = document.getElementById('eventName').value;
                 const unitStr = currentLang === 'en' ? 'People' : 'Orang';
                 const docRef = await db.collection("events").add({
@@ -1564,8 +1667,10 @@
                     quota: initialQuota, remainingQuota: initialQuota, pendingQuota: pendingQ, price: harga,
                     wallpaperUrl: wallpaperFinalUrl,
                     status: harga === 0 ? "Aktif" : "Pending",
+                    appliedPromo: usedVoucherCode || null,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
+
                 if(harga === 0) { alert(currentLang === 'en' ? "Successfully created!" : "Berhasil dibuat!"); bukaDasbor(); }
                 else {
                     pendingPaymentInfo = { type: currentLang === 'en' ? 'New Event Activation' : 'Aktivasi Acara Baru', eventId: docRef.id, name: eventName, package: kuota===9999?(currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas'):`${kuota} ${unitStr}`, price: harga, targetQuota: kuota, addedQuota: 0 };
