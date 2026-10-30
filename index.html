@@ -458,11 +458,6 @@
                     <div style="display: flex; gap: 8px; flex-wrap: wrap;">
                         <select id="upgradePackage" class="form-control" style="padding: 10px; font-size: 0.85rem; flex: 1; min-width: 150px;">
                             <option value="" data-i18n="selectAddOpt">-- Pilih Tambahan --</option>
-                            <option value="10|50000">+ 10 <span data-i18n="guestsUnit">Orang</span> (Rp 50.000)</option>
-                            <option value="25|85000">+ 25 <span data-i18n="guestsUnit">Orang</span> (Rp 85.000)</option>
-                            <option value="50|160000">+ 50 <span data-i18n="guestsUnit">Orang</span> (Rp 160.000)</option>
-                            <option value="100|250000">+ 100 <span data-i18n="guestsUnit">Orang</span> (Rp 250.000)</option>
-                            <option value="9999|800000" data-i18n="upgradeUnlimitedOpt">Jadi Tak Terbatas (Rp 800.000)</option>
                         </select>
                         <button class="btn-primary" onclick="prosesUpgrade()" style="font-weight: bold; padding: 10px 16px;" data-i18n="upgradeBtn">Upgrade</button>
                     </div>
@@ -681,6 +676,17 @@
         const ADMIN_WA = "6285111246036";
         let pendingPaymentInfo = { type: '', eventId: '', name: '', package: '', price: 0, addedQuota: 0, targetQuota: 0 };
         
+        // Master daftar paket upgrade lengkap dengan kuota dan harganya
+        const MASTER_PACKAGES = [
+            { quota: 10, label: "+ 10 Orang", price: 50000 },
+            { quota: 25, label: "+ 25 Orang", price: 85000 },
+            { quota: 50, label: "+ 50 Orang", price: 160000 },
+            { quota: 100, label: "+ 100 Orang", price: 250000 },
+            { quota: 150, label: "+ 150 Orang", price: 350000 },
+            { quota: 200, label: "+ 200 Orang", price: 470000 },
+            { quota: 9999, label: "Jadi Tak Terbatas", price: 800000 }
+        ];
+
         let currentLang = 'id';
         const translations = {
             id: {
@@ -1382,6 +1388,27 @@
             updateEventPreview();
         }
         
+        // Fungsi untuk mengisi dropdown opsi upgrade berdasarkan kuota saat ini (hanya tampil paket di atasnya)
+        function populateUpgradeDropdown(currentQuota) {
+            const select = document.getElementById('upgradePackage');
+            const defaultOptionText = currentLang === 'en' ? '-- Select Add-on --' : '-- Pilih Tambahan --';
+            select.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            
+            MASTER_PACKAGES.forEach(pkg => {
+                // Hanya masukkan paket jika kuotanya lebih besar dari kuota saat ini
+                if (pkg.quota > currentQuota) {
+                    let labelText = '';
+                    if (pkg.quota === 9999) {
+                        labelText = currentLang === 'en' ? 'Jadi Tak Terbatas (Rp 800.000)' : 'Jadi Tak Terbatas (Rp 800.000)';
+                    } else {
+                        const unitStr = currentLang === 'en' ? 'People' : 'Orang';
+                        labelText = `+ ${pkg.quota} ${unitStr} (Rp ${pkg.price.toLocaleString('id-ID')})`;
+                    }
+                    select.innerHTML += `<option value="${pkg.quota}|${pkg.price}">${labelText}</option>`;
+                }
+            });
+        }
+
         function bukaPengaturan(eventId) {
             const event = daftarAcaraGlobal.find(e => e.id === eventId);
             if(!event) return;
@@ -1407,7 +1434,11 @@
             });
 
             const unitStr = currentLang === 'en' ? 'People' : 'Orang';
-            document.getElementById('currentQuotaText').innerText = event.quota === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${event.quota} ${unitStr}`;
+            let currentQuotaValue = event.quota || 5;
+            document.getElementById('currentQuotaText').innerText = currentQuotaValue === 9999 ? (currentLang === 'en' ? 'Unlimited' : 'Tak Terbatas') : `${currentQuotaValue} ${unitStr}`;
+
+            // Panggil filter dropdown upgrade otomatis agar menyesuaikan dengan kuota saat ini
+            populateUpgradeDropdown(currentQuotaValue);
 
             selectedEditWallpaperUrl = event.wallpaperUrl || '';
             perbaruiPresetEditOtomatis();
