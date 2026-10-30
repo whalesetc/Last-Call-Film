@@ -20,108 +20,111 @@
 
     <style>
         :root { 
-            --bg-dark: #121010; 
-            --text-light: #ffffff; 
-            --text-muted: rgba(255, 255, 255, 0.55); 
-            --accent: #b82d38; /* Burgundy / Dark Red Elegan */
-            --border-color: rgba(255, 255, 255, 0.15); 
+            --bg-dark: #261C17; /* Record Night */
+            --card-bg: #322520;
+            --text-light: #E5D178; /* Sunbeam Sugar */
+            --text-muted: rgba(229, 209, 120, 0.65); 
+            --accent: #D9874F; /* Funky Apricot */
+            --secondary-accent: #638073; /* Minted Moss */
+            --border-color: rgba(107, 61, 54, 0.5); /* Mahogany Groove border */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
         body { background-color: var(--bg-dark); color: var(--text-light); line-height: 1.6; min-height: 100vh; display: flex; flex-direction: column; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
-        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(18,16,16,0.85); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
-        .logo { font-size: 1.25rem; font-weight: 700; color: #fff; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
+        nav { padding: 15px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(38,28,23,0.9); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); }
+        .logo { font-size: 1.25rem; font-weight: 700; color: #E5D178; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
         .logo:hover { opacity: 0.8; }
         
         .nav-right-container { display: flex; align-items: center; gap: 15px; }
         
-        .lang-selector { display: flex; align-items: center; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px 8px; gap: 4px; font-size: 0.75rem; }
+        .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.2); border: 1px solid var(--border-color); border-radius: 20px; padding: 4px 8px; gap: 4px; font-size: 0.75rem; }
         .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 6px; border-radius: 4px; transition: 0.2s; }
-        .lang-btn.active { background: var(--accent); color: #fff; }
+        .lang-btn.active { background: var(--accent); color: #261C17; }
 
-        .btn-outline { background: transparent; color: #fff; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center;}
-        .btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-muted); }
-        .btn-danger { background: transparent; color: #ff6b6b; border: 1px solid rgba(255, 107, 107, 0.4); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center; }
-        .btn-danger:hover { background: rgba(255, 107, 107, 0.1); border-color: #ff6b6b; }
+        .btn-outline { background: transparent; color: #E5D178; border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center;}
+        .btn-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
+        .btn-danger { background: transparent; color: #D9874F; border: 1px solid rgba(217, 135, 79, 0.4); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; transition: 0.2s; display: inline-block; text-align: center; }
+        .btn-danger:hover { background: rgba(217, 135, 79, 0.1); border-color: #D9874F; }
         
-        .btn-primary { background: #fff; color: #000; padding: 12px 20px; border-radius: 8px; font-weight: 600; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-primary { background: #D9874F; color: #261C17; padding: 12px 20px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; }
+        .btn-primary:hover { background: #e09867; }
         .btn-primary:active { transform: scale(0.98); }
-        .btn-wa { background: #25D366; color: #fff; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
-        .btn-wa:hover { background: #20ba59; }
-        .btn-crypto { background: #f59e0b; color: #000; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
-        .btn-crypto:hover { background: #d97706; color: #fff; }
+        .btn-wa { background: #638073; color: #E5D178; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-wa:hover { background: #526c60; }
+        .btn-crypto { background: #6B3D36; color: #E5D178; border: none; font-weight: 600; padding: 14px; border-radius: 8px; cursor: pointer; display: flex; justify-content: center; align-items: center; gap: 8px; transition: 0.2s; }
+        .btn-crypto:hover { background: #542f2a; }
 
         .profile-container { position: relative; display: inline-block; }
-        .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #fff; transition: 0.2s; }
-        .profile-btn:hover { background: rgba(255,255,255,0.1); }
-        .profile-icon { width: 30px; height: 30px; background: var(--accent); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
+        .profile-btn { display: flex; align-items: center; gap: 10px; background: rgba(99,128,115,0.2); border: 1px solid var(--border-color); padding: 6px 14px; border-radius: 20px; cursor: pointer; color: #E5D178; transition: 0.2s; }
+        .profile-btn:hover { background: rgba(99,128,115,0.4); }
+        .profile-icon { width: 30px; height: 30px; background: #6B3D36; color: #E5D178; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.9rem; text-transform: uppercase; }
         .profile-dropdown { display: none; position: absolute; right: 0; top: 120%; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 8px; width: 160px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 200; }
         .profile-dropdown.show { display: block; }
-        .dropdown-item { padding: 12px 15px; cursor: pointer; color: #fff; font-size: 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.05); transition: 0.2s; text-align: left; width: 100%; background: transparent; border: none; font-family: inherit; }
+        .dropdown-item { padding: 12px 15px; cursor: pointer; color: #E5D178; font-size: 0.85rem; border-bottom: 1px solid rgba(107,61,54,0.3); transition: 0.2s; text-align: left; width: 100%; background: transparent; border: none; font-family: inherit; }
         .dropdown-item:last-child { border-bottom: none; }
-        .dropdown-item:hover { background: rgba(255,255,255,0.1); }
-        .text-danger { color: #ff6b6b; }
+        .dropdown-item:hover { background: rgba(107,61,54,0.3); }
+        .text-danger { color: #D9874F; }
 
         .section { display: none; padding: 40px 5%; max-width: 1000px; margin: 0 auto; width: 100%; flex: 1; }
         .active-section { display: block; }
 
         #landingPage { text-align: center; padding-top: 80px; position: relative; overflow: hidden; }
-        #landingPage::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(circle, rgba(184, 45, 56, 0.12) 0%, rgba(0,0,0,0) 60%); z-index: -1; pointer-events: none;}
+        #landingPage::before { content: ''; position: absolute; top: -100px; left: 50%; transform: translateX(-50%); width: 800px; height: 600px; background: radial-gradient(circle, rgba(217, 135, 79, 0.1) 0%, rgba(38,28,23,0) 60%); z-index: -1; pointer-events: none;}
         
-        .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 25px; color: #e65c65; letter-spacing: 1px; text-transform: uppercase;}
-        .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 20px; line-height: 1.15; text-shadow: 0 4px 20px rgba(0,0,0,0.5);}
-        .text-accent { color: #e65c65; font-style: italic; }
+        .hero-badge { display: inline-block; padding: 6px 16px; background: rgba(99,128,115,0.2); border: 1px solid var(--border-color); border-radius: 30px; font-size: 0.75rem; font-weight: 600; margin-bottom: 25px; color: #638073; letter-spacing: 1px; text-transform: uppercase;}
+        .hero-title { font-size: clamp(2.5rem, 5vw, 4rem); margin-bottom: 20px; line-height: 1.15; color: #E5D178; text-shadow: 0 4px 20px rgba(0,0,0,0.5);}
+        .text-accent { color: #D9874F; font-style: italic; }
         .hero-subtitle { color: var(--text-muted); font-size: 1.1rem; max-width: 600px; margin: 0 auto 40px auto; line-height: 1.7; }
         
-        .event-card { background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
-        .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; }
+        .event-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 20px; border-radius: 16px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;}
+        .event-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; margin-bottom: 5px; color: #E5D178; }
         .event-info p { color: var(--text-muted); font-size: 0.85rem; }
-        .badge { background: var(--accent); color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
-        .badge-pending { background: #fbbc05; color: #000; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
+        .badge { background: #638073; color: #E5D178; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+        .badge-pending { background: #D9874F; color: #261C17; padding: 4px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 700; cursor: pointer; display: inline-block; animation: pulse 1.5s infinite; }
         @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
         .form-group { margin-bottom: 25px; }
-        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; }
-        .form-control { width: 100%; padding: 14px; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); color: #fff; border-radius: 8px; outline: none; font-family: inherit; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 0.9rem; color: #E5D178; }
+        .form-control { width: 100%; padding: 14px; background: rgba(38,28,23,0.8); border: 1px solid var(--border-color); color: #E5D178; border-radius: 8px; outline: none; font-family: inherit; }
         .form-control:focus { border-color: var(--accent); }
         
         .time-group { display: flex; gap: 15px; }
         .time-group .form-group { flex: 1; margin-bottom: 0; }
         
         .radio-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-        .radio-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: 0.2s; background: rgba(255,255,255,0.02); }
+        .radio-card { border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; cursor: pointer; text-align: center; transition: 0.2s; background: var(--card-bg); color: #E5D178; }
         .radio-card input { display: none; }
-        .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(184, 45, 56, 0.12); }
-        .price-tag { font-weight: 700; color: #e65c65; display: block; margin-top: 5px; }
+        .radio-card:has(input:checked) { border-color: var(--accent); background: rgba(217, 135, 79, 0.15); }
+        .price-tag { font-weight: 700; color: #D9874F; display: block; margin-top: 5px; }
 
         .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 15px; }
         @media(min-width: 600px) { .preset-grid { grid-template-columns: repeat(4, 1fr); } }
         .preset-card { border: 2px solid var(--border-color); border-radius: 10px; overflow: hidden; cursor: pointer; height: 100px; position: relative; transition: 0.2s; background-size: cover; background-position: center; }
         .preset-card:hover { transform: scale(1.02); }
-        .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(184, 45, 56, 0.4); }
-        .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.75); font-size: 0.65rem; padding: 4px; text-align: center; color: #fff; }
+        .preset-card.selected { border-color: var(--accent); box-shadow: 0 0 10px rgba(217, 135, 79, 0.4); }
+        .preset-label { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(38,28,23,0.85); font-size: 0.65rem; padding: 4px; text-align: center; color: #E5D178; }
 
-        .mockup-container { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px; }
-        .phone-mockup { width: 220px; height: 440px; border: 10px solid #222; border-radius: 30px; position: relative; overflow: hidden; background: #111; box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: block; }
-        .phone-mockup::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 20px; background: #222; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
+        .mockup-container { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 25px; display: flex; flex-direction: column; align-items: center; gap: 15px; margin-top: 15px; }
+        .phone-mockup { width: 220px; height: 440px; border: 10px solid #1a120e; border-radius: 30px; position: relative; overflow: hidden; background: #111; box-shadow: 0 15px 35px rgba(0,0,0,0.6); display: block; }
+        .phone-mockup::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 90px; height: 20px; background: #1a120e; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px; z-index: 10; }
         
         .phone-screen { width: 100%; height: 100%; background-size: cover; background-position: center; position: relative; overflow: hidden; }
         .phone-screen::before {
             content: ''; position: absolute; top: -10px; left: -10px; right: -10px; bottom: -10px;
             background: inherit; filter: blur(6px); -webkit-filter: blur(6px); transform: scale(1.1); z-index: 1;
         }
-        .phone-bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); z-index: 2; }
+        .phone-bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 28, 23, 0.65); z-index: 2; }
         
         .phone-preview-card {
             position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 86%; background: rgba(18, 16, 16, 0.88); border: 1px solid rgba(255,255,255,0.15);
-            backdrop-filter: blur(8px); padding: 12px 8px; border-radius: 12px; text-align: center; z-index: 5; color: #fff;
+            width: 86%; background: rgba(38, 28, 23, 0.9); border: 1px solid var(--border-color);
+            backdrop-filter: blur(8px); padding: 12px 8px; border-radius: 12px; text-align: center; z-index: 5; color: #E5D178;
         }
         .preview-timer { display: flex; justify-content: center; gap: 6px; margin: 6px 0; }
         .preview-box { background: rgba(0,0,0,0.4); padding: 4px 6px; border-radius: 6px; min-width: 30px; }
-        .preview-val { font-size: 0.85rem; font-weight: bold; color: #fff; }
-        .preview-lbl { font-size: 0.4rem; color: rgba(255,255,255,0.6); text-transform: uppercase; }
+        .preview-val { font-size: 0.85rem; font-weight: bold; color: #E5D178; }
+        .preview-lbl { font-size: 0.4rem; color: rgba(229, 209, 120, 0.6); text-transform: uppercase; }
 
         .filter-original { filter: none; }
         .filter-ultramax { filter: contrast(1.1) saturate(1.2) brightness(1.05) sepia(0.15); }
@@ -136,37 +139,37 @@
 
         .filter-scroll-container { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; padding-bottom: 8px; scroll-behavior: smooth; max-width: 100%; box-sizing: border-box; }
         .filter-scroll-container::-webkit-scrollbar { height: 5px; }
-        .filter-scroll-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
+        .filter-scroll-container::-webkit-scrollbar-thumb { background: rgba(229,209,120,0.2); border-radius: 3px; }
 
         .admin-panel { display: grid; grid-template-columns: 1fr; gap: 20px; margin-bottom: 40px; }
         @media(min-width: 768px) { .admin-panel { grid-template-columns: 1.15fr 1fr; } }
         
-        .dash-card { background: rgba(255,255,255,0.02); border: 1px solid var(--border-color); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; }
-        .dash-card h3 { color: var(--text-light); font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
+        .dash-card { background: var(--card-bg); border: 1px solid var(--border-color); padding: 25px; border-radius: 16px; display: flex; flex-direction: column; }
+        .dash-card h3 { color: #E5D178; font-size: 1.1rem; margin-bottom: 10px; font-family: 'Playfair Display', serif;}
         
-        .countdown-dashboard-card { background: rgba(184, 45, 56, 0.06); border: 1px solid rgba(184, 45, 56, 0.3); border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
-        .countdown-dash-title { font-size: 0.85rem; color: #e65c65; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
+        .countdown-dashboard-card { background: rgba(99, 128, 115, 0.15); border: 1px solid var(--secondary-accent); border-radius: 16px; padding: 20px; margin-bottom: 30px; text-align: center; }
+        .countdown-dash-title { font-size: 0.85rem; color: #E5D178; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; }
         .countdown-dash-timer { display: flex; justify-content: center; align-items: center; gap: 10px; }
-        .cd-box { background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); padding: 10px 15px; border-radius: 10px; min-width: 60px; text-align: center; }
-        .cd-val { font-size: 1.4rem; font-weight: bold; color: #fff; font-variant-numeric: tabular-nums; }
-        .cd-lbl { font-size: 0.7rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-top: 4px; }
+        .cd-box { background: rgba(0,0,0,0.3); border: 1px solid var(--border-color); padding: 10px 15px; border-radius: 10px; min-width: 60px; text-align: center; }
+        .cd-val { font-size: 1.4rem; font-weight: bold; color: #E5D178; font-variant-numeric: tabular-nums; }
+        .cd-lbl { font-size: 0.7rem; color: rgba(229, 209, 120, 0.6); text-transform: uppercase; margin-top: 4px; }
 
         .auth-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center; padding: 20px; }
-        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #fff; position: relative; text-align: left; }
-        .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: #888; font-size: 1.2rem; }
+        .auth-box { background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 450px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: #E5D178; position: relative; text-align: left; }
+        .auth-close { position: absolute; top: 15px; right: 20px; cursor: pointer; color: var(--text-muted); font-size: 1.2rem; }
         
         .auth-tabs { display: flex; border-bottom: 1px solid var(--border-color); margin-bottom: 20px; }
-        .auth-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: rgba(255,255,255,0.5); font-weight: 600; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .auth-tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: var(--text-muted); font-weight: 600; border-bottom: 2px solid transparent; transition: 0.3s; }
         .auth-tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
         
         .auth-form { display: none; }
         .auth-form.active { display: block; }
         
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(255,255,255,0.05); color: #fff; outline: none; font-size: 0.9rem; }
+        .auth-input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(38,28,23,0.8); color: #E5D178; outline: none; font-size: 0.9rem; }
         .auth-btn { width: 100%; padding: 12px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; margin-bottom: 10px; font-size: 0.9rem; transition: 0.2s; }
-        .btn-google { background: #fff; color: #000; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 500; }
+        .btn-google { background: #E5D178; color: #261C17; display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: 600; }
         .btn-google img { width: 18px; }
-        .auth-divider { text-align: center; margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem; display: flex; align-items: center; }
+        .auth-divider { text-align: center; margin: 15px 0; color: var(--text-muted); font-size: 0.8rem; display: flex; align-items: center; }
         .auth-divider::before, .auth-divider::after { content: ""; flex: 1; border-bottom: 1px solid var(--border-color); margin: 0 10px; }
     </style>
 </head>
@@ -209,7 +212,7 @@
     <!-- 2. DASBOR CUSTOMER -->
     <div id="customerDashboard" class="section">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-            <h2 class="font-serif" style="font-size: 2rem;" data-i18n="myEventsTitle">Acara Saya</h2>
+            <h2 class="font-serif" style="font-size: 2rem; color: #E5D178;" data-i18n="myEventsTitle">Acara Saya</h2>
             <button class="btn-primary" onclick="bukaForm()" data-i18n="newEventQueueBtn">+ Buat Baru</button>
         </div>
         <div id="eventList">
@@ -220,17 +223,17 @@
     <!-- 3. FORMULIR PEMBUATAN ACARA BARU -->
     <div id="createEventForm" class="section" style="max-width: 700px;">
         <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;" data-i18n="cancelBtn">&larr; Batal</button>
-        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px;" data-i18n="newEventQueueForm">Detail Acara Baru</h2>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 20px; color: #E5D178;" data-i18n="newEventQueueForm">Detail Acara Baru</h2>
         
         <form id="eventForm">
             <!-- KOLOM PROMO CODE -->
-            <div class="form-group" style="background: rgba(184, 45, 56, 0.05); border: 1px dashed var(--accent); padding: 15px; border-radius: 12px;">
-                <label style="color: #e65c65; font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
+            <div class="form-group" style="background: rgba(99, 128, 115, 0.1); border: 1px dashed var(--secondary-accent); padding: 15px; border-radius: 12px;">
+                <label style="color: var(--accent); font-weight: 600;" data-i18n="promoCodeLabel">🎟️ Punya Promo Code / Voucher Khusus?</label>
                 <div style="display: flex; gap: 8px; margin-top: 8px;">
                     <input type="text" id="promoCodeInput" class="form-control" placeholder="" style="text-transform: uppercase;">
                     <button type="button" class="btn-primary" onclick="terapkanPromoCode()" style="padding: 0 20px;" data-i18n="applyPromoBtn">Gunakan</button>
                 </div>
-                <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: #e65c65; display: none;"></p>
+                <p id="promoMessage" style="font-size: 0.8rem; margin-top: 6px; color: var(--accent); display: none;"></p>
             </div>
 
             <input type="hidden" id="appliedVoucherCode" value="">
@@ -272,9 +275,9 @@
                         <div class="phone-screen" id="phoneScreen" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80');">
                             <div class="phone-bg-overlay"></div>
                             <div class="phone-preview-card">
-                                <div id="previewWaitingText" style="font-size: 0.45rem; letter-spacing: 1px; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 2px;">THE WEDDING OF</div>
-                                <h4 id="previewEventTitle" class="font-serif" style="font-size: 0.95rem; color: #fff; margin-bottom: 4px;">Nama Acara</h4>
-                                <div style="font-size: 0.5rem; color: #e65c65; font-weight: 600; margin-bottom: 4px;">KAMERA AKAN TERBUKA:</div>
+                                <div id="previewWaitingText" style="font-size: 0.45rem; letter-spacing: 1px; color: rgba(229,209,120,0.7); text-transform: uppercase; margin-bottom: 2px;">THE WEDDING OF</div>
+                                <h4 id="previewEventTitle" class="font-serif" style="font-size: 0.95rem; color: #E5D178; margin-bottom: 4px;">Nama Acara</h4>
+                                <div style="font-size: 0.5rem; color: var(--accent); font-weight: 600; margin-bottom: 4px;">KAMERA AKAN TERBUKA:</div>
                                 <div class="preview-timer">
                                     <div class="preview-box"><div class="preview-val">00</div><div class="preview-lbl">Jam</div></div>
                                     <div class="preview-box"><div class="preview-val">50</div><div class="preview-lbl">Menit</div></div>
@@ -284,7 +287,7 @@
                         </div>
                     </div>
                     
-                    <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3); text-align: center; display: block; cursor: pointer;">
+                    <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed var(--border-color); text-align: center; display: block; cursor: pointer;">
                         <input type="file" id="wallpaperFile" accept="image/*" style="display:none;" onchange="previewFileCustom()">
                         <span id="fileName">✏️ Atau Unggah File Gambar dari Galeri</span>
                     </label>
@@ -356,7 +359,7 @@
     <div id="manageEventSection" class="section">
         <button class="btn-outline" onclick="bukaDasbor()" style="margin-bottom: 20px;" data-i18n="backToEvents">&larr; Kembali ke Acara Saya</button>
         
-        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" id="manageEventTitle">Kelola Acara</h2>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px; color: #E5D178;" id="manageEventTitle">Kelola Acara</h2>
         <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="manageSubtitle">Bagikan QR Code ini kepada tamu undangan Anda.</p>
 
         <div class="countdown-dashboard-card" id="dashboardCountdownWrapper" style="display: none;">
@@ -372,7 +375,7 @@
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="dash-card" style="text-align: center;">
                     <h3 style="text-align: left; margin-bottom: 20px;" data-i18n="guestCameraAccess">Akses Kamera Tamu</h3>
-                    <img id="qrCodeImageManage" src="" alt="QR Code" style="width: 180px; height: 180px; border: 4px solid #fff; border-radius: 12px; margin: 0 auto 15px;">
+                    <img id="qrCodeImageManage" src="" alt="QR Code" style="width: 180px; height: 180px; border: 4px solid #E5D178; border-radius: 12px; margin: 0 auto 15px;">
                     <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;" data-i18n="printQrDesc">Cetak QR ini di meja undangan.</p>
                     
                     <div style="display: flex; gap: 8px;">
@@ -380,7 +383,7 @@
                         <button class="btn-primary" onclick="salinLink()" style="padding: 10px 15px; font-size: 0.85rem;" data-i18n="copyBtn">Salin</button>
                     </div>
                     <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-top: 10px; padding: 10px;" data-i18n="openCameraTab">Buka Kamera di Tab Baru &rarr;</button>
-                    <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #fff; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
+                    <button onclick="bukaAlbum()" style="width: 100%; margin-top: 12px; padding: 12px; background-color: var(--accent); color: #261C17; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
                 </div>
 
                 <div class="dash-card">
@@ -394,10 +397,10 @@
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="dash-card">
                     <h3 data-i18n="guestQuotaTitle">Kuota Tamu</h3>
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.5); padding: 15px; border-radius: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px;">
                         <div>
                             <span style="font-size: 0.8rem; color: var(--text-muted); display: block;" data-i18n="currentQuotaLabel">Batas Kuota Saat Ini:</span>
-                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: #e65c65;">5 <span data-i18n="guestsUnit">Orang</span></strong>
+                            <strong id="currentQuotaText" style="font-size: 1.2rem; color: var(--accent);">5 <span data-i18n="guestsUnit">Orang</span></strong>
                         </div>
                     </div>
                     <div style="display: flex; gap: 8px;">
@@ -466,8 +469,8 @@
                                     <div class="phone-screen" id="editPhoneScreen" style="background-image: url('https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=400&q=80');">
                                         <div class="phone-bg-overlay"></div>
                                         <div class="phone-preview-card">
-                                            <div id="editPreviewWaitingText" style="font-size: 0.4rem; letter-spacing: 1px; color: rgba(255,255,255,0.7); text-transform: uppercase;">THE WEDDING OF</div>
-                                            <h4 id="editPreviewEventTitle" class="font-serif" style="font-size: 0.85rem; color: #fff; margin: 3px 0;">Acara</h4>
+                                            <div id="editPreviewWaitingText" style="font-size: 0.4rem; letter-spacing: 1px; color: rgba(229,209,120,0.7); text-transform: uppercase;">THE WEDDING OF</div>
+                                            <h4 id="editPreviewEventTitle" class="font-serif" style="font-size: 0.85rem; color: #E5D178; margin: 3px 0;">Acara</h4>
                                             <div class="preview-timer">
                                                 <div class="preview-box"><div class="preview-val" style="font-size:0.7rem;">00</div></div>
                                                 <div class="preview-box"><div class="preview-val" style="font-size:0.7rem;">50</div></div>
@@ -478,7 +481,7 @@
                                 </div>
                             </div>
 
-                            <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed rgba(255,255,255,0.3); text-align: center; display: block; margin-top: 10px; cursor: pointer;">
+                            <label class="btn-outline" style="width: 100%; padding: 10px; border-radius: 8px; border: 2px dashed var(--border-color); text-align: center; display: block; margin-top: 10px; cursor: pointer;">
                                 <input type="file" id="editWallpaperFile" accept="image/*" style="display:none;" onchange="previewFileEditCustom()">
                                 <span id="editFileName" data-i18n="uploadCustomFile">✏️ Atau Unggah File dari Galeri</span>
                             </label>
@@ -509,20 +512,20 @@
 
     <!-- 5. HALAMAN PEMBAYARAN -->
     <div id="paymentSection" class="section" style="max-width: 600px; text-align: center;">
-        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px;" data-i18n="completePaymentTitle">Selesaikan Pembayaran</h2>
+        <h2 class="font-serif" style="font-size: 2rem; margin-bottom: 5px; color: #E5D178;" data-i18n="completePaymentTitle">Selesaikan Pembayaran</h2>
         <p style="color: var(--text-muted); margin-bottom: 30px;" data-i18n="selectPaymentMethod">Pilih metode pembayaran di bawah ini.</p>
         
         <div class="dash-card" style="margin-bottom: 25px; padding: 30px;">
             <p style="font-size: 0.9rem; color: var(--text-muted);" data-i18n="totalBillLabel">Total Tagihan</p>
-            <h1 id="paymentTotal" style="color: #e65c65; font-size: 2.5rem; margin: 10px 0;">Rp 0</h1>
-            <p id="paymentDesc" style="font-size: 0.9rem;"></p>
+            <h1 id="paymentTotal" style="color: var(--accent); font-size: 2.5rem; margin: 10px 0;">Rp 0</h1>
+            <p id="paymentDesc" style="font-size: 0.9rem; color: #E5D178;"></p>
         </div>
 
-        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: #3b82f6; color: #fff; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Pay with QRIS, VA, E-Wallet</button>
+        <button class="btn-primary" onclick="prosesPembayaranMidtrans()" style="width: 100%; margin-bottom: 15px; background: var(--secondary-accent); color: #E5D178; font-size: 1.05rem; padding: 15px;" data-i18n="midtransBtn">💳 Pay with QRIS, VA, E-Wallet</button>
         <div id="paypal-button-container" style="margin-bottom: 15px;"></div>
         <button class="btn-crypto" onclick="tampilkanInfoCrypto()" style="width: 100%; margin-bottom: 15px;" data-i18n="cryptoBtn">🪙 Pay with Crypto (USDT, SOL, ETH, BTC)</button>
 
-        <div style="margin: 15px 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;" data-i18n="orManualLocal">ATAU PEMBAYARAN MANUAL LOKAL</div>
+        <div style="margin: 15px 0; color: var(--text-muted); font-size: 0.8rem;" data-i18n="orManualLocal">ATAU PEMBAYARAN MANUAL LOKAL</div>
 
         <button class="btn-wa" id="btnConfirmWA" style="width: 100%;" data-i18n="whatsappManualBtn">Pembayaran Manual via WhatsApp</button>
         <button class="btn-outline" onclick="bukaDasbor()" style="width: 100%; margin-top: 15px;" data-i18n="laterBtn">Nanti Saja</button>
@@ -532,7 +535,7 @@
     <div class="auth-modal" id="testCameraModal">
         <div class="auth-box" style="text-align: center; max-width: 420px; padding: 20px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h3 class="font-serif" style="color: #e65c65; font-size: 1.1rem; margin: 0;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
+                <h3 class="font-serif" style="color: #E5D178; font-size: 1.1rem; margin: 0;" data-i18n="testCameraTitle">Uji Coba Filter Kamera</h3>
                 <div style="display: flex; gap: 8px; align-items: center;">
                     <button type="button" class="btn-outline" onclick="balikKameraTes()" style="padding: 4px 8px; font-size: 0.75rem;" title="Ubah Kamera Depan/Belakang">🔄 <span data-i18n="flipCameraBtn">Kamera</span></button>
                     <span class="auth-close" style="position: static; font-size: 1.2rem;" onclick="tutupTestKameraModal()">✖</span>
@@ -565,16 +568,16 @@
     <div class="auth-modal" id="cryptoModal">
         <div class="auth-box" style="text-align: center;">
             <span class="auth-close" onclick="tutupCryptoModal()">✖</span>
-            <h3 class="font-serif" style="color: #f59e0b; margin-bottom: 15px; font-size: 1.5rem;" data-i18n="cryptoModalTitle">Pembayaran Crypto</h3>
+            <h3 class="font-serif" style="color: var(--accent); margin-bottom: 15px; font-size: 1.5rem;" data-i18n="cryptoModalTitle">Pembayaran Crypto</h3>
             <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;" data-i18n="cryptoModalDesc">Silakan transfer aset kripto senilai tagihan ke salah satu alamat dompet di bawah ini:</p>
             
-            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
-                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">USDT (BNB Smart Chain):</p>
-                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent); margin-bottom: 10px; text-align: left;">
+                <p style="font-size: 0.7rem; color: var(--accent); font-weight: bold; margin-bottom: 2px;">USDT (BNB Smart Chain):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #E5D178;">0x5d3056D057fec52b080458D7BA807363Ae5299A</code>
             </div>
-            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed rgba(245, 158, 11, 0.4); margin-bottom: 10px; text-align: left;">
-                <p style="font-size: 0.7rem; color: #f59e0b; font-weight: bold; margin-bottom: 2px;">Solana (SOL):</p>
-                <code style="font-size: 0.7rem; word-break: break-all; color: #fff;">EMGFtB3yUG6rTjJximqnb5QoqUzbcK5c3dBjZ7yfae4D</code>
+            <div style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; border: 1px dashed var(--accent); margin-bottom: 10px; text-align: left;">
+                <p style="font-size: 0.7rem; color: var(--accent); font-weight: bold; margin-bottom: 2px;">Solana (SOL):</p>
+                <code style="font-size: 0.7rem; word-break: break-all; color: #E5D178;">EMGFtB3yUG6rTjJximqnb5QoqUzbcK5c3dBjZ7yfae4D</code>
             </div>
             <button class="btn-wa" onclick="konfirmasiCryptoWA()" style="width: 100%; margin-bottom: 10px; font-size: 0.9rem;" data-i18n="confirmCryptoWABtn">📲 Konfirmasi Transfer Crypto via WhatsApp</button>
             <button class="btn-outline" onclick="tutupCryptoModal()" style="width: 100%;" data-i18n="closeBtn">Tutup</button>
@@ -850,20 +853,20 @@
             
             if(!code) {
                 msgEl.style.display = 'block';
-                msgEl.style.color = '#ff6b6b';
+                msgEl.style.color = 'var(--accent)';
                 msgEl.innerText = currentLang === 'en' ? "Please enter a promo code!" : "Silakan masukkan kode promo terlebih dahulu!";
                 resetHargaPaket();
                 return;
             }
 
             msgEl.style.display = 'block';
-            msgEl.style.color = '#e65c65';
+            msgEl.style.color = '#E5D178';
             msgEl.innerText = currentLang === 'en' ? "Checking promo code..." : "Memeriksa kode promo...";
 
             try {
                 const docRef = await db.collection('vouchers').doc(code).get();
                 if(!docRef.exists) {
-                    msgEl.style.color = '#ff6b6b';
+                    msgEl.style.color = 'var(--accent)';
                     msgEl.innerText = currentLang === 'en' ? "Invalid or expired promo code!" : "Kode promo tidak valid atau salah!";
                     resetHargaPaket();
                     return;
@@ -873,14 +876,14 @@
                 const usedAccounts = vData.usedAccounts || [];
 
                 if(usedAccounts.includes(currentUser.uid)) {
-                    msgEl.style.color = '#ff6b6b';
+                    msgEl.style.color = 'var(--accent)';
                     msgEl.innerText = currentLang === 'en' ? "You have already used this promo code!" : "Anda sudah pernah menggunakan kode promo ini!";
                     resetHargaPaket();
                     return;
                 }
 
                 if(vData.maxUsage && usedAccounts.length >= vData.maxUsage) {
-                    msgEl.style.color = '#ff6b6b';
+                    msgEl.style.color = 'var(--accent)';
                     msgEl.innerText = currentLang === 'en' ? "Promo code usage limit has been reached!" : "Batas maksimal penggunaan kode promo ini sudah habis!";
                     resetHargaPaket();
                     return;
@@ -892,7 +895,7 @@
                 document.getElementById('appliedVoucherDiscount').value = vData.discountPercent || 0;
                 document.getElementById('appliedVoucherFreePax').value = vData.freePax || 0;
 
-                msgEl.style.color = '#e65c65';
+                msgEl.style.color = '#E5D178';
                 msgEl.innerText = currentLang === 'en' 
                     ? `Promo applied successfully! (Free ${vData.freePax || 0} Pax, Discount ${vData.discountPercent || 0}%)` 
                     : `Promo berhasil digunakan! (Free ${vData.freePax || 0} Orang, Diskon ${vData.discountPercent || 0}%)`;
@@ -920,7 +923,7 @@
 
             } catch(err) {
                 console.error(err);
-                msgEl.style.color = '#ff6b6b';
+                msgEl.style.color = 'var(--accent)';
                 msgEl.innerText = currentLang === 'en' ? "Error checking code." : "Gagal memeriksa kode.";
                 resetHargaPaket();
             }
@@ -1371,15 +1374,15 @@
                     const data = doc.data();
                     const waktuJoin = data.joinedAt ? new Date(data.joinedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (currentLang === 'en' ? 'Just now' : 'Baru saja');
                     container.innerHTML += `
-                        <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid rgba(255,255,255,0.05);">
-                            <span style="font-weight: 500; font-size: 0.9rem; color: #fff;">👤 ${data.name}</span>
+                        <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
+                            <span style="font-weight: 500; font-size: 0.9rem; color: #E5D178;">👤 ${data.name}</span>
                             <span style="font-size: 0.75rem; color: var(--text-muted);">${waktuJoin}</span>
                         </div>
                     `;
                 });
             } catch (err) {
                 console.error(err);
-                container.innerHTML = `<div style="color: #ff6b6b; font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'Failed to load participant list.' : 'Gagal memuat daftar peserta.'}</div>`;
+                container.innerHTML = `<div style="color: var(--accent); font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'Failed to load participant list.' : 'Gagal memuat daftar peserta.'}</div>`;
             }
         }
 
@@ -1400,7 +1403,7 @@
 
                 if (selisih > 0) {
                     statusText.innerText = currentLang === 'en' ? "Event Starts In:" : "Acara Akan Dimulai Dalam:";
-                    statusText.style.color = "#e65c65";
+                    statusText.style.color = "#E5D178";
                     timerContainer.style.display = 'flex';
                     const jam = Math.floor((selisih % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
                     const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
