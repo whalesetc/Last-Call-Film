@@ -90,6 +90,7 @@
         /* Tombol Jepret di Tengah */
         .shutter-btn { width: 46px; height: 46px; background: var(--accent); border: 2.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
+        .shutter-btn:disabled { background: #555; border-color: #777; cursor: not-allowed; }
 
         /* Tombol Aksi di Kiri (Putar & Album) */
         .left-actions { position: absolute; left: 0; display: flex; gap: 4px; }
@@ -248,7 +249,7 @@
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
         let totalPhotoLimit = 36;
-        let localCurrentCount = 0; // Penghitung lokal agar angka berkurang instan tanpa menunggu database
+        let deviceRemainingQuota = 36; // Kuota mandiri per device
 
         let currentLang = 'id';
         const translations = {
@@ -329,6 +330,14 @@
                 
                 totalPhotoLimit = currentEventData.guestPhotoLimit || 36;
 
+                // Inisialisasi kuota mandiri khusus device ini via localStorage
+                const storageKey = `device_quota_${eventId}`;
+                if (localStorage.getItem(storageKey) === null) {
+                    localStorage.setItem(storageKey, totalPhotoLimit);
+                }
+                deviceRemainingQuota = parseInt(localStorage.getItem(storageKey));
+                perbaruiTampilanKuota();
+
                 if (currentEventData.wallpaperUrl) {
                     document.getElementById('bgWallpaper').style.backgroundImage = `url('${currentEventData.wallpaperUrl}')`;
                 }
@@ -347,7 +356,6 @@
 
                 renderFilterPills(currentEventData.defaultFilter || 'original');
                 inisialisasiCountdownLogic(currentEventData);
-                inisialisasiSisaKuota();
 
                 if (!guestName) {
                     document.getElementById('guestNameModal').style.display = 'flex';
@@ -360,20 +368,19 @@
             }
         });
 
-        // Sinkronisasi awal jumlah foto dari Firestore secara efisien (menggunakan get() sekali agar tidak berat di background)
-        async function inisialisasiSisaKuota() {
-            try {
-                const snapshot = await db.collection('events').doc(eventId).collection('photos').get();
-                localCurrentCount = snapshot.size;
-                perbaruiTampilanKuota();
-            } catch (e) {
-                console.error("Gagal memuat kuota awal:", e);
-            }
-        }
-
         function perbaruiTampilanKuota() {
-            const sisa = Math.max(0, totalPhotoLimit - localCurrentCount);
-            document.getElementById('quotaBadgeText').innerText = sisa;
+            const badge = document.getElementById('quotaBadgeText');
+            badge.innerText = deviceRemainingQuota;
+
+            // Jika kuota habis, matikan tombol jepret
+            const shutterBtn = document.getElementById('btnShutter');
+            if (deviceRemainingQuota <= 0) {
+                shutterBtn.disabled = true;
+                shutterBtn.style.opacity = '0.5';
+            } else {
+                shutterBtn.disabled = false;
+                shutterBtn.style.opacity = '1';
+            }
         }
 
         async function simpanNamaTamu() {
@@ -509,8 +516,10 @@
             startCameraStream();
         }
 
-        // Proses Jepret Instan Tanpa Lag & Pengurangan Kuota Instan secara Lokal
+        // Jepret instan tanpa lag dan kuota mandiri per device berkurang instan secara lokal
         function ambilFoto() {
+            if (deviceRemainingQuota <= 0) return;
+
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
             canvas.width = video.videoWidth || 640;
@@ -523,15 +532,16 @@
             flash.style.opacity = '0.7';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // 2. Kurangi kuota angka secara instan di layar tanpa jeda menunggu server
-            localCurrentCount++;
+            // 2. Kurangi kuota mandiri perangkat ini secara lokal dan simpan ke localStorage
+            deviceRemainingQuota--;
+            localStorage.setItem(`device_quota_${eventId}`, deviceRemainingQuota);
             perbaruiTampilanKuota();
 
             // 3. Tampilkan thumbnail foto secara lokal ke baris bawah secara instan
             const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
             tambahThumbnailKeLayar(dataUrl);
 
-            // 4. Proses unggah (ImgBB & Firebase) dilakukan sepenuhnya di latar belakang (asynchronous background)
+            // 4. Proses unggah ke ImgBB & Firebase di latar belakang (background)
             canvas.toBlob(async (blob) => {
                 try {
                     const formData = new FormData();
