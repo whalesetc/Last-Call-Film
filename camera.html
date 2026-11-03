@@ -61,12 +61,14 @@
         .btn-custom-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.8rem; margin-top: 8px; display: block; text-align: center; text-decoration: none; }
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Container Kamera Aktif & Info Sisa Kuota di Atas Viewfinder */
+        /* Container Kamera Aktif & Kotak Angka Sisa Kuota di Atas */
         .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; display: none; }
         
-        .camera-header-info { text-align: center; width: 100%; margin-bottom: 2px; }
-        .camera-header-title { font-size: 0.95rem; font-weight: 700; color: var(--text-light); }
-        .quota-counter-badge { font-size: 0.65rem; color: var(--accent); font-weight: 600; background: rgba(217, 135, 79, 0.15); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 2px; border: 1px solid rgba(217, 135, 79, 0.3); }
+        .camera-header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; margin-bottom: 2px; }
+        .camera-header-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
+        
+        /* Kotak Angka Sisa Kuota Ala Kamera Analog */
+        .quota-counter-box { background: var(--mahogany); border: 1px solid var(--accent); padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,0.4); letter-spacing: 1px; }
 
         /* Tampilan Viewfinder Kamera Utama */
         .camera-viewfinder { width: 100%; height: 42vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
@@ -173,11 +175,11 @@
             <a href="#" id="btnAlbumLink" class="btn-custom-outline" style="display: none;" data-i18n="viewAlbumBtn">Lihat Album Foto &darr;</a>
         </div>
 
-        <!-- 2. CONTAINER KAMERA AKTIF (Lengkap dengan Info Sisa Kuota di Atasnya) -->
+        <!-- 2. CONTAINER KAMERA AKTIF -->
         <div class="active-camera-container" id="activeCameraContainer" style="display: none;">
-            <div class="camera-header-info">
+            <div class="camera-header-row">
                 <div class="camera-header-title font-serif" id="activeEventTitle">Acara</div>
-                <div class="quota-counter-badge" id="quotaBadgeText">Sisa Kuota: Memuat...</div>
+                <div class="quota-counter-box" id="quotaBadgeText">--</div>
             </div>
 
             <!-- Viewfinder Kamera -->
@@ -245,7 +247,8 @@
         let activeStream = null;
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
-        let totalPhotoLimit = 15;
+        let totalPhotoLimit = 36;
+        let localCurrentCount = 0; // Penghitung lokal agar angka berkurang instan tanpa menunggu database
 
         let currentLang = 'id';
         const translations = {
@@ -324,7 +327,7 @@
                 document.getElementById('activeEventTitle').innerText = currentEventData.eventName;
                 document.getElementById('lblWaitingText').innerText = currentEventData.waitingText || "THE WEDDING OF";
                 
-                totalPhotoLimit = currentEventData.guestPhotoLimit || 15;
+                totalPhotoLimit = currentEventData.guestPhotoLimit || 36;
 
                 if (currentEventData.wallpaperUrl) {
                     document.getElementById('bgWallpaper').style.backgroundImage = `url('${currentEventData.wallpaperUrl}')`;
@@ -344,7 +347,7 @@
 
                 renderFilterPills(currentEventData.defaultFilter || 'original');
                 inisialisasiCountdownLogic(currentEventData);
-                listenToPhotoCount();
+                inisialisasiSisaKuota();
 
                 if (!guestName) {
                     document.getElementById('guestNameModal').style.display = 'flex';
@@ -357,17 +360,20 @@
             }
         });
 
-        function listenToPhotoCount() {
-            db.collection('events').doc(eventId).collection('photos').onSnapshot(snapshot => {
-                const currentCount = snapshot.size;
-                const sisa = Math.max(0, totalPhotoLimit - currentCount);
-                const badge = document.getElementById('quotaBadgeText');
-                if (currentLang === 'en') {
-                    badge.innerText = `Remaining Quota: ${sisa} / ${totalPhotoLimit} photos`;
-                } else {
-                    badge.innerText = `Sisa Kuota: ${sisa} / ${totalPhotoLimit} foto`;
-                }
-            });
+        // Sinkronisasi awal jumlah foto dari Firestore secara efisien (menggunakan get() sekali agar tidak berat di background)
+        async function inisialisasiSisaKuota() {
+            try {
+                const snapshot = await db.collection('events').doc(eventId).collection('photos').get();
+                localCurrentCount = snapshot.size;
+                perbaruiTampilanKuota();
+            } catch (e) {
+                console.error("Gagal memuat kuota awal:", e);
+            }
+        }
+
+        function perbaruiTampilanKuota() {
+            const sisa = Math.max(0, totalPhotoLimit - localCurrentCount);
+            document.getElementById('quotaBadgeText').innerText = sisa;
         }
 
         async function simpanNamaTamu() {
@@ -503,6 +509,7 @@
             startCameraStream();
         }
 
+        // Proses Jepret Instan Tanpa Lag & Pengurangan Kuota Instan secara Lokal
         function ambilFoto() {
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
@@ -511,13 +518,20 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+            // 1. Efek kilat flash putih tipis secara instan
             const flash = document.getElementById('cameraFlashOverlay');
             flash.style.opacity = '0.7';
-            setTimeout(() => { flash.style.opacity = '0'; }, 100);
+            setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+            // 2. Kurangi kuota angka secara instan di layar tanpa jeda menunggu server
+            localCurrentCount++;
+            perbaruiTampilanKuota();
+
+            // 3. Tampilkan thumbnail foto secara lokal ke baris bawah secara instan
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
             tambahThumbnailKeLayar(dataUrl);
 
+            // 4. Proses unggah (ImgBB & Firebase) dilakukan sepenuhnya di latar belakang (asynchronous background)
             canvas.toBlob(async (blob) => {
                 try {
                     const formData = new FormData();
@@ -539,9 +553,9 @@
                         });
                     }
                 } catch (err) {
-                    console.error("Gagal mengunggah foto:", err);
+                    console.error("Gagal mengunggah foto di background:", err);
                 }
-            }, 'image/jpeg', 0.85);
+            }, 'image/jpeg', 0.80);
         }
 
         function tambahThumbnailKeLayar(url) {
