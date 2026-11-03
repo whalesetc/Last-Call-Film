@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Kamera • The Last Call Film</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     
@@ -22,37 +22,33 @@
             --border-color: rgba(107, 61, 54, 0.6); 
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', sans-serif; }
-        body { background-color: var(--bg-dark); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; overflow-x: hidden; position: relative; }
+        body { background-color: var(--bg-dark); color: var(--text-light); height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; position: fixed; width: 100%; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
         /* Tampilan Background & Blur Wallpaper */
-        .camera-bg-container { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: blur(12px); -webkit-filter: blur(12px); transform: scale(1.1); z-index: 1; }
-        .camera-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 28, 23, 0.75); z-index: 2; }
+        .camera-bg-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; filter: blur(12px); -webkit-filter: blur(12px); transform: scale(1.1); z-index: 1; }
+        .camera-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 28, 23, 0.8); z-index: 2; }
 
-        /* Konten Utama di atas Background */
-        .camera-wrapper { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 12px; }
+        /* Konten Utama Pas 1 Layar Tanpa Scroll */
+        .camera-wrapper { position: relative; z-index: 10; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 12px; }
 
         /* Top Bar & Selector Bahasa */
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin-bottom: 2px; }
-        .brand-mini { font-size: 0.75rem; font-weight: 700; color: var(--text-light); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 400px; flex-shrink: 0; }
+        .brand-mini { font-size: 0.75rem; font-weight: 700; color: var(--text-light); letter-spacing: 0.5px; display: flex; align-items: center; gap: 5px; }
         
         .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.25); border: 1px solid var(--border-color); border-radius: 20px; padding: 2px 6px; gap: 4px; font-size: 0.6rem; }
         .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 4px; border-radius: 4px; transition: 0.2s; }
         .lang-btn.active { background: var(--accent); color: #261C17; }
 
         /* Kartu Hitung Mundur / Status Acara */
-        .status-card-container { width: 100%; max-width: 380px; background: rgba(50, 37, 32, 0.9); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 18px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(10px); margin: auto; }
-        
+        .status-card-container { width: 100%; max-width: 380px; background: rgba(50, 37, 32, 0.95); border: 1.5px solid var(--border-color); border-radius: 16px; padding: 20px; text-align: center; box-shadow: 0 15px 35px rgba(0,0,0,0.6); backdrop-filter: blur(10px); margin: auto; }
         .waiting-subtitle { font-size: 0.6rem; letter-spacing: 2px; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; }
         .event-title-display { font-size: 1.3rem; color: var(--text-light); margin-bottom: 10px; font-weight: 700; word-break: break-word; }
-        
         .countdown-status-label { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-        
         .countdown-boxes { display: flex; justify-content: center; gap: 6px; margin-bottom: 12px; }
         .c-box { background: var(--mahogany); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 8px; min-width: 45px; }
         .c-val { font-size: 1rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; }
         .c-lbl { font-size: 0.45rem; color: var(--text-muted); text-transform: uppercase; margin-top: 2px; }
-
         .info-desc { font-size: 0.75rem; color: var(--text-muted); line-height: 1.4; margin-bottom: 12px; }
 
         .btn-custom-primary { background: var(--accent); color: #261C17; width: 100%; padding: 10px; border-radius: 8px; font-weight: 700; border: none; cursor: pointer; transition: 0.2s; font-size: 0.85rem; display: block; text-align: center; text-decoration: none; }
@@ -61,19 +57,19 @@
         .btn-custom-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.8rem; margin-top: 8px; display: block; text-align: center; text-decoration: none; }
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Container Kamera Aktif & Kotak Angka Sisa Kuota di Atas */
-        .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; display: none; }
+        /* Container Kamera Aktif (Padat & Pas 1 Layar) */
+        .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex-grow: 1; justify-content: center; display: none; }
         
-        .camera-header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; margin-bottom: 2px; }
-        .camera-header-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
+        .camera-header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; flex-shrink: 0; }
+        .camera-header-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
         
-        /* Kotak Angka Sisa Kuota Ala Kamera Analog */
-        .quota-counter-box { background: var(--mahogany); border: 1px solid var(--accent); padding: 3px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,0.4); letter-spacing: 1px; }
+        /* Kotak Angka Sisa Kuota */
+        .quota-counter-box { background: var(--mahogany); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,0.4); letter-spacing: 1px; }
 
-        /* Tampilan Viewfinder Kamera Utama */
-        .camera-viewfinder { width: 100%; height: 42vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
+        /* Viewfinder Kamera Format Potret */
+        .camera-viewfinder { width: 100%; flex-grow: 1; max-height: 48vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
         
-        /* Bingkai Sudut Ala Kamera Analog */
+        /* Bingkai Sudut Analog */
         .viewfinder-corner { position: absolute; width: 16px; height: 16px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
         .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
         .corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
@@ -82,37 +78,34 @@
 
         video { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Panel Bawah Kamera */
-        .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 3px; }
+        /* Panel Kontrol Bawah */
+        .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
         
-        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 45px; }
+        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 60px; }
         
-        /* Tombol Jepret di Tengah */
-        .shutter-btn { width: 46px; height: 46px; background: var(--accent); border: 2.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
+        /* TOMBOL JEPRET DIPERBESAR */
+        .shutter-btn { width: 62px; height: 62px; background: var(--accent); border: 3.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
         .shutter-btn:disabled { background: #555; border-color: #777; cursor: not-allowed; }
 
         /* Tombol Aksi di Kiri (Putar & Album) */
         .left-actions { position: absolute; left: 0; display: flex; gap: 4px; }
-        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.6rem; text-decoration: none; display: flex; align-items: center; gap: 2px; }
+        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.7rem; text-decoration: none; display: flex; align-items: center; gap: 3px; }
         .btn-action-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Efek Kilat Flash saat Shutter Ditekan */
+        /* Efek Kilat Flash */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
         /* Filter Selector Scroll */
         .filter-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        .filter-scroll::-webkit-scrollbar { height: 2px; }
-        .filter-scroll::-webkit-scrollbar-thumb { background: var(--secondary-accent); border-radius: 2px; }
-        
-        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 8px; border-radius: 10px; font-size: 0.6rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .filter-scroll::-webkit-scrollbar { display: none; }
+        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .f-pill.active { background: var(--secondary-accent); border-color: var(--text-light); font-weight: bold; }
 
         /* Baris Preview Thumbnail Foto di Bawah */
-        .recent-photos-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; min-height: 35px; align-items: center; }
-        .recent-photos-scroll::-webkit-scrollbar { height: 2px; }
-        .recent-photos-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
-        .thumbnail-item { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; border: 1px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
+        .recent-photos-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; min-height: 40px; align-items: center; }
+        .recent-photos-scroll::-webkit-scrollbar { display: none; }
+        .thumbnail-item { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
@@ -176,14 +169,14 @@
             <a href="#" id="btnAlbumLink" class="btn-custom-outline" style="display: none;" data-i18n="viewAlbumBtn">Lihat Album Foto &darr;</a>
         </div>
 
-        <!-- 2. CONTAINER KAMERA AKTIF -->
+        <!-- 2. CONTAINER KAMERA AKTIF (Padat & Pas 1 Layar Tanpa Scroll) -->
         <div class="active-camera-container" id="activeCameraContainer" style="display: none;">
             <div class="camera-header-row">
                 <div class="camera-header-title font-serif" id="activeEventTitle">Acara</div>
                 <div class="quota-counter-box" id="quotaBadgeText">--</div>
             </div>
 
-            <!-- Viewfinder Kamera -->
+            <!-- Viewfinder Kamera Potret -->
             <div class="camera-viewfinder" id="cameraViewfinder">
                 <div id="cameraFlashOverlay"></div>
                 <div class="viewfinder-corner corner-tl"></div>
@@ -204,15 +197,16 @@
                         <button class="btn-action-left" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
                         <a href="#" id="btnInCameraAlbum" class="btn-action-left" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
                     </div>
+                    <!-- Tombol Jepret Diperbesar -->
                     <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
                 </div>
 
-                <!-- Baris Preview Foto yang Baru Dijepret (Berjejer ke Samping) -->
+                <!-- Baris Preview Thumbnail Foto di Bawah -->
                 <div class="recent-photos-scroll" id="recentPhotosContainer"></div>
             </div>
         </div>
 
-        <div style="font-size: 0.5rem; color: var(--text-muted); text-align: center;">
+        <div style="font-size: 0.45rem; color: var(--text-muted); text-align: center; flex-shrink: 0; padding-bottom: 2px;">
             The Last Call Film • Vintage Disposable Experience
         </div>
     </div>
@@ -249,7 +243,7 @@
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
         let totalPhotoLimit = 36;
-        let deviceRemainingQuota = 36; // Kuota mandiri per device
+        let deviceRemainingQuota = 36;
 
         let currentLang = 'id';
         const translations = {
@@ -330,7 +324,6 @@
                 
                 totalPhotoLimit = currentEventData.guestPhotoLimit || 36;
 
-                // Inisialisasi kuota mandiri khusus device ini via localStorage
                 const storageKey = `device_quota_${eventId}`;
                 if (localStorage.getItem(storageKey) === null) {
                     localStorage.setItem(storageKey, totalPhotoLimit);
@@ -372,7 +365,6 @@
             const badge = document.getElementById('quotaBadgeText');
             badge.innerText = deviceRemainingQuota;
 
-            // Jika kuota habis, matikan tombol jepret
             const shutterBtn = document.getElementById('btnShutter');
             if (deviceRemainingQuota <= 0) {
                 shutterBtn.disabled = true;
@@ -516,7 +508,7 @@
             startCameraStream();
         }
 
-        // Jepret instan tanpa lag dan kuota mandiri per device berkurang instan secara lokal
+        // Jepret instan tanpa lag & kuota mandiri per device
         function ambilFoto() {
             if (deviceRemainingQuota <= 0) return;
 
@@ -527,21 +519,17 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-            // 1. Efek kilat flash putih tipis secara instan
             const flash = document.getElementById('cameraFlashOverlay');
             flash.style.opacity = '0.7';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            // 2. Kurangi kuota mandiri perangkat ini secara lokal dan simpan ke localStorage
             deviceRemainingQuota--;
             localStorage.setItem(`device_quota_${eventId}`, deviceRemainingQuota);
             perbaruiTampilanKuota();
 
-            // 3. Tampilkan thumbnail foto secara lokal ke baris bawah secara instan
             const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
             tambahThumbnailKeLayar(dataUrl);
 
-            // 4. Proses unggah ke ImgBB & Firebase di latar belakang (background)
             canvas.toBlob(async (blob) => {
                 try {
                     const formData = new FormData();
