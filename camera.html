@@ -30,14 +30,14 @@
         .camera-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(38, 28, 23, 0.75); z-index: 2; }
 
         /* Konten Utama di atas Background */
-        .camera-wrapper { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 10px 15px; }
+        .camera-wrapper { position: relative; z-index: 10; width: 100%; min-height: 100vh; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 8px 12px; }
 
         /* Top Bar & Selector Bahasa */
-        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 420px; margin-bottom: 2px; }
-        .brand-mini { font-size: 0.8rem; font-weight: 700; color: var(--text-light); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
+        .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; max-width: 400px; margin-bottom: 2px; }
+        .brand-mini { font-size: 0.75rem; font-weight: 700; color: var(--text-light); letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
         
-        .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.25); border: 1px solid var(--border-color); border-radius: 20px; padding: 2px 6px; gap: 4px; font-size: 0.65rem; }
-        .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 5px; border-radius: 4px; transition: 0.2s; }
+        .lang-selector { display: flex; align-items: center; background: rgba(99,128,115,0.25); border: 1px solid var(--border-color); border-radius: 20px; padding: 2px 6px; gap: 4px; font-size: 0.6rem; }
+        .lang-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; font-weight: 600; padding: 2px 4px; border-radius: 4px; transition: 0.2s; }
         .lang-btn.active { background: var(--accent); color: #261C17; }
 
         /* Kartu Hitung Mundur / Status Acara */
@@ -61,48 +61,55 @@
         .btn-custom-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.8rem; margin-top: 8px; display: block; text-align: center; text-decoration: none; }
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Tampilan Viewfinder Kamera Aktif */
-        .camera-viewfinder { width: 100%; max-width: 380px; height: 46vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); display: none; }
+        /* Container Kamera Aktif & Info Sisa Kuota di Atas Viewfinder */
+        .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; display: none; }
+        
+        .camera-header-info { text-align: center; width: 100%; margin-bottom: 2px; }
+        .camera-header-title { font-size: 0.95rem; font-weight: 700; color: var(--text-light); }
+        .quota-counter-badge { font-size: 0.65rem; color: var(--accent); font-weight: 600; background: rgba(217, 135, 79, 0.15); padding: 2px 8px; border-radius: 10px; display: inline-block; margin-top: 2px; border: 1px solid rgba(217, 135, 79, 0.3); }
+
+        /* Tampilan Viewfinder Kamera Utama */
+        .camera-viewfinder { width: 100%; height: 42vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
         
         /* Bingkai Sudut Ala Kamera Analog */
-        .viewfinder-corner { position: absolute; width: 18px; height: 18px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
-        .corner-tl { top: 10px; left: 10px; border-width: 2.5px 0 0 2.5px; }
-        .corner-tr { top: 10px; right: 10px; border-width: 2.5px 2.5px 0 0; }
-        .corner-bl { bottom: 10px; left: 10px; border-width: 0 0 2.5px 2.5px; }
-        .corner-br { bottom: 10px; right: 10px; border-width: 0 2.5px 2.5px 0; }
+        .viewfinder-corner { position: absolute; width: 16px; height: 16px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
+        .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+        .corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
+        .corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
+        .corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
 
         video { width: 100%; height: 100%; object-fit: cover; }
         
         /* Panel Bawah Kamera */
-        .camera-controls-panel { width: 100%; max-width: 380px; display: flex; flex-direction: column; gap: 4px; display: none; }
+        .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 3px; }
         
-        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 50px; }
+        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 45px; }
         
         /* Tombol Jepret di Tengah */
-        .shutter-btn { width: 50px; height: 50px; background: var(--accent); border: 3px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
+        .shutter-btn { width: 46px; height: 46px; background: var(--accent); border: 2.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 3px 8px rgba(0,0,0,0.5); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
 
         /* Tombol Aksi di Kiri (Putar & Album) */
-        .left-actions { position: absolute; left: 0; display: flex; gap: 5px; }
-        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 5px 9px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.65rem; text-decoration: none; display: flex; align-items: center; gap: 3px; }
+        .left-actions { position: absolute; left: 0; display: flex; gap: 4px; }
+        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 0.6rem; text-decoration: none; display: flex; align-items: center; gap: 2px; }
         .btn-action-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
         /* Efek Kilat Flash saat Shutter Ditekan */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
         /* Filter Selector Scroll */
-        .filter-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
-        .filter-scroll::-webkit-scrollbar { height: 3px; }
+        .filter-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+        .filter-scroll::-webkit-scrollbar { height: 2px; }
         .filter-scroll::-webkit-scrollbar-thumb { background: var(--secondary-accent); border-radius: 2px; }
         
-        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
+        .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 8px; border-radius: 10px; font-size: 0.6rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .f-pill.active { background: var(--secondary-accent); border-color: var(--text-light); font-weight: bold; }
 
         /* Baris Preview Thumbnail Foto di Bawah */
-        .recent-photos-scroll { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0; min-height: 40px; align-items: center; }
-        .recent-photos-scroll::-webkit-scrollbar { height: 3px; }
+        .recent-photos-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; min-height: 35px; align-items: center; }
+        .recent-photos-scroll::-webkit-scrollbar { height: 2px; }
         .recent-photos-scroll::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
-        .thumbnail-item { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
+        .thumbnail-item { width: 34px; height: 34px; border-radius: 5px; object-fit: cover; border: 1px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
@@ -135,7 +142,7 @@
         <!-- Top Navigation -->
         <div class="top-bar">
             <div class="brand-mini font-serif">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                     <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
                     <line x1="7" y1="2" x2="7" y2="22"></line><line x1="17" y1="2" x2="17" y2="22"></line><line x1="2" y1="12" x2="22" y2="12"></line>
                 </svg>
@@ -166,35 +173,43 @@
             <a href="#" id="btnAlbumLink" class="btn-custom-outline" style="display: none;" data-i18n="viewAlbumBtn">Lihat Album Foto &darr;</a>
         </div>
 
-        <!-- 2. VIEWFINDER KAMERA UTAMA -->
-        <div class="camera-viewfinder" id="cameraViewfinder">
-            <div id="cameraFlashOverlay"></div>
-            <div class="viewfinder-corner corner-tl"></div>
-            <div class="viewfinder-corner corner-tr"></div>
-            <div class="viewfinder-corner corner-bl"></div>
-            <div class="viewfinder-corner corner-br"></div>
-
-            <video id="cameraVideo" autoplay playsinline></video>
-            <canvas id="cameraCanvas" style="display: none;"></canvas>
-        </div>
-
-        <!-- Kontrol Kamera Bawah (Tombol Putar & Album di Kiri, Shutter di Tengah) -->
-        <div class="camera-controls-panel" id="cameraControls">
-            <div class="filter-scroll" id="filterScrollContainer"></div>
-            
-            <div class="shutter-row">
-                <div class="left-actions">
-                    <button class="btn-action-left" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
-                    <a href="#" id="btnInCameraAlbum" class="btn-action-left" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
-                </div>
-                <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
+        <!-- 2. CONTAINER KAMERA AKTIF (Lengkap dengan Info Sisa Kuota di Atasnya) -->
+        <div class="active-camera-container" id="activeCameraContainer" style="display: none;">
+            <div class="camera-header-info">
+                <div class="camera-header-title font-serif" id="activeEventTitle">Acara</div>
+                <div class="quota-counter-badge" id="quotaBadgeText">Sisa Kuota: Memuat...</div>
             </div>
 
-            <!-- Baris Preview Foto yang Baru Dijepret (Berjejer ke Samping) -->
-            <div class="recent-photos-scroll" id="recentPhotosContainer"></div>
+            <!-- Viewfinder Kamera -->
+            <div class="camera-viewfinder" id="cameraViewfinder">
+                <div id="cameraFlashOverlay"></div>
+                <div class="viewfinder-corner corner-tl"></div>
+                <div class="viewfinder-corner corner-tr"></div>
+                <div class="viewfinder-corner corner-bl"></div>
+                <div class="viewfinder-corner corner-br"></div>
+
+                <video id="cameraVideo" autoplay playsinline></video>
+                <canvas id="cameraCanvas" style="display: none;"></canvas>
+            </div>
+
+            <!-- Kontrol Kamera Bawah -->
+            <div class="camera-controls-panel" id="cameraControls">
+                <div class="filter-scroll" id="filterScrollContainer"></div>
+                
+                <div class="shutter-row">
+                    <div class="left-actions">
+                        <button class="btn-action-left" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
+                        <a href="#" id="btnInCameraAlbum" class="btn-action-left" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
+                    </div>
+                    <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
+                </div>
+
+                <!-- Baris Preview Foto yang Baru Dijepret (Berjejer ke Samping) -->
+                <div class="recent-photos-scroll" id="recentPhotosContainer"></div>
+            </div>
         </div>
 
-        <div style="font-size: 0.55rem; color: var(--text-muted); text-align: center;">
+        <div style="font-size: 0.5rem; color: var(--text-muted); text-align: center;">
             The Last Call Film • Vintage Disposable Experience
         </div>
     </div>
@@ -230,6 +245,7 @@
         let activeStream = null;
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
+        let totalPhotoLimit = 15;
 
         let currentLang = 'id';
         const translations = {
@@ -305,8 +321,11 @@
                 currentEventData = doc.data();
                 
                 document.getElementById('lblEventName').innerText = currentEventData.eventName;
+                document.getElementById('activeEventTitle').innerText = currentEventData.eventName;
                 document.getElementById('lblWaitingText').innerText = currentEventData.waitingText || "THE WEDDING OF";
                 
+                totalPhotoLimit = currentEventData.guestPhotoLimit || 15;
+
                 if (currentEventData.wallpaperUrl) {
                     document.getElementById('bgWallpaper').style.backgroundImage = `url('${currentEventData.wallpaperUrl}')`;
                 }
@@ -314,12 +333,10 @@
                 if (currentEventData.privacy === 'visible') {
                     const domainClean = window.location.href.split('?')[0].replace('camera.html', '');
                     
-                    // Tombol di kartu hitung mundur
                     const albumBtn = document.getElementById('btnAlbumLink');
                     albumBtn.href = `${domainClean}album.html?event=${eventId}`;
                     albumBtn.style.display = 'block';
 
-                    // Tombol di panel bawah kamera aktif
                     const inCameraAlbumBtn = document.getElementById('btnInCameraAlbum');
                     inCameraAlbumBtn.href = `${domainClean}album.html?event=${eventId}`;
                     inCameraAlbumBtn.style.display = 'flex';
@@ -327,6 +344,7 @@
 
                 renderFilterPills(currentEventData.defaultFilter || 'original');
                 inisialisasiCountdownLogic(currentEventData);
+                listenToPhotoCount();
 
                 if (!guestName) {
                     document.getElementById('guestNameModal').style.display = 'flex';
@@ -338,6 +356,19 @@
                 console.error(err);
             }
         });
+
+        function listenToPhotoCount() {
+            db.collection('events').doc(eventId).collection('photos').onSnapshot(snapshot => {
+                const currentCount = snapshot.size;
+                const sisa = Math.max(0, totalPhotoLimit - currentCount);
+                const badge = document.getElementById('quotaBadgeText');
+                if (currentLang === 'en') {
+                    badge.innerText = `Remaining Quota: ${sisa} / ${totalPhotoLimit} photos`;
+                } else {
+                    badge.innerText = `Sisa Kuota: ${sisa} / ${totalPhotoLimit} foto`;
+                }
+            });
+        }
 
         async function simpanNamaTamu() {
             const input = document.getElementById('inputGuestName').value.trim();
@@ -408,8 +439,7 @@
             const timerGroup = document.getElementById('countdownTimerGroup');
             const guestInfo = document.getElementById('lblGuestInfo');
             const statusCard = document.getElementById('statusCard');
-            const viewfinder = document.getElementById('cameraViewfinder');
-            const controls = document.getElementById('cameraControls');
+            const cameraContainer = document.getElementById('activeCameraContainer');
 
             if (selisih > 0) {
                 statusLabel.innerText = translations[currentLang].statusStarting;
@@ -428,8 +458,7 @@
                 guestInfo.innerText = currentLang === 'en' ? `Ready, ${guestName}! Capture your best moments.` : `Siap, ${guestName}! Abadikan momen terbaikmu.`;
 
                 statusCard.style.display = 'none';
-                viewfinder.style.display = 'block';
-                controls.style.display = 'flex';
+                cameraContainer.style.display = 'flex';
 
                 if (!activeStream) startCameraStream();
             } else {
@@ -438,8 +467,7 @@
                 guestInfo.innerText = currentLang === 'en' ? "Thank you for joining this event!" : "Terima kasih telah berpartisipasi di acara ini!";
                 
                 statusCard.style.display = 'block';
-                viewfinder.style.display = 'none';
-                controls.style.display = 'none';
+                cameraContainer.style.display = 'none';
                 if (activeStream) {
                     activeStream.getTracks().forEach(t => t.stop());
                     activeStream = null;
