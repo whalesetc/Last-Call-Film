@@ -62,7 +62,7 @@
         
         .camera-header-row { width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4px; flex-shrink: 0; }
         /* NAMA PEMBUAT ACARA DIPERBESAR DAN RAPI */
-        .camera-header-title { font-size: 1.1rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; letter-spacing: 0.5px; }
+        .camera-header-title { font-size: 1.15rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; letter-spacing: 0.5px; }
 
         /* Viewfinder Kamera Format Potret */
         .camera-viewfinder { width: 100%; flex-grow: 1; max-height: 48vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
@@ -81,9 +81,8 @@
         
         .shutter-row { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 62px; padding: 0 4px; position: relative; }
         
-        /* KELOMPOK TOMBOL KIRI (PUTAR & ALBUM - DIPERBESAR) */
-        .left-controls-group { display: flex; align-items: center; gap: 8px; }
-        .btn-action-ctrl { background: transparent; color: var(--text-light); border: 1.5px solid var(--border-color); padding: 8px 12px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.75rem; text-decoration: none; display: flex; align-items: center; gap: 4px; height: 42px; }
+        /* TOMBOL PUTAR DI KIRI SENDIRI (AGAK BESAR) */
+        .btn-action-ctrl { background: transparent; color: var(--text-light); border: 1.5px solid var(--border-color); padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.75rem; text-decoration: none; display: flex; align-items: center; gap: 5px; height: 44px; flex-shrink: 0; }
         .btn-action-ctrl:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
         /* TOMBOL JEPRET DI TENGAH */
@@ -91,8 +90,11 @@
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
         .shutter-btn:disabled { background: #555; border-color: #777; cursor: not-allowed; }
 
-        /* KOTAK ANGKA SISA KUOTA DI KANAN MENGGANTIKAN POSISI TOMBOL JEPRET */
-        .quota-counter-box { background: var(--mahogany); border: 1.5px solid var(--accent); padding: 6px 14px; border-radius: 10px; font-size: 1.3rem; font-weight: 800; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 3px 8px rgba(0,0,0,0.5); letter-spacing: 1.5px; height: 42px; display: flex; align-items: center; justify-content: center; min-width: 55px; }
+        /* KELOMPOK KANAN: KOTAK KUOTA & TOMBOL ALBUM BERJAJAR */
+        .right-controls-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+        /* KOTAK ANGKA SISA KUOTA */
+        .quota-counter-box { background: var(--mahogany); border: 1.5px solid var(--accent); padding: 4px 10px; border-radius: 10px; font-size: 1.3rem; font-weight: 800; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 3px 8px rgba(0,0,0,0.5); letter-spacing: 1.5px; height: 44px; display: flex; align-items: center; justify-content: center; min-width: 50px; }
 
         /* Efek Kilat Flash */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
@@ -193,17 +195,17 @@
                 <div class="filter-scroll" id="filterScrollContainer"></div>
                 
                 <div class="shutter-row">
-                    <!-- Kelompok Kiri: Tombol Putar & Tombol Album (Agak Besar) -->
-                    <div class="left-controls-group">
-                        <button class="btn-action-ctrl" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
-                        <a href="#" id="btnInCameraAlbum" class="btn-action-ctrl" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
-                    </div>
+                    <!-- Tombol Putar di Kiri Sendiri (Agak Besar) -->
+                    <button class="btn-action-ctrl" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
                     
                     <!-- Tombol Jepret di Tengah -->
                     <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
                     
-                    <!-- Kotak Angka Sisa Kuota di Kanan Menggantikan Posisi Tombol Jepret -->
-                    <div class="quota-counter-box" id="quotaBadgeText">--</div>
+                    <!-- Kelompok Kanan: Kotak Kuota & Tombol Album Berjajar -->
+                    <div class="right-controls-group">
+                        <div class="quota-counter-box" id="quotaBadgeText">--</div>
+                        <a href="#" id="btnInCameraAlbum" class="btn-action-ctrl" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
+                    </div>
                 </div>
 
                 <!-- Baris Preview Thumbnail Foto di Bawah -->
