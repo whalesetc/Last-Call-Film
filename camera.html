@@ -60,11 +60,8 @@
         /* Container Kamera Aktif (Padat & Pas 1 Layar) */
         .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex-grow: 1; justify-content: center; display: none; }
         
-        .camera-header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 4px; flex-shrink: 0; }
-        .camera-header-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 75%; }
-        
-        /* Kotak Angka Sisa Kuota */
-        .quota-counter-box { background: var(--mahogany); border: 1px solid var(--accent); padding: 2px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 2px 6px rgba(0,0,0,0.4); letter-spacing: 1px; }
+        .camera-header-row { width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4px; flex-shrink: 0; }
+        .camera-header-title { font-size: 0.85rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; text-align: center; }
 
         /* Viewfinder Kamera Format Potret */
         .camera-viewfinder { width: 100%; flex-grow: 1; max-height: 48vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
@@ -81,17 +78,22 @@
         /* Panel Kontrol Bawah */
         .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
         
-        .shutter-row { display: flex; justify-content: center; align-items: center; position: relative; width: 100%; height: 60px; }
+        .shutter-row { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 62px; padding: 0 4px; }
         
-        /* TOMBOL JEPRET DIPERBESAR */
-        .shutter-btn { width: 62px; height: 62px; background: var(--accent); border: 3.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); }
-        .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
+        /* TOMBOL JEPRET DI SEBELAH KANAN (DIPERBESAR) */
+        .shutter-btn { width: 60px; height: 60px; background: var(--accent); border: 3.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: 0.1s; flex-shrink: 0; }
+        .shutter-btn:active { transform: scale(0.9); }
         .shutter-btn:disabled { background: #555; border-color: #777; cursor: not-allowed; }
 
-        /* Tombol Aksi di Kiri (Putar & Album) */
-        .left-actions { position: absolute; left: 0; display: flex; gap: 4px; }
-        .btn-action-left { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.7rem; text-decoration: none; display: flex; align-items: center; gap: 3px; }
-        .btn-action-left:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
+        /* KELOMPOK KONTROL KIRI (KOTAK KUOTA UKURAN BESAR, TOMBOL ALBUM, TOMBOL PUTAR) */
+        .left-controls-group { display: flex; align-items: center; gap: 8px; }
+
+        /* KOTAK ANGKA SISA KUOTA (UKURAN LEBIH BESAR) */
+        .quota-counter-box { background: var(--mahogany); border: 1.5px solid var(--accent); padding: 4px 12px; border-radius: 8px; font-size: 1.25rem; font-weight: 800; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 3px 8px rgba(0,0,0,0.5); letter-spacing: 1.5px; }
+
+        /* Tombol Aksi (Album & Putar) */
+        .btn-action-ctrl { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 0.7rem; text-decoration: none; display: flex; align-items: center; gap: 3px; height: 36px; }
+        .btn-action-ctrl:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
         /* Efek Kilat Flash */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
@@ -173,7 +175,6 @@
         <div class="active-camera-container" id="activeCameraContainer" style="display: none;">
             <div class="camera-header-row">
                 <div class="camera-header-title font-serif" id="activeEventTitle">Acara</div>
-                <div class="quota-counter-box" id="quotaBadgeText">--</div>
             </div>
 
             <!-- Viewfinder Kamera Potret -->
@@ -193,11 +194,13 @@
                 <div class="filter-scroll" id="filterScrollContainer"></div>
                 
                 <div class="shutter-row">
-                    <div class="left-actions">
-                        <button class="btn-action-left" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
-                        <a href="#" id="btnInCameraAlbum" class="btn-action-left" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
+                    <!-- Kelompok Kiri: Kotak Kuota Besar, Tombol Album, Tombol Putar -->
+                    <div class="left-controls-group">
+                        <div class="quota-counter-box" id="quotaBadgeText">--</div>
+                        <a href="#" id="btnInCameraAlbum" class="btn-action-ctrl" style="display: none;" data-i18n="albumBtn">🖼️ Album</a>
+                        <button class="btn-action-ctrl" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
                     </div>
-                    <!-- Tombol Jepret Diperbesar -->
+                    <!-- Tombol Jepret di Sebelah Kanan -->
                     <button class="shutter-btn" id="btnShutter" onclick="ambilFoto()"></button>
                 </div>
 
