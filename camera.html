@@ -57,21 +57,18 @@
         .btn-custom-outline { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); width: 100%; padding: 8px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.8rem; margin-top: 8px; display: block; text-align: center; text-decoration: none; }
         .btn-custom-outline:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* Container Kamera Aktif (Padat & Pas 1 Layar) */
+        /* Container Kamera Aktif */
         .active-camera-container { width: 100%; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 4px; flex-grow: 1; justify-content: center; display: none; }
         
-        /* Baris Header Atas Viewfinder (Nama Acara & Tombol Album Rapi) */
         .camera-header-row { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 2px; flex-shrink: 0; }
         .camera-header-title { font-size: 1.1rem; font-weight: 700; color: var(--text-light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70%; letter-spacing: 0.5px; }
         
-        /* Tombol Album di Atas (Sebelah Nama Acara) */
-        .btn-album-top { background: rgba(99,128,115,0.3); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 10px; border-radius: 12px; font-size: 0.65s; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
+        .btn-album-top { background: rgba(99,128,115,0.3); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
         .btn-album-top:hover { background: var(--secondary-accent); }
 
         /* Viewfinder Kamera Format Potret */
         .camera-viewfinder { width: 100%; flex-grow: 1; max-height: 48vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
         
-        /* Bingkai Sudut Analog */
         .viewfinder-corner { position: absolute; width: 16px; height: 16px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
         .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
         .corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
@@ -79,41 +76,36 @@
         .corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
 
         video { width: 100%; height: 100%; object-fit: cover; }
+        /* Efek Mirror khusus saat kamera depan aktif */
+        video.mirror-mode { transform: scaleX(-1); }
         
         /* Panel Kontrol Bawah */
         .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
         
         .shutter-row { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 62px; padding: 0 4px; position: relative; }
         
-        /* TOMBOL PUTAR DI KIRI (AGAK BESAR) */
         .btn-action-ctrl { background: transparent; color: var(--text-light); border: 1.5px solid var(--border-color); padding: 8px 14px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 0.75rem; text-decoration: none; display: flex; align-items: center; gap: 5px; height: 44px; flex-shrink: 0; }
         .btn-action-ctrl:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
 
-        /* TOMBOL JEPRET DI TENGAH */
         .shutter-btn { width: 60px; height: 60px; background: var(--accent); border: 3.5px solid var(--text-light); border-radius: 50%; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transition: 0.1s; position: absolute; left: 50%; transform: translateX(-50%); flex-shrink: 0; }
         .shutter-btn:active { transform: translateX(-50%) scale(0.9); }
         .shutter-btn:disabled { background: #555; border-color: #777; cursor: not-allowed; }
 
-        /* KOTAK ANGKA SISA KUOTA DI KANAN */
         .quota-counter-box { background: var(--mahogany); border: 1.5px solid var(--accent); padding: 4px 10px; border-radius: 10px; font-size: 1.3rem; font-weight: 800; color: var(--text-light); font-variant-numeric: tabular-nums; box-shadow: 0 3px 8px rgba(0,0,0,0.5); letter-spacing: 1.5px; height: 44px; display: flex; align-items: center; justify-content: center; min-width: 55px; flex-shrink: 0; }
 
-        /* Efek Kilat Flash */
         #cameraFlashOverlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; pointer-events: none; z-index: 20; transition: opacity 0.1s ease-out; }
 
-        /* Filter Selector Scroll */
         .filter-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
         .filter-scroll::-webkit-scrollbar { display: none; }
         .f-pill { background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-light); padding: 4px 10px; border-radius: 12px; font-size: 0.65rem; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .f-pill.active { background: var(--secondary-accent); border-color: var(--text-light); font-weight: bold; }
 
-        /* Baris Preview Thumbnail Foto di Bawah */
         .recent-photos-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; min-height: 40px; align-items: center; }
         .recent-photos-scroll::-webkit-scrollbar { display: none; }
         .thumbnail-item { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
-        /* Filter CSS Classes */
         .filter-original { filter: none; }
         .filter-ultramax { filter: contrast(1.1) saturate(1.2) brightness(1.05) sepia(0.15); }
         .filter-fuji { filter: contrast(1.15) saturate(1.1) hue-rotate(-10deg); }
@@ -125,7 +117,6 @@
         .filter-cinematic { filter: contrast(1.2) saturate(0.8) hue-rotate(180deg) brightness(0.95); }
         .filter-mono { filter: grayscale(100%) contrast(1.2); }
 
-        /* Modal Pendaftaran Tamu */
         .guest-modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 999; justify-content: center; align-items: center; padding: 15px; }
         .guest-box { background: var(--bg-dark); border: 1.5px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 350px; padding: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); color: var(--text-light); }
         .guest-input { width: 100%; padding: 10px 12px; margin: 12px 0; border-radius: 8px; border: 1px solid var(--border-color); background: rgba(50,37,32,0.8); color: var(--text-light); outline: none; font-size: 0.9rem; }
@@ -173,7 +164,7 @@
             <a href="#" id="btnAlbumLink" class="btn-custom-outline" style="display: none;" data-i18n="viewAlbumBtn">Lihat Album Foto &darr;</a>
         </div>
 
-        <!-- 2. CONTAINER KAMERA AKTIF (Padat & Pas 1 Layar Tanpa Scroll) -->
+        <!-- 2. CONTAINER KAMERA AKTIF -->
         <div class="active-camera-container" id="activeCameraContainer" style="display: none;">
             <div class="camera-header-row">
                 <div class="camera-header-title font-serif" id="activeEventTitle">Acara</div>
@@ -197,7 +188,7 @@
                 <div class="filter-scroll" id="filterScrollContainer"></div>
                 
                 <div class="shutter-row">
-                    <!-- Tombol Putar di Kiri Sendiri (Agak Besar) -->
+                    <!-- Tombol Putar di Kiri -->
                     <button class="btn-action-ctrl" onclick="balikKamera()" data-i18n="flipBtn">🔄 Putar</button>
                     
                     <!-- Tombol Jepret di Tengah -->
@@ -424,8 +415,11 @@
         function pilihFilter(key, className, el) {
             activeFilterClass = className;
             const video = document.getElementById('cameraVideo');
+            // Pertahankan kelas mirror jika sedang menggunakan kamera depan
+            const isMirror = video.classList.contains('mirror-mode');
             video.className = '';
             video.classList.add(activeFilterClass);
+            if (isMirror) video.classList.add('mirror-mode');
 
             document.querySelectorAll('.f-pill').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
@@ -493,6 +487,13 @@
             video.className = '';
             video.classList.add(activeFilterClass);
 
+            // Aktifkan efek mirror jika menggunakan kamera depan ('user'), matikan jika kamera belakang ('environment')
+            if (currentFacingMode === 'user') {
+                video.classList.add('mirror-mode');
+            } else {
+                video.classList.remove('mirror-mode');
+            }
+
             try {
                 activeStream = await navigator.mediaDevices.getUserMedia({
                     video: { facingMode: currentFacingMode },
@@ -514,7 +515,7 @@
             startCameraStream();
         }
 
-        // Jepret instan tanpa lag & kuota mandiri per device
+        // Jepret foto dengan mempertahankan posisi normal (tidak terbalik mirror pada hasil akhir foto yang diunggah)
         function ambilFoto() {
             if (deviceRemainingQuota <= 0) return;
 
@@ -523,7 +524,16 @@
             canvas.width = video.videoWidth || 640;
             canvas.height = video.videoHeight || 480;
             const ctx = canvas.getContext('2d');
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Jika sedang mode kamera depan, hasil jepretan dinormalkan kembali agar tidak ikut terbalik saat disimpan ke album
+            if (currentFacingMode === 'user') {
+                ctx.save();
+                ctx.scale(-1, 1);
+                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.restore();
+            } else {
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            }
 
             const flash = document.getElementById('cameraFlashOverlay');
             flash.style.opacity = '0.7';
