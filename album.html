@@ -76,7 +76,7 @@
     <header>
         <div class="album-title-group">
             <h1 class="font-serif" id="headerTitle">Album • Memuat...</h1>
-            <p id="headerSubtitle" id="subText">Koleksi kenangan autentik.</p>
+            <p id="headerSubtitle">Koleksi kenangan autentik.</p>
         </div>
         <div class="header-actions">
             <a href="camera.html" class="btn-custom" id="btnBack">&larr; Kembali ke Kamera</a>
@@ -124,15 +124,8 @@
                 const eventData = eventDoc.data();
                 document.getElementById('headerTitle').innerText = `Album • ${eventData.eventName}`;
 
-                // Aturan privasi:
-                // Jika eventData.privacy === 'visible' -> Tampilkan SEMUA foto dari semua tamu tanpa terkecuali.
-                // Jika eventData.privacy diset lain (privat) -> Tamu hanya melihat foto jepretannya sendiri.
                 const privacySetting = eventData.privacy || 'visible';
                 const currentGuestName = localStorage.getItem(`guest_name_${eventId}`) || '';
-
-                if (privacySetting !== 'visible') {
-                    document.getElementById('headerSubtitle').innerText = `Menampilkan foto privat milik: ${currentGuestName || 'Anda'}`;
-                }
 
                 db.collection('events').doc(eventId).collection('photos')
                     .orderBy('uploadedAt', 'desc')
@@ -148,7 +141,6 @@
                         snapshot.forEach(doc => {
                             const p = doc.data();
 
-                            // Filter privasi
                             if (privacySetting !== 'visible') {
                                 if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
                                     return; 
@@ -188,7 +180,6 @@
             }
         });
 
-        // Fitur Unduh ZIP Langsung Tanpa Gagal / CORS Error
         function unduhSemuaFotoZip() {
             if (globalPhotosList.length === 0) {
                 alert("Belum ada foto untuk diunduh.");
@@ -204,7 +195,6 @@
 
             globalPhotosList.forEach((photo, i) => {
                 try {
-                    // Mengubah format Base64 langsung menjadi file gambar di dalam ZIP tanpa perlu request internet tambahan
                     const base64Data = photo.imageUrl.split(',')[1];
                     const cleanName = (photo.guestName || 'Tamu').replace(/[^a-zA-Z0-9]/g, '_');
                     folder.file(`foto_${i + 1}_${cleanName}.jpg`, base64Data, {base64: true});
