@@ -9,7 +9,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore-compat.js"></script>
     
-    <!-- Library untuk unduh ZIP (JSZip & FileSaver) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
@@ -28,7 +27,6 @@
         body { background-color: var(--bg-dark); color: var(--text-light); min-height: 100vh; display: flex; flex-direction: column; }
         .font-serif { font-family: 'Playfair Display', serif; }
 
-        /* Header Album */
         header { padding: 20px 5%; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); background: rgba(38,28,23,0.95); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(10px); flex-wrap: wrap; gap: 15px; }
         .album-title-group h1 { font-size: 1.6rem; color: var(--text-light); font-weight: 700; }
         .album-title-group p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
@@ -41,7 +39,6 @@
         .btn-primary-custom { background: var(--accent); color: #261C17; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary-custom:hover { background: #e09867; }
 
-        /* Kontainer Utama Galeri */
         .main-container { padding: 30px 5%; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
@@ -49,14 +46,13 @@
         .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         
-        .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #111; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
         .photo-footer { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(38,28,23,0.9); border-top: 1px solid var(--border-color); }
         .guest-tag { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
         .time-tag { font-size: 0.7rem; color: var(--text-muted); }
 
-        /* Filter Kelas Gambar */
         .filter-original { filter: none; }
         .filter-ultramax { filter: contrast(1.1) saturate(1.2) brightness(1.05) sepia(0.15); }
         .filter-fuji { filter: contrast(1.15) saturate(1.1) hue-rotate(-10deg); }
@@ -68,7 +64,6 @@
         .filter-cinematic { filter: contrast(1.2) saturate(0.8) hue-rotate(180deg) brightness(0.95); }
         .filter-mono { filter: grayscale(100%) contrast(1.2); }
 
-        /* Responsif Ponsel */
         @media(max-width: 600px) {
             header { padding: 15px 4%; flex-direction: column; align-items: flex-start; }
             .header-actions { width: 100%; justify-content: space-between; }
@@ -81,7 +76,7 @@
     <header>
         <div class="album-title-group">
             <h1 class="font-serif" id="headerTitle">Album • Memuat...</h1>
-            <p id="headerSubtitle">Koleksi kenangan autentik dari para tamu.</p>
+            <p id="headerSubtitle" id="subText">Koleksi kenangan autentik.</p>
         </div>
         <div class="header-actions">
             <a href="camera.html" class="btn-custom" id="btnBack">&larr; Kembali ke Kamera</a>
@@ -117,7 +112,6 @@
                 return;
             }
 
-            // Tombol kembali ke kamera dengan eventId yang sesuai
             const btnBack = document.getElementById('btnBack');
             btnBack.href = `camera.html?event=${eventId}`;
 
@@ -130,13 +124,16 @@
                 const eventData = eventDoc.data();
                 document.getElementById('headerTitle').innerText = `Album • ${eventData.eventName}`;
 
-                // Cek pengaturan privasi dari pembuat acara
-                // 'visible' = semua tamu bisa melihat semua foto
-                // 'private' (atau selain visible) = tamu hanya bisa melihat foto miliknya sendiri
+                // Aturan privasi:
+                // Jika eventData.privacy === 'visible' -> Tampilkan SEMUA foto dari semua tamu tanpa terkecuali.
+                // Jika eventData.privacy diset lain (privat) -> Tamu hanya melihat foto jepretannya sendiri.
                 const privacySetting = eventData.privacy || 'visible';
                 const currentGuestName = localStorage.getItem(`guest_name_${eventId}`) || '';
 
-                // Ambil Foto secara real-time dari Firestore
+                if (privacySetting !== 'visible') {
+                    document.getElementById('headerSubtitle').innerText = `Menampilkan foto privat milik: ${currentGuestName || 'Anda'}`;
+                }
+
                 db.collection('events').doc(eventId).collection('photos')
                     .orderBy('uploadedAt', 'desc')
                     .onSnapshot(snapshot => {
@@ -151,10 +148,10 @@
                         snapshot.forEach(doc => {
                             const p = doc.data();
 
-                            // Filter privasi: Jika diset privat, hanya masukkan foto yang nama tamunya cocok dengan device ini
+                            // Filter privasi
                             if (privacySetting !== 'visible') {
                                 if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
-                                    return; // Lewati foto tamu lain
+                                    return; 
                                 }
                             }
 
@@ -162,7 +159,7 @@
                         });
 
                         if (globalPhotosList.length === 0) {
-                            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 50px 0;">Belum ada foto yang tersedia untuk ditampilkan di album Anda.</div>`;
+                            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 50px 0;">Belum ada foto yang tersedia untuk ditampilkan.</div>`;
                             return;
                         }
 
@@ -174,7 +171,7 @@
                             grid.innerHTML += `
                                 <div class="photo-card">
                                     <div class="photo-wrapper">
-                                        <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80'">
+                                        <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy">
                                     </div>
                                     <div class="photo-footer">
                                         <span class="guest-tag">👤 ${p.guestName || 'Tamu'}</span>
@@ -191,7 +188,8 @@
             }
         });
 
-        async function unduhSemuaFotoZip() {
+        // Fitur Unduh ZIP Langsung Tanpa Gagal / CORS Error
+        function unduhSemuaFotoZip() {
             if (globalPhotosList.length === 0) {
                 alert("Belum ada foto untuk diunduh.");
                 return;
@@ -204,33 +202,26 @@
             const zip = new JSZip();
             const folder = zip.folder("TheLastCall_Album");
 
-            let count = 0;
-            for (let i = 0; i < globalPhotosList.length; i++) {
-                const photo = globalPhotosList[i];
+            globalPhotosList.forEach((photo, i) => {
                 try {
-                    const corsUrl = "https://corsproxy.io/?" + encodeURIComponent(photo.imageUrl);
-                    const response = await fetch(corsUrl);
-                    const blob = await response.blob();
+                    // Mengubah format Base64 langsung menjadi file gambar di dalam ZIP tanpa perlu request internet tambahan
+                    const base64Data = photo.imageUrl.split(',')[1];
                     const cleanName = (photo.guestName || 'Tamu').replace(/[^a-zA-Z0-9]/g, '_');
-                    const filename = `foto_${i + 1}_${cleanName}.jpg`;
-                    folder.file(filename, blob);
-                    count++;
+                    folder.file(`foto_${i + 1}_${cleanName}.jpg`, base64Data, {base64: true});
                 } catch (e) {
-                    console.error("Gagal mengunduh gambar ke ZIP:", e);
+                    console.error("Gagal memproses foto ke ZIP:", e);
                 }
-            }
+            });
 
-            if (count > 0) {
-                zip.generateAsync({ type: "blob" }).then(content => {
-                    saveAs(content, "Album_TheLastCall.zip");
-                    btn.innerText = "Unduh Semua (.zip)";
-                    btn.disabled = false;
-                });
-            } else {
-                alert("Gagal mengunduh foto. Periksa koneksi internet Anda.");
+            zip.generateAsync({ type: "blob" }).then(content => {
+                saveAs(content, "Album_TheLastCall.zip");
                 btn.innerText = "Unduh Semua (.zip)";
                 btn.disabled = false;
-            }
+            }).catch(err => {
+                alert("Gagal membuat file ZIP.");
+                btn.innerText = "Unduh Semua (.zip)";
+                btn.disabled = false;
+            });
         }
     </script>
 </body>
