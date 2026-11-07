@@ -84,7 +84,7 @@
             <p id="headerSubtitle">Koleksi kenangan autentik dari para tamu.</p>
         </div>
         <div class="header-actions">
-            <a href="index.html" class="btn-custom" id="btnBack">&larr; Kembali</a>
+            <a href="camera.html" class="btn-custom" id="btnBack">&larr; Kembali ke Kamera</a>
             <button class="btn-primary-custom" id="btnDownloadZip" onclick="unduhSemuaFotoZip()">Unduh Semua (.zip)</button>
         </div>
     </header>
@@ -117,7 +117,7 @@
                 return;
             }
 
-            // Atur tombol kembali agar kembali ke kamera atau halaman utama dengan event ID yang sesuai
+            // Tombol kembali ke kamera dengan eventId yang sesuai
             const btnBack = document.getElementById('btnBack');
             btnBack.href = `camera.html?event=${eventId}`;
 
@@ -129,6 +129,12 @@
                 }
                 const eventData = eventDoc.data();
                 document.getElementById('headerTitle').innerText = `Album • ${eventData.eventName}`;
+
+                // Cek pengaturan privasi dari pembuat acara
+                // 'visible' = semua tamu bisa melihat semua foto
+                // 'private' (atau selain visible) = tamu hanya bisa melihat foto miliknya sendiri
+                const privacySetting = eventData.privacy || 'visible';
+                const currentGuestName = localStorage.getItem(`guest_name_${eventId}`) || '';
 
                 // Ambil Foto secara real-time dari Firestore
                 db.collection('events').doc(eventId).collection('photos')
@@ -142,18 +148,33 @@
                             return;
                         }
 
-                        grid.innerHTML = '';
                         snapshot.forEach(doc => {
                             const p = doc.data();
-                            globalPhotosList.push(p);
 
+                            // Filter privasi: Jika diset privat, hanya masukkan foto yang nama tamunya cocok dengan device ini
+                            if (privacySetting !== 'visible') {
+                                if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
+                                    return; // Lewati foto tamu lain
+                                }
+                            }
+
+                            globalPhotosList.push(p);
+                        });
+
+                        if (globalPhotosList.length === 0) {
+                            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 50px 0;">Belum ada foto yang tersedia untuk ditampilkan di album Anda.</div>`;
+                            return;
+                        }
+
+                        grid.innerHTML = '';
+                        globalPhotosList.forEach((p, index) => {
                             const waktu = p.uploadedAt ? new Date(p.uploadedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Baru saja';
                             const filterClass = p.filterUsed || 'filter-original';
 
                             grid.innerHTML += `
                                 <div class="photo-card">
                                     <div class="photo-wrapper">
-                                        <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy" onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?auto=format&fit=crop&w=300&q=80';">
+                                        <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=300&q=80'">
                                     </div>
                                     <div class="photo-footer">
                                         <span class="guest-tag">👤 ${p.guestName || 'Tamu'}</span>
@@ -187,7 +208,6 @@
             for (let i = 0; i < globalPhotosList.length; i++) {
                 const photo = globalPhotosList[i];
                 try {
-                    // Menggunakan CORS proxy gratis (corsproxy.io) agar unduhan gambar lintas domain tidak diblokir browser
                     const corsUrl = "https://corsproxy.io/?" + encodeURIComponent(photo.imageUrl);
                     const response = await fetch(corsUrl);
                     const blob = await response.blob();
