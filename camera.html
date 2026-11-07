@@ -228,8 +228,6 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        const imgbbApiKey = "e260099c988d57272862b5d72290e82b";
-
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
 
@@ -415,7 +413,6 @@
         function pilihFilter(key, className, el) {
             activeFilterClass = className;
             const video = document.getElementById('cameraVideo');
-            // Pertahankan kelas mirror jika sedang menggunakan kamera depan
             const isMirror = video.classList.contains('mirror-mode');
             video.className = '';
             video.classList.add(activeFilterClass);
@@ -487,7 +484,6 @@
             video.className = '';
             video.classList.add(activeFilterClass);
 
-            // Aktifkan efek mirror jika menggunakan kamera depan ('user'), matikan jika kamera belakang ('environment')
             if (currentFacingMode === 'user') {
                 video.classList.add('mirror-mode');
             } else {
@@ -515,17 +511,16 @@
             startCameraStream();
         }
 
-        // Jepret foto dengan mempertahankan posisi normal (tidak terbalik mirror pada hasil akhir foto yang diunggah)
-        function ambilFoto() {
+        // Jepret foto dan simpan langsung ke Firestore agar 100% mulus tampil di album
+        async function ambilFoto() {
             if (deviceRemainingQuota <= 0) return;
 
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
-            canvas.width = video.videoWidth || 640;
-            canvas.height = video.videoHeight || 480;
+            canvas.width = 640;
+            canvas.height = 480;
             const ctx = canvas.getContext('2d');
 
-            // Jika sedang mode kamera depan, hasil jepretan dinormalkan kembali agar tidak ikut terbalik saat disimpan ke album
             if (currentFacingMode === 'user') {
                 ctx.save();
                 ctx.scale(-1, 1);
@@ -543,33 +538,19 @@
             localStorage.setItem(`device_quota_${eventId}`, deviceRemainingQuota);
             perbaruiTampilanKuota();
 
-            const dataUrl = canvas.toDataURL('image/jpeg', 0.80);
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
             tambahThumbnailKeLayar(dataUrl);
 
-            canvas.toBlob(async (blob) => {
-                try {
-                    const formData = new FormData();
-                    formData.append('image', blob);
-
-                    const res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbApiKey}`, {
-                        method: 'POST',
-                        body: formData
-                    });
-                    const r = await res.json();
-                    
-                    if (r.success) {
-                        const imageUrl = r.data.url;
-                        await db.collection('events').doc(eventId).collection('photos').add({
-                            guestName: guestName || "Tamu",
-                            imageUrl: imageUrl,
-                            filterUsed: activeFilterClass,
-                            uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
-                        });
-                    }
-                } catch (err) {
-                    console.error("Gagal mengunggah foto di background:", err);
-                }
-            }, 'image/jpeg', 0.80);
+            try {
+                await db.collection('events').doc(eventId).collection('photos').add({
+                    guestName: guestName || "Tamu",
+                    imageUrl: dataUrl,
+                    filterUsed: activeFilterClass,
+                    uploadedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+            } catch (err) {
+                console.error("Gagal menyimpan foto:", err);
+            }
         }
 
         function tambahThumbnailKeLayar(url) {
