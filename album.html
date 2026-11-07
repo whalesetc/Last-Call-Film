@@ -115,8 +115,6 @@
 
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
-        const isOwner = urlParams.get('owner') === 'true'; // Deteksi apakah dibuka oleh pembuat acara
-
         let globalPhotosList = [];
         let eventMeta = { eventType: 'Event', eventName: 'Album' };
         let isSelectMode = false;
@@ -138,7 +136,9 @@
                 }
                 const eventData = eventDoc.data();
                 
+                // Simpan metadata untuk penamaan file ZIP
                 eventMeta.eventName = eventData.eventName || 'Acara';
+                // Mendeteksi jenis acara berdasarkan teks waitingText atau nama event
                 let rawType = eventData.waitingText || "EVENT";
                 if (rawType.toLowerCase().includes("wedding")) {
                     eventMeta.eventType = "Wedding_of";
@@ -153,10 +153,6 @@
                 const privacySetting = eventData.privacy || 'visible';
                 const currentGuestName = localStorage.getItem(`guest_name_${eventId}`) || '';
 
-                if (isOwner) {
-                    document.getElementById('headerSubtitle').innerText = "Mode Pembuat Acara: Menampilkan seluruh foto secara lengkap.";
-                }
-
                 db.collection('events').doc(eventId).collection('photos')
                     .orderBy('uploadedAt', 'desc')
                     .onSnapshot(snapshot => {
@@ -170,16 +166,11 @@
 
                         snapshot.forEach(doc => {
                             const p = doc.data();
-
-                            // ATURAN PRIVASI:
-                            // Jika 'isOwner' true (pembuat acara), abaikan aturan privat dan tampilkan SEMUA foto.
-                            // Jika bukan owner dan galeri disetel privat, tamu hanya bisa melihat fotonya sendiri.
-                            if (!isOwner && privacySetting !== 'visible') {
+                            if (privacySetting !== 'visible') {
                                 if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
                                     return; 
                                 }
                             }
-
                             globalPhotosList.push(p);
                         });
 
@@ -274,9 +265,10 @@
             }
         }
 
+        // Membuat nama file ZIP otomatis berdasarkan Jenis Acara & Nama Pembuat Acara
         function getZipFileName(isCustom = false) {
             const cleanEventName = eventMeta.eventName.replace(/[^a-zA-Z0-9]/g, '_');
-            const prefix = eventMeta.eventType;
+            const prefix = eventMeta.eventType; // contoh: "Wedding_of", "Birthday_of", atau "Event"
             const suffix = isCustom ? "_Pilihan" : "_Album";
             return `${prefix}_${cleanEventName}${suffix}.zip`;
         }
@@ -328,7 +320,7 @@
             }
 
             const btn = document.getElementById('btnDownloadZip');
-            btn.innerText = "Menyiapkan ZIP</h4>";
+            btn.innerText = "Menyiapkan ZIP...";
             btn.disabled = true;
 
             const zip = new JSZip();
