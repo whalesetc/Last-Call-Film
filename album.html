@@ -46,16 +46,19 @@
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         
-        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; }
+        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; cursor: default; }
+        
+        /* Ketika mode pilih aktif, kartu bisa diklik di seluruh area */
+        .gallery-grid.selecting .photo-card { cursor: pointer; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         
         .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Checkbox Pilih Manual */
-        .photo-checkbox { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; z-index: 10; display: none; }
-        .photo-card.selecting .photo-checkbox { display: block; }
-        .photo-card.selected { border: 2px solid var(--accent); background: rgba(217, 135, 79, 0.15); }
+        /* Checkbox Styling */
+        .photo-checkbox { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; z-index: 10; display: none; pointer-events: none; }
+        .gallery-grid.selecting .photo-checkbox { display: block; }
+        .photo-card.selected { border: 2.5px solid var(--accent); background: rgba(217, 135, 79, 0.15); }
 
         .photo-footer { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(38,28,23,0.9); border-top: 1px solid var(--border-color); }
         .guest-tag { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
@@ -170,8 +173,8 @@
                             const filterClass = p.filterUsed || 'filter-original';
 
                             grid.innerHTML += `
-                                <div class="photo-card" id="card-${index}">
-                                    <input type="checkbox" class="photo-checkbox" data-index="${index}" onchange="cekPilihanFoto()">
+                                <div class="photo-card" id="card-${index}" onclick="toggleCardSelect(${index})">
+                                    <input type="checkbox" class="photo-checkbox" id="cb-${index}" data-index="${index}">
                                     <div class="photo-wrapper">
                                         <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy">
                                     </div>
@@ -182,6 +185,11 @@
                                 </div>
                             `;
                         });
+
+                        // Pertahankan status select jika data ter-refresh real-time
+                        if (isSelectMode) {
+                            document.getElementById('galleryGrid').classList.add('selecting');
+                        }
                     });
 
             } catch (err) {
@@ -193,18 +201,21 @@
         function toggleSelectMode() {
             isSelectMode = !isSelectMode;
             const btnToggle = document.getElementById('btnToggleSelect');
+            const grid = document.getElementById('galleryGrid');
             const cards = document.querySelectorAll('.photo-card');
 
             if (isSelectMode) {
                 btnToggle.classList.add('active');
                 btnToggle.innerText = "❌ Batal Pilih";
-                cards.forEach(card => card.classList.add('selecting'));
+                grid.classList.add('selecting');
             } else {
                 btnToggle.classList.remove('active');
                 btnToggle.innerText = "☑️ Pilih Foto";
+                grid.classList.remove('selecting');
                 cards.forEach(card => {
-                    card.classList.remove('selecting', 'selected');
-                    const cb = card.querySelector('.photo-checkbox');
+                    card.classList.remove('selected');
+                    const idx = card.id.replace('card-', '');
+                    const cb = document.getElementById(`cb-${idx}`);
                     if(cb) cb.checked = false;
                 });
                 document.getElementById('btnDownloadSelected').style.display = 'none';
@@ -212,20 +223,27 @@
             }
         }
 
-        function cekPilihanFoto() {
+        // Fungsi agar seluruh area kartu foto bisa disentuh untuk mencentang
+        function toggleCardSelect(index) {
+            if (!isSelectMode) return; // Hanya aktif jika mode pilih menyala
+
+            const cb = document.getElementById(`cb-${index}`);
+            const card = document.getElementById(`card-${index}`);
+
+            cb.checked = !cb.checked;
+            if (cb.checked) {
+                card.classList.add('selected');
+            } else {
+                card.classList.remove('selected');
+            }
+
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
             const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
             const btnSelected = document.getElementById('btnDownloadSelected');
             const btnAll = document.getElementById('btnDownloadZip');
-
-            checkedBoxes.forEach(cb => {
-                const idx = cb.getAttribute('data-index');
-                document.getElementById(`card-${idx}`).classList.add('selected');
-            });
-
-            document.querySelectorAll('.photo-checkbox:not(:checked)').forEach(cb => {
-                const idx = cb.getAttribute('data-index');
-                document.getElementById(`card-${idx}`).classList.remove('selected');
-            });
 
             if (checkedBoxes.length > 0) {
                 btnSelected.style.display = 'inline-flex';
@@ -268,7 +286,7 @@
                 saveAs(content, "Foto_Pilihan_TheLastCall.zip");
                 btn.innerText = oldText;
                 btn.disabled = false;
-                toggleSelectMode(); // Tutup mode pilih setelah selesai
+                toggleSelectMode(); 
             }).catch(err => {
                 alert("Gagal membuat file ZIP.");
                 btn.innerText = oldText;
