@@ -48,14 +48,12 @@
         
         .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; cursor: default; }
         
-        /* Ketika mode pilih aktif, kartu bisa diklik di seluruh area */
         .gallery-grid.selecting .photo-card { cursor: pointer; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         
         .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
-        /* Checkbox Styling */
         .photo-checkbox { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; z-index: 10; display: none; pointer-events: none; }
         .gallery-grid.selecting .photo-checkbox { display: block; }
         .photo-card.selected { border: 2.5px solid var(--accent); background: rgba(217, 135, 79, 0.15); }
@@ -118,6 +116,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let globalPhotosList = [];
+        let eventMeta = { eventType: 'Event', eventName: 'Album' };
         let isSelectMode = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
@@ -136,6 +135,19 @@
                     return;
                 }
                 const eventData = eventDoc.data();
+                
+                // Simpan metadata untuk penamaan file ZIP
+                eventMeta.eventName = eventData.eventName || 'Acara';
+                // Mendeteksi jenis acara berdasarkan teks waitingText atau nama event
+                let rawType = eventData.waitingText || "EVENT";
+                if (rawType.toLowerCase().includes("wedding")) {
+                    eventMeta.eventType = "Wedding_of";
+                } else if (rawType.toLowerCase().includes("birthday")) {
+                    eventMeta.eventType = "Birthday_of";
+                } else {
+                    eventMeta.eventType = "Event";
+                }
+
                 document.getElementById('headerTitle').innerText = `Album • ${eventData.eventName}`;
 
                 const privacySetting = eventData.privacy || 'visible';
@@ -186,7 +198,6 @@
                             `;
                         });
 
-                        // Pertahankan status select jika data ter-refresh real-time
                         if (isSelectMode) {
                             document.getElementById('galleryGrid').classList.add('selecting');
                         }
@@ -223,9 +234,8 @@
             }
         }
 
-        // Fungsi agar seluruh area kartu foto bisa disentuh untuk mencentang
         function toggleCardSelect(index) {
-            if (!isSelectMode) return; // Hanya aktif jika mode pilih menyala
+            if (!isSelectMode) return;
 
             const cb = document.getElementById(`cb-${index}`);
             const card = document.getElementById(`card-${index}`);
@@ -255,6 +265,14 @@
             }
         }
 
+        // Membuat nama file ZIP otomatis berdasarkan Jenis Acara & Nama Pembuat Acara
+        function getZipFileName(isCustom = false) {
+            const cleanEventName = eventMeta.eventName.replace(/[^a-zA-Z0-9]/g, '_');
+            const prefix = eventMeta.eventType; // contoh: "Wedding_of", "Birthday_of", atau "Event"
+            const suffix = isCustom ? "_Pilihan" : "_Album";
+            return `${prefix}_${cleanEventName}${suffix}.zip`;
+        }
+
         async function unduhFotoTerpilih() {
             const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
             if (checkedBoxes.length === 0) {
@@ -268,7 +286,7 @@
             btn.disabled = true;
 
             const zip = new JSZip();
-            const folder = zip.folder("TheLastCall_Selected");
+            const folder = zip.folder("Selected_Photos");
 
             checkedBoxes.forEach((cb) => {
                 const i = cb.getAttribute('data-index');
@@ -282,8 +300,9 @@
                 }
             });
 
+            const zipFileName = getZipFileName(true);
             zip.generateAsync({ type: "blob" }).then(content => {
-                saveAs(content, "Foto_Pilihan_TheLastCall.zip");
+                saveAs(content, zipFileName);
                 btn.innerText = oldText;
                 btn.disabled = false;
                 toggleSelectMode(); 
@@ -305,7 +324,7 @@
             btn.disabled = true;
 
             const zip = new JSZip();
-            const folder = zip.folder("TheLastCall_Album");
+            const folder = zip.folder("Album_Photos");
 
             globalPhotosList.forEach((photo, i) => {
                 try {
@@ -317,8 +336,9 @@
                 }
             });
 
+            const zipFileName = getZipFileName(false);
             zip.generateAsync({ type: "blob" }).then(content => {
-                saveAs(content, "Album_TheLastCall.zip");
+                saveAs(content, zipFileName);
                 btn.innerText = "Unduh Semua (.zip)";
                 btn.disabled = false;
             }).catch(err => {
