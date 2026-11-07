@@ -31,24 +31,32 @@
         .album-title-group h1 { font-size: 1.6rem; color: var(--text-light); font-weight: 700; }
         .album-title-group p { font-size: 0.8rem; color: var(--text-muted); margin-top: 2px; }
 
-        .header-actions { display: flex; gap: 10px; align-items: center; }
+        .header-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
 
-        .btn-custom { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 600; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-custom { background: transparent; color: var(--text-light); border: 1px solid var(--border-color); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 600; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
         .btn-custom:hover { background: rgba(107,61,54,0.3); border-color: var(--accent); }
         
-        .btn-primary-custom { background: var(--accent); color: #261C17; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
+        .btn-primary-custom { background: var(--accent); color: #261C17; border: none; padding: 8px 14px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; font-weight: 700; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; }
         .btn-primary-custom:hover { background: #e09867; }
+
+        .btn-select-mode { background: var(--secondary-accent); color: #fff; border: none; }
+        .btn-select-mode.active { background: #4a6358; border: 1px solid var(--text-light); }
 
         .main-container { padding: 30px 5%; max-width: 1200px; margin: 0 auto; width: 100%; flex: 1; }
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         
-        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; }
+        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         
         .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
+        /* Checkbox Pilih Manual */
+        .photo-checkbox { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; z-index: 10; display: none; }
+        .photo-card.selecting .photo-checkbox { display: block; }
+        .photo-card.selected { border: 2px solid var(--accent); background: rgba(217, 135, 79, 0.15); }
+
         .photo-footer { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(38,28,23,0.9); border-top: 1px solid var(--border-color); }
         .guest-tag { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
         .time-tag { font-size: 0.7rem; color: var(--text-muted); }
@@ -79,7 +87,9 @@
             <p id="headerSubtitle">Koleksi kenangan autentik.</p>
         </div>
         <div class="header-actions">
-            <a href="camera.html" class="btn-custom" id="btnBack">&larr; Kembali ke Kamera</a>
+            <a href="camera.html" class="btn-custom" id="btnBack">&larr; Kamera</a>
+            <button class="btn-custom btn-select-mode" id="btnToggleSelect" onclick="toggleSelectMode()">☑️ Pilih Foto</button>
+            <button class="btn-primary-custom" id="btnDownloadSelected" style="display: none;" onclick="unduhFotoTerpilih()">Unduh Terpilih (.zip)</button>
             <button class="btn-primary-custom" id="btnDownloadZip" onclick="unduhSemuaFotoZip()">Unduh Semua (.zip)</button>
         </div>
     </header>
@@ -105,6 +115,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const eventId = urlParams.get('event');
         let globalPhotosList = [];
+        let isSelectMode = false;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (!eventId) {
@@ -140,13 +151,11 @@
 
                         snapshot.forEach(doc => {
                             const p = doc.data();
-
                             if (privacySetting !== 'visible') {
                                 if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
                                     return; 
                                 }
                             }
-
                             globalPhotosList.push(p);
                         });
 
@@ -161,7 +170,8 @@
                             const filterClass = p.filterUsed || 'filter-original';
 
                             grid.innerHTML += `
-                                <div class="photo-card">
+                                <div class="photo-card" id="card-${index}">
+                                    <input type="checkbox" class="photo-checkbox" data-index="${index}" onchange="cekPilihanFoto()">
                                     <div class="photo-wrapper">
                                         <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy">
                                     </div>
@@ -179,6 +189,92 @@
                 document.getElementById('loadingText').innerText = "Gagal memuat album.";
             }
         });
+
+        function toggleSelectMode() {
+            isSelectMode = !isSelectMode;
+            const btnToggle = document.getElementById('btnToggleSelect');
+            const cards = document.querySelectorAll('.photo-card');
+
+            if (isSelectMode) {
+                btnToggle.classList.add('active');
+                btnToggle.innerText = "❌ Batal Pilih";
+                cards.forEach(card => card.classList.add('selecting'));
+            } else {
+                btnToggle.classList.remove('active');
+                btnToggle.innerText = "☑️ Pilih Foto";
+                cards.forEach(card => {
+                    card.classList.remove('selecting', 'selected');
+                    const cb = card.querySelector('.photo-checkbox');
+                    if(cb) cb.checked = false;
+                });
+                document.getElementById('btnDownloadSelected').style.display = 'none';
+                document.getElementById('btnDownloadZip').style.display = 'inline-flex';
+            }
+        }
+
+        function cekPilihanFoto() {
+            const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
+            const btnSelected = document.getElementById('btnDownloadSelected');
+            const btnAll = document.getElementById('btnDownloadZip');
+
+            checkedBoxes.forEach(cb => {
+                const idx = cb.getAttribute('data-index');
+                document.getElementById(`card-${idx}`).classList.add('selected');
+            });
+
+            document.querySelectorAll('.photo-checkbox:not(:checked)').forEach(cb => {
+                const idx = cb.getAttribute('data-index');
+                document.getElementById(`card-${idx}`).classList.remove('selected');
+            });
+
+            if (checkedBoxes.length > 0) {
+                btnSelected.style.display = 'inline-flex';
+                btnSelected.innerText = `Unduh Terpilih (${checkedBoxes.length}) (.zip)`;
+                btnAll.style.display = 'none';
+            } else {
+                btnSelected.style.display = 'none';
+                btnAll.style.display = 'inline-flex';
+            }
+        }
+
+        async function unduhFotoTerpilih() {
+            const checkedBoxes = document.querySelectorAll('.photo-checkbox:checked');
+            if (checkedBoxes.length === 0) {
+                alert("Pilih minimal satu foto untuk diunduh.");
+                return;
+            }
+
+            const btn = document.getElementById('btnDownloadSelected');
+            const oldText = btn.innerText;
+            btn.innerText = "Menyiapkan ZIP...";
+            btn.disabled = true;
+
+            const zip = new JSZip();
+            const folder = zip.folder("TheLastCall_Selected");
+
+            checkedBoxes.forEach((cb) => {
+                const i = cb.getAttribute('data-index');
+                const photo = globalPhotosList[i];
+                try {
+                    const base64Data = photo.imageUrl.split(',')[1];
+                    const cleanName = (photo.guestName || 'Tamu').replace(/[^a-zA-Z0-9]/g, '_');
+                    folder.file(`foto_${parseInt(i) + 1}_${cleanName}.jpg`, base64Data, {base64: true});
+                } catch (e) {
+                    console.error("Gagal memproses foto:", e);
+                }
+            });
+
+            zip.generateAsync({ type: "blob" }).then(content => {
+                saveAs(content, "Foto_Pilihan_TheLastCall.zip");
+                btn.innerText = oldText;
+                btn.disabled = false;
+                toggleSelectMode(); // Tutup mode pilih setelah selesai
+            }).catch(err => {
+                alert("Gagal membuat file ZIP.");
+                btn.innerText = oldText;
+                btn.disabled = false;
+            });
+        }
 
         function unduhSemuaFotoZip() {
             if (globalPhotosList.length === 0) {
