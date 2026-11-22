@@ -423,7 +423,7 @@
         </div>
 
         <div class="admin-panel" style="align-items: start;">
-            <!-- Kolom Kiri: Dilebarkan menjadi 380px dan disejajarkan agar rapi -->
+            <!-- Kolom Kiri -->
             <div style="display: flex; flex-direction: column; gap: 20px;">
                 <div class="dash-card" style="text-align: center;">
                     <h3 style="text-align: left; margin-bottom: 15px;" data-i18n="guestCameraAccess">Akses Kamera Tamu</h3>
@@ -1478,16 +1478,30 @@
             
             try {
                 const snapshot = await db.collection('events').doc(eventId).collection('guests').orderBy('joinedAt', 'desc').get();
-                countBadge.innerText = snapshot.size;
                 
                 if (snapshot.empty) {
+                    countBadge.innerText = "0";
                     container.innerHTML = `<div style="color: var(--text-muted); font-size: 0.85rem; text-align: center; padding: 15px;">${currentLang === 'en' ? 'No participants have joined yet.' : 'Belum ada peserta yang bergabung.'}</div>`;
                     return;
                 }
 
-                container.innerHTML = '';
+                // Saring agar 1 device hanya tampil sekali tanpa duplikasi
+                const seenKeys = new Set();
+                const uniqueGuests = [];
+
                 snapshot.forEach(doc => {
                     const data = doc.data();
+                    const key = data.deviceId || doc.id || (data.name ? data.name.trim().toLowerCase() : '');
+                    if (key && !seenKeys.has(key)) {
+                        seenKeys.add(key);
+                        uniqueGuests.push(data);
+                    }
+                });
+
+                countBadge.innerText = uniqueGuests.length;
+                container.innerHTML = '';
+
+                uniqueGuests.forEach(data => {
                     const waktuJoin = data.joinedAt ? new Date(data.joinedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : (currentLang === 'en' ? 'Just now' : 'Baru saja');
                     container.innerHTML += `
                         <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color);">
@@ -1741,7 +1755,6 @@
             window.open(`${domainAnda}/album.html?event=${eventId}`, '_blank');
         }
 
-        // Fungsi khusus membuka Album Full (Mode Pemilik / Owner)
         function bukaAlbumOwner() {
             const eventId = document.getElementById('editEventId').value;
             const domainAnda = window.location.href.split('?')[0].replace('index.html', '').replace(/\/$/, '');
