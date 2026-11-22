@@ -364,13 +364,15 @@
             await catatKehadiranTamu(guestName);
         }
 
+        // Mencatat tamu berdasarkan deviceId agar 1 device hanya tampil sekali tanpa duplikasi
         async function catatKehadiranTamu(nama) {
+            if (!nama || !eventId || !deviceId) return;
             try {
-                await db.collection('events').doc(eventId).collection('guests').add({
+                await db.collection('events').doc(eventId).collection('guests').doc(deviceId).set({
                     name: nama,
                     deviceId: deviceId,
                     joinedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
+                }, { merge: true });
             } catch(e) {
                 console.error("Gagal mencatat tamu:", e);
             }
@@ -474,7 +476,6 @@
             }
 
             try {
-                // Meminta orientasi potret (tinggi lebih besar dari lebar pada mode potret)
                 activeStream = await navigator.mediaDevices.getUserMedia({
                     video: { 
                         facingMode: currentFacingMode,
@@ -502,14 +503,12 @@
             startCameraStream();
         }
 
-        // Jepret foto format POTRET (rasio 3:4 vertikal, tidak melebar ke samping)
         async function ambilFoto() {
             if (deviceRemainingQuota <= 0) return;
 
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
             
-            // Ukuran kanvas potret (lebar 480, tinggi 640)
             const targetW = 480;
             const targetH = 640;
             canvas.width = targetW;
@@ -519,17 +518,14 @@
             const vWidth = video.videoWidth || 640;
             const vHeight = video.videoHeight || 480;
 
-            // Hitung cropping tengah agar rasio pas potret 3:4 tanpa distorsi melebar
             const targetRatio = targetW / targetH;
             const srcRatio = vWidth / vHeight;
 
             let sx = 0, sy = 0, sWidth = vWidth, sHeight = vHeight;
             if (srcRatio > targetRatio) {
-                // Video lebih lebar dari target potret -> potong sisi kiri & kanan
                 sWidth = vHeight * targetRatio;
                 sx = (vWidth - sWidth) / 2;
             } else {
-                // Video lebih tinggi dari target potret -> potong sisi atas & bawah
                 sHeight = vWidth / targetRatio;
                 sy = (vHeight - sHeight) / 2;
             }
