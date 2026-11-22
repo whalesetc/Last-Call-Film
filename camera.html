@@ -61,7 +61,8 @@
         .btn-album-top { background: rgba(99,128,115,0.3); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
         .btn-album-top:hover { background: var(--secondary-accent); }
 
-        .camera-viewfinder { width: 100%; flex-grow: 1; max-height: 48vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
+        /* Viewfinder Potret */
+        .camera-viewfinder { width: 100%; aspect-ratio: 3 / 4; max-height: 54vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
         
         .viewfinder-corner { position: absolute; width: 16px; height: 16px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
         .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
@@ -93,7 +94,7 @@
 
         .recent-photos-scroll { display: flex; gap: 5px; overflow-x: auto; padding: 2px 0; min-height: 40px; align-items: center; }
         .recent-photos-scroll::-webkit-scrollbar { display: none; }
-        .thumbnail-item { width: 38px; height: 38px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
+        .thumbnail-item { width: 32px; height: 42px; border-radius: 6px; object-fit: cover; border: 1.5px solid var(--text-light); flex-shrink: 0; animation: fadeIn 0.3s ease; }
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 
@@ -314,8 +315,6 @@
                     document.getElementById('bgWallpaper').style.backgroundImage = `url('${currentEventData.wallpaperUrl}')`;
                 }
 
-                // Tampilkan tombol Album baik saat Publik maupun Privat
-                // Saat Privat, album hanya menampilkan foto milik tamu tersebut (atau semua foto jika mode owner)
                 const domainClean = window.location.href.split('?')[0].replace('camera.html', '');
                 const albumBtn = document.getElementById('btnAlbumLink');
                 albumBtn.href = `${domainClean}album.html?event=${eventId}`;
@@ -475,17 +474,25 @@
             }
 
             try {
+                // Meminta orientasi potret (tinggi lebih besar dari lebar pada mode potret)
                 activeStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: currentFacingMode },
+                    video: { 
+                        facingMode: currentFacingMode,
+                        width: { ideal: 720 },
+                        height: { ideal: 960 }
+                    },
                     audio: false
                 });
                 video.srcObject = activeStream;
             } catch (err) {
-                if (currentFacingMode === 'environment') {
-                    currentFacingMode = 'user';
-                    startCameraStream();
-                } else {
-                    alert(currentLang === 'en' ? "Camera access error: " + err.message : "Gagal mengakses kamera: " + err.message);
+                try {
+                    activeStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: currentFacingMode },
+                        audio: false
+                    });
+                    video.srcObject = activeStream;
+                } catch (fallbackErr) {
+                    alert(currentLang === 'en' ? "Camera access error: " + fallbackErr.message : "Gagal mengakses kamera: " + fallbackErr.message);
                 }
             }
         }
@@ -495,22 +502,45 @@
             startCameraStream();
         }
 
+        // Jepret foto format POTRET (rasio 3:4 vertikal, tidak melebar ke samping)
         async function ambilFoto() {
             if (deviceRemainingQuota <= 0) return;
 
             const video = document.getElementById('cameraVideo');
             const canvas = document.getElementById('cameraCanvas');
-            canvas.width = 640;
-            canvas.height = 480;
+            
+            // Ukuran kanvas potret (lebar 480, tinggi 640)
+            const targetW = 480;
+            const targetH = 640;
+            canvas.width = targetW;
+            canvas.height = targetH;
             const ctx = canvas.getContext('2d');
+
+            const vWidth = video.videoWidth || 640;
+            const vHeight = video.videoHeight || 480;
+
+            // Hitung cropping tengah agar rasio pas potret 3:4 tanpa distorsi melebar
+            const targetRatio = targetW / targetH;
+            const srcRatio = vWidth / vHeight;
+
+            let sx = 0, sy = 0, sWidth = vWidth, sHeight = vHeight;
+            if (srcRatio > targetRatio) {
+                // Video lebih lebar dari target potret -> potong sisi kiri & kanan
+                sWidth = vHeight * targetRatio;
+                sx = (vWidth - sWidth) / 2;
+            } else {
+                // Video lebih tinggi dari target potret -> potong sisi atas & bawah
+                sHeight = vWidth / targetRatio;
+                sy = (vHeight - sHeight) / 2;
+            }
 
             if (currentFacingMode === 'user') {
                 ctx.save();
                 ctx.scale(-1, 1);
-                ctx.drawImage(video, -canvas.width, 0, canvas.width, canvas.height);
+                ctx.drawImage(video, sx, sy, sWidth, sHeight, -targetW, 0, targetW, targetH);
                 ctx.restore();
             } else {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                ctx.drawImage(video, sx, sy, sWidth, sHeight, 0, 0, targetW, targetH);
             }
 
             const flash = document.getElementById('cameraFlashOverlay');
