@@ -416,11 +416,18 @@
             updateEventStatusDisplay(eventObj);
         }
 
+        // Mengunci waktu acara ke WITA (+08:00) agar tamu dari luar kota mengikuti jadwal WITA
+        function parseWitaDateTime(dateStr, timeStr, fallbackTime) {
+            const cleanTime = (timeStr && timeStr.trim()) ? timeStr.trim() : fallbackTime;
+            const timeWithSec = cleanTime.length === 5 ? `${cleanTime}:00` : cleanTime;
+            return new Date(`${dateStr}T${timeWithSec}+08:00`);
+        }
+
         function updateEventStatusDisplay(eventObj) {
             const sekarang = new Date();
-            const start = new Date(`${eventObj.date}T${eventObj.startTime || '00:00'}:00`);
-            const end = new Date(`${eventObj.date}T${eventObj.endTime || '23:59'}:00`);
-            const selisih = start - sekarang;
+            const start = parseWitaDateTime(eventObj.date, eventObj.startTime, '00:00');
+            const end = parseWitaDateTime(eventObj.date, eventObj.endTime, '23:59');
+            const selisih = start.getTime() - sekarang.getTime();
 
             const statusLabel = document.getElementById('lblCountdownStatus');
             const timerGroup = document.getElementById('countdownTimerGroup');
