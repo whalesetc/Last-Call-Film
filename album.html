@@ -46,12 +46,10 @@
         
         .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 15px; }
         
-        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; cursor: default; }
-        
-        .gallery-grid.selecting .photo-card { cursor: pointer; }
+        .photo-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.4); display: flex; flex-direction: column; transition: 0.2s; position: relative; cursor: pointer; }
         .photo-card:hover { transform: translateY(-3px); border-color: var(--accent); }
         
-        .photo-wrapper { width: 100%; aspect-ratio: 1/1; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
+        .photo-wrapper { width: 100%; aspect-ratio: 3/4; background: #1a120e; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; }
         .photo-wrapper img { width: 100%; height: 100%; object-fit: cover; }
         
         .photo-checkbox { position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; accent-color: var(--accent); cursor: pointer; z-index: 10; display: none; pointer-events: none; }
@@ -61,6 +59,17 @@
         .photo-footer { padding: 10px 12px; display: flex; justify-content: space-between; align-items: center; background: rgba(38,28,23,0.9); border-top: 1px solid var(--border-color); }
         .guest-tag { font-size: 0.8rem; font-weight: 600; color: var(--text-light); }
         .time-tag { font-size: 0.7rem; color: var(--text-muted); }
+
+        /* Modal Preview Foto Penuh (Lightbox) */
+        .lightbox-modal { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); z-index: 9999; justify-content: center; align-items: center; padding: 16px; backdrop-filter: blur(6px); }
+        .lightbox-modal.show { display: flex; }
+        .lightbox-content { max-width: 520px; width: 100%; max-height: 92vh; background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.85); position: relative; }
+        .lightbox-top { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: rgba(38,28,23,0.95); border-bottom: 1px solid var(--border-color); }
+        .lightbox-close { background: transparent; border: 1px solid var(--border-color); color: var(--text-light); border-radius: 8px; padding: 5px 10px; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+        .lightbox-close:hover { background: rgba(107,61,54,0.4); border-color: var(--accent); }
+        .lightbox-img-wrap { width: 100%; max-height: 75vh; background: #111; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .lightbox-img-wrap img { max-width: 100%; max-height: 75vh; object-fit: contain; }
+        .lightbox-caption { padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: rgba(38,28,23,0.95); border-top: 1px solid var(--border-color); font-size: 0.85rem; }
 
         .filter-original { filter: none; }
         .filter-ultramax { filter: contrast(1.1) saturate(1.2) brightness(1.05) sepia(0.15); }
@@ -103,6 +112,23 @@
         </div>
     </div>
 
+    <!-- Modal Lihat Foto Penuh Saat Ditekan -->
+    <div class="lightbox-modal" id="photoLightbox" onclick="tutupLightbox()">
+        <div class="lightbox-content" onclick="event.stopPropagation()">
+            <div class="lightbox-top">
+                <span class="font-serif" style="font-weight: 700; font-size: 1rem;">Preview Foto</span>
+                <button type="button" class="lightbox-close" onclick="tutupLightbox()">✖ Tutup</button>
+            </div>
+            <div class="lightbox-img-wrap">
+                <img id="lightboxImg" src="" alt="Preview Foto Penuh">
+            </div>
+            <div class="lightbox-caption">
+                <span id="lightboxGuest" class="guest-tag">👤 Tamu</span>
+                <span id="lightboxTime" class="time-tag">--:--</span>
+            </div>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyAkU02LCtMx-KAhsjLPmSsR0ZEs-jVlyHI",
@@ -114,8 +140,28 @@
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const eventId = urlParams.get('event');
-        const isOwner = urlParams.get('owner') === 'true'; // Deteksi akses penuh pemilik acara
+        const rawEventParam = (urlParams.get('event') || '').trim();
+        const eventId = rawEventParam;
+        const storageScope = (rawEventParam || 'default_event').toLowerCase();
+        const isOwner = urlParams.get('owner') === 'true';
+
+        function getAlbumStorageItem(key) {
+            try {
+                const lsVal = window.localStorage.getItem(key);
+                if (lsVal !== null && lsVal !== '') return lsVal;
+            } catch (e) {}
+            try {
+                const cookies = document.cookie ? document.cookie.split(';') : [];
+                const target = `${encodeURIComponent(key)}=`;
+                for (let c of cookies) {
+                    const trimmed = c.trim();
+                    if (trimmed.startsWith(target)) {
+                        return decodeURIComponent(trimmed.substring(target.length));
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
 
         let globalPhotosList = [];
         let eventMeta = { eventType: 'Event', eventName: 'Album' };
@@ -128,7 +174,7 @@
             }
 
             const btnBack = document.getElementById('btnBack');
-            btnBack.href = `camera.html?event=${eventId}`;
+            btnBack.href = `camera.html?event=${encodeURIComponent(eventId)}`;
 
             try {
                 const eventDoc = await db.collection('events').doc(eventId).get();
@@ -150,12 +196,18 @@
 
                 document.getElementById('headerTitle').innerText = `Album • ${eventData.eventName}`;
 
+                const privacySetting = eventData.privacy || 'visible';
+                const savedGuestDisplayName = (getAlbumStorageItem(`tlc_guest_name_${storageScope}`) || '').trim();
+                const currentGuestName = savedGuestDisplayName.toLowerCase();
+                const currentDeviceId = (getAlbumStorageItem(`tlc_device_id_${storageScope}`) || '').trim();
+
                 if (isOwner) {
                     document.getElementById('headerSubtitle').innerText = "Mode Pemilik Acara: Menampilkan seluruh foto secara lengkap.";
+                } else if (privacySetting !== 'visible') {
+                    document.getElementById('headerSubtitle').innerText = `Mode Privat: Menampilkan foto milik ${savedGuestDisplayName || 'perangkat Anda'}.`;
+                } else {
+                    document.getElementById('headerSubtitle').innerText = "Mode Publik: Menampilkan seluruh foto tamu.";
                 }
-
-                const privacySetting = eventData.privacy || 'visible';
-                const currentGuestName = localStorage.getItem(`guest_name_${eventId}`) || '';
 
                 db.collection('events').doc(eventId).collection('photos')
                     .orderBy('uploadedAt', 'desc')
@@ -171,10 +223,19 @@
                         snapshot.forEach(doc => {
                             const p = doc.data();
 
-                            // Jika bukan owner dan galeri disetel privat, saring hanya foto milik tamu tersebut
+                            // Pada mode privat (bukan owner), utamakan kecocokan deviceId agar tamu bernama sama di HP berbeda tidak saling melihat foto
                             if (!isOwner && privacySetting !== 'visible') {
-                                if (!currentGuestName || p.guestName.toLowerCase() !== currentGuestName.toLowerCase()) {
-                                    return; 
+                                const photoDeviceId = (p.deviceId || '').trim();
+                                const photoGuestName = (p.guestName || '').trim().toLowerCase();
+
+                                if (photoDeviceId) {
+                                    if (!currentDeviceId || photoDeviceId !== currentDeviceId) {
+                                        return;
+                                    }
+                                } else {
+                                    if (!currentGuestName || photoGuestName !== currentGuestName) {
+                                        return;
+                                    }
                                 }
                             }
 
@@ -182,7 +243,7 @@
                         });
 
                         if (globalPhotosList.length === 0) {
-                            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 50px 0;">Belum ada foto yang tersedia untuk ditampilkan.</div>`;
+                            grid.innerHTML = `<div style="grid-column: 1 / -1; text-align: center; color: var(--text-muted); padding: 50px 0;">Belum ada foto milik Anda yang tersimpan di album ini.</div>`;
                             return;
                         }
 
@@ -192,7 +253,7 @@
                             const filterClass = p.filterUsed || 'filter-original';
 
                             grid.innerHTML += `
-                                <div class="photo-card" id="card-${index}" onclick="toggleCardSelect(${index})">
+                                <div class="photo-card" id="card-${index}" onclick="handleCardClick(${index})">
                                     <input type="checkbox" class="photo-checkbox" id="cb-${index}" data-index="${index}">
                                     <div class="photo-wrapper">
                                         <img src="${p.imageUrl}" class="${filterClass}" alt="Foto Tamu" loading="lazy">
@@ -215,6 +276,35 @@
                 document.getElementById('loadingText').innerText = "Gagal memuat album.";
             }
         });
+
+        function handleCardClick(index) {
+            if (isSelectMode) {
+                toggleCardSelect(index);
+            } else {
+                bukaLightbox(index);
+            }
+        }
+
+        function bukaLightbox(index) {
+            const p = globalPhotosList[index];
+            if (!p) return;
+
+            const waktu = p.uploadedAt ? new Date(p.uploadedAt.toDate()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Baru saja';
+            const filterClass = p.filterUsed || 'filter-original';
+
+            const imgEl = document.getElementById('lightboxImg');
+            imgEl.src = p.imageUrl;
+            imgEl.className = '';
+            imgEl.classList.add(filterClass);
+
+            document.getElementById('lightboxGuest').innerText = `👤 ${p.guestName || 'Tamu'}`;
+            document.getElementById('lightboxTime').innerText = waktu;
+            document.getElementById('photoLightbox').classList.add('show');
+        }
+
+        function tutupLightbox() {
+            document.getElementById('photoLightbox').classList.remove('show');
+        }
 
         function toggleSelectMode() {
             isSelectMode = !isSelectMode;
