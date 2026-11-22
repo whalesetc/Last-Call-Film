@@ -61,8 +61,7 @@
         .btn-album-top { background: rgba(99,128,115,0.3); border: 1px solid var(--border-color); color: var(--text-light); padding: 3px 10px; border-radius: 12px; font-size: 0.65rem; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 4px; transition: 0.2s; }
         .btn-album-top:hover { background: var(--secondary-accent); }
 
-        /* Viewfinder Potret */
-        .camera-viewfinder { width: 100%; aspect-ratio: 3 / 4; max-height: 54vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
+        .camera-viewfinder { width: 100%; aspect-ratio: 3 / 4; max-height: 52vh; background: #000; border-radius: 14px; overflow: hidden; position: relative; border: 2.5px solid var(--mahogany); box-shadow: 0 6px 20px rgba(0,0,0,0.8); }
         
         .viewfinder-corner { position: absolute; width: 16px; height: 16px; border-color: var(--text-light); border-style: solid; z-index: 5; pointer-events: none; }
         .corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
@@ -70,8 +69,12 @@
         .corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
         .corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
 
-        video { width: 100%; height: 100%; object-fit: cover; }
-        video.mirror-mode { transform: scaleX(-1); }
+        .zoom-controls { position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%); z-index: 12; display: flex; align-items: center; gap: 6px; background: rgba(38, 28, 23, 0.78); border: 1px solid var(--border-color); padding: 3px 8px; border-radius: 20px; backdrop-filter: blur(6px); }
+        .zoom-btn { width: 24px; height: 24px; border-radius: 50%; border: 1px solid var(--text-light); background: rgba(107, 61, 54, 0.7); color: var(--text-light); font-weight: 700; font-size: 0.85rem; line-height: 1; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+        .zoom-btn:active { transform: scale(0.9); background: var(--accent); color: #261C17; }
+        .zoom-label { font-size: 0.65rem; font-weight: 700; color: var(--text-light); min-width: 32px; text-align: center; font-variant-numeric: tabular-nums; }
+
+        video { width: 100%; height: 100%; object-fit: cover; transform-origin: center center; transition: transform 0.15s ease-out; }
         
         .camera-controls-panel { width: 100%; display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
         .shutter-row { display: flex; justify-content: space-between; align-items: center; width: 100%; height: 62px; padding: 0 4px; position: relative; }
@@ -168,6 +171,12 @@
 
                 <video id="cameraVideo" autoplay playsinline></video>
                 <canvas id="cameraCanvas" style="display: none;"></canvas>
+
+                <div class="zoom-controls">
+                    <button type="button" class="zoom-btn" onclick="ubahZoom(-0.25)" title="Zoom Out">−</button>
+                    <span class="zoom-label" id="zoomLevelText">1.0x</span>
+                    <button type="button" class="zoom-btn" onclick="ubahZoom(0.25)" title="Zoom In">+</button>
+                </div>
             </div>
 
             <div class="camera-controls-panel" id="cameraControls">
@@ -208,20 +217,25 @@
         const db = firebase.firestore();
 
         const urlParams = new URLSearchParams(window.location.search);
-        const eventId = urlParams.get('event');
+        const eventId = (urlParams.get('event') || '').trim();
+        const storageScope = eventId || 'default_event';
 
         let currentEventData = null;
-        let guestName = localStorage.getItem(`guest_name_${eventId}`) || '';
-        let deviceId = localStorage.getItem(`guest_device_id_${eventId}`);
+        let guestName = (localStorage.getItem(`guest_name_${storageScope}`) || '').trim();
+        let deviceId = localStorage.getItem(`guest_device_id_${storageScope}`);
         if (!deviceId) {
             deviceId = 'dev_' + Math.random().toString(36).substring(2, 12) + '_' + Date.now();
-            localStorage.setItem(`guest_device_id_${eventId}`, deviceId);
+            localStorage.setItem(`guest_device_id_${storageScope}`, deviceId);
         }
 
         let eventInterval = null;
         let activeStream = null;
         let currentFacingMode = 'environment';
         let activeFilterClass = 'filter-original';
+        let currentZoom = 1.0;
+        let useHardwareZoom = false;
+        let minHardwareZoom = 1.0;
+        let maxHardwareZoom = 3.0;
         let totalPhotoLimit = 36;
         let deviceRemainingQuota = 36;
 
@@ -284,10 +298,27 @@
             if (currentEventData) updateEventStatusDisplay(currentEventData);
         }
 
+        function muatKuotaPerangkat(limitBawaan) {
+            const quotaKey = `device_quota_${storageScope}`;
+            const savedQuota = localStorage.getItem(quotaKey);
+            if (savedQuota === null || Number.isNaN(parseInt(savedQuota, 10))) {
+                deviceRemainingQuota = limitBawaan;
+                localStorage.setItem(quotaKey, String(deviceRemainingQuota));
+            } else {
+                deviceRemainingQuota = Math.max(0, parseInt(savedQuota, 10));
+            }
+            perbaruiTampilanKuota();
+        }
+
         document.addEventListener('DOMContentLoaded', async () => {
             if (!eventId) {
                 alert("Event ID tidak ditemukan!");
                 return;
+            }
+
+            guestName = (localStorage.getItem(`guest_name_${storageScope}`) || '').trim();
+            if (guestName) {
+                document.getElementById('guestNameModal').style.display = 'none';
             }
 
             try {
@@ -303,13 +334,7 @@
                 document.getElementById('lblWaitingText').innerText = currentEventData.waitingText || "THE WEDDING OF";
                 
                 totalPhotoLimit = currentEventData.guestPhotoLimit || 36;
-
-                const storageKey = `device_quota_${eventId}`;
-                if (localStorage.getItem(storageKey) === null) {
-                    localStorage.setItem(storageKey, totalPhotoLimit);
-                }
-                deviceRemainingQuota = parseInt(localStorage.getItem(storageKey));
-                perbaruiTampilanKuota();
+                muatKuotaPerangkat(totalPhotoLimit);
 
                 if (currentEventData.wallpaperUrl) {
                     document.getElementById('bgWallpaper').style.backgroundImage = `url('${currentEventData.wallpaperUrl}')`;
@@ -330,7 +355,8 @@
                 if (!guestName) {
                     document.getElementById('guestNameModal').style.display = 'flex';
                 } else {
-                    catatKehadiranTamu(guestName);
+                    document.getElementById('guestNameModal').style.display = 'none';
+                    await catatKehadiranTamu(guestName);
                 }
 
             } catch (err) {
@@ -359,12 +385,15 @@
                 return;
             }
             guestName = input;
-            localStorage.setItem(`guest_name_${eventId}`, guestName);
+            localStorage.setItem(`guest_name_${storageScope}`, guestName);
+            muatKuotaPerangkat(totalPhotoLimit);
             document.getElementById('guestNameModal').style.display = 'none';
+            if (currentEventData) {
+                updateEventStatusDisplay(currentEventData);
+            }
             await catatKehadiranTamu(guestName);
         }
 
-        // Mencatat tamu berdasarkan deviceId agar 1 device hanya tampil sekali tanpa duplikasi
         async function catatKehadiranTamu(nama) {
             if (!nama || !eventId || !deviceId) return;
             try {
@@ -376,6 +405,13 @@
             } catch(e) {
                 console.error("Gagal mencatat tamu:", e);
             }
+        }
+
+        function terapkanTransformVideo() {
+            const video = document.getElementById('cameraVideo');
+            const mirrorScaleX = currentFacingMode === 'user' ? -1 : 1;
+            const visualScale = useHardwareZoom ? 1.0 : currentZoom;
+            video.style.transform = `scale(${mirrorScaleX * visualScale}, ${visualScale})`;
         }
 
         function renderFilterPills(defaultKey) {
@@ -398,13 +434,35 @@
         function pilihFilter(key, className, el) {
             activeFilterClass = className;
             const video = document.getElementById('cameraVideo');
-            const isMirror = video.classList.contains('mirror-mode');
             video.className = '';
             video.classList.add(activeFilterClass);
-            if (isMirror) video.classList.add('mirror-mode');
+            terapkanTransformVideo();
 
             document.querySelectorAll('.f-pill').forEach(btn => btn.classList.remove('active'));
             el.classList.add('active');
+        }
+
+        async function ubahZoom(delta) {
+            const minZ = useHardwareZoom ? minHardwareZoom : 1.0;
+            const maxZ = useHardwareZoom ? Math.min(maxHardwareZoom, 4.0) : 3.0;
+            let nextZoom = Math.round((currentZoom + delta) * 100) / 100;
+            nextZoom = Math.max(minZ, Math.min(maxZ, nextZoom));
+            currentZoom = nextZoom;
+
+            document.getElementById('zoomLevelText').innerText = `${currentZoom.toFixed(1)}x`;
+
+            if (useHardwareZoom && activeStream) {
+                const track = activeStream.getVideoTracks()[0];
+                if (track && typeof track.applyConstraints === 'function') {
+                    try {
+                        await track.applyConstraints({ advanced: [{ zoom: currentZoom }] });
+                    } catch (e) {
+                        useHardwareZoom = false;
+                    }
+                }
+            }
+
+            terapkanTransformVideo();
         }
 
         function inisialisasiCountdownLogic(eventObj) {
@@ -416,17 +474,31 @@
             updateEventStatusDisplay(eventObj);
         }
 
-        // Mengunci waktu acara ke WITA (+08:00) agar tamu dari luar kota mengikuti jadwal WITA
-        function parseWitaDateTime(dateStr, timeStr, fallbackTime) {
+        function parseEventDateTime(dateStr, timeStr, fallbackTime, tzOffsetMinutes) {
             const cleanTime = (timeStr && timeStr.trim()) ? timeStr.trim() : fallbackTime;
-            const timeWithSec = cleanTime.length === 5 ? `${cleanTime}:00` : cleanTime;
-            return new Date(`${dateStr}T${timeWithSec}+08:00`);
+            const parts = cleanTime.split(':');
+            const hour = parseInt(parts[0] || '0', 10);
+            const minute = parseInt(parts[1] || '0', 10);
+            const second = parseInt(parts[2] || '0', 10);
+
+            const dateParts = (dateStr || '').split('-');
+            const year = parseInt(dateParts[0], 10);
+            const month = parseInt(dateParts[1], 10) - 1;
+            const day = parseInt(dateParts[2], 10);
+
+            const offset = (typeof tzOffsetMinutes === 'number' && !Number.isNaN(tzOffsetMinutes))
+                ? tzOffsetMinutes
+                : -480;
+
+            const utcMillis = Date.UTC(year, month, day, hour, minute, second) + (offset * 60 * 1000);
+            return new Date(utcMillis);
         }
 
         function updateEventStatusDisplay(eventObj) {
             const sekarang = new Date();
-            const start = parseWitaDateTime(eventObj.date, eventObj.startTime, '00:00');
-            const end = parseWitaDateTime(eventObj.date, eventObj.endTime, '23:59');
+            const tzOffset = eventObj.ownerTimezoneOffset;
+            const start = parseEventDateTime(eventObj.date, eventObj.startTime, '00:00', tzOffset);
+            const end = parseEventDateTime(eventObj.date, eventObj.endTime, '23:59', tzOffset);
             const selisih = start.getTime() - sekarang.getTime();
 
             const statusLabel = document.getElementById('lblCountdownStatus');
@@ -472,15 +544,14 @@
         async function startCameraStream() {
             if (activeStream) activeStream.getTracks().forEach(t => t.stop());
 
+            currentZoom = 1.0;
+            useHardwareZoom = false;
+            document.getElementById('zoomLevelText').innerText = "1.0x";
+
             const video = document.getElementById('cameraVideo');
             video.className = '';
             video.classList.add(activeFilterClass);
-
-            if (currentFacingMode === 'user') {
-                video.classList.add('mirror-mode');
-            } else {
-                video.classList.remove('mirror-mode');
-            }
+            terapkanTransformVideo();
 
             try {
                 activeStream = await navigator.mediaDevices.getUserMedia({
@@ -492,6 +563,18 @@
                     audio: false
                 });
                 video.srcObject = activeStream;
+
+                const track = activeStream.getVideoTracks()[0];
+                if (track && typeof track.getCapabilities === 'function') {
+                    const caps = track.getCapabilities();
+                    if (caps.zoom) {
+                        useHardwareZoom = true;
+                        minHardwareZoom = caps.zoom.min || 1.0;
+                        maxHardwareZoom = caps.zoom.max || 3.0;
+                        currentZoom = Math.max(minHardwareZoom, Math.min(maxHardwareZoom, 1.0));
+                        document.getElementById('zoomLevelText').innerText = `${currentZoom.toFixed(1)}x`;
+                    }
+                }
             } catch (err) {
                 try {
                     activeStream = await navigator.mediaDevices.getUserMedia({
@@ -537,6 +620,15 @@
                 sy = (vHeight - sHeight) / 2;
             }
 
+            if (!useHardwareZoom && currentZoom > 1.0) {
+                const zoomedW = sWidth / currentZoom;
+                const zoomedH = sHeight / currentZoom;
+                sx = sx + (sWidth - zoomedW) / 2;
+                sy = sy + (sHeight - zoomedH) / 2;
+                sWidth = zoomedW;
+                sHeight = zoomedH;
+            }
+
             if (currentFacingMode === 'user') {
                 ctx.save();
                 ctx.scale(-1, 1);
@@ -550,8 +642,8 @@
             flash.style.opacity = '0.7';
             setTimeout(() => { flash.style.opacity = '0'; }, 80);
 
-            deviceRemainingQuota--;
-            localStorage.setItem(`device_quota_${eventId}`, deviceRemainingQuota);
+            deviceRemainingQuota = Math.max(0, deviceRemainingQuota - 1);
+            localStorage.setItem(`device_quota_${storageScope}`, String(deviceRemainingQuota));
             perbaruiTampilanKuota();
 
             const dataUrl = canvas.toDataURL('image/jpeg', 0.75);
