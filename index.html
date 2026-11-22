@@ -437,7 +437,6 @@
                     <button class="btn-outline" onclick="bukaKamera()" style="width: 100%; margin-bottom: 8px; padding: 10px;" data-i18n="openCameraTab">Buka Kamera di Tab Baru &rarr;</button>
                     <button onclick="bukaAlbum()" style="width: 100%; margin-bottom: 8px; padding: 12px; background-color: var(--accent); color: #261C17; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;" data-i18n="openAlbumZip">Buka Album & Unduh ZIP &darr;</button>
                     
-                    <!-- TOMBOL KHUSUS PEMILIK ACARA KE ALBUM FULL -->
                     <button onclick="bukaAlbumOwner()" style="width: 100%; padding: 12px; background-color: var(--secondary-accent); color: #E5D178; font-weight: bold; border: none; border-radius: 8px; cursor: pointer;">🖼️ Buka Album Full (Mode Pemilik)</button>
                 </div>
 
@@ -878,6 +877,30 @@
             }
         };
 
+        function getTodayDateString() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        }
+
+        function setMinEventDate() {
+            const todayStr = getTodayDateString();
+            const createDateInput = document.getElementById('eventDate');
+            const editDateInput = document.getElementById('editEventDate');
+
+            if (createDateInput) {
+                createDateInput.min = todayStr;
+                createDateInput.max = todayStr;
+                if (!createDateInput.value) createDateInput.value = todayStr;
+            }
+            if (editDateInput) {
+                editDateInput.min = todayStr;
+                editDateInput.max = todayStr;
+            }
+        }
+
         function showToast(message) {
             const toast = document.getElementById('customToast');
             toast.innerText = message;
@@ -929,6 +952,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            setMinEventDate();
             const promoInput = document.getElementById('promoCodeInput');
             if (promoInput) {
                 promoInput.addEventListener('input', () => {
@@ -1382,6 +1406,7 @@
 
             showSection('createEventForm'); 
             document.getElementById('eventForm').reset(); 
+            setMinEventDate();
             document.getElementById('promoMessage').style.display = 'none';
             resetHargaPaket();
 
@@ -1415,7 +1440,8 @@
 
             document.getElementById('manageEventTitle').innerText = event.eventName;
             document.getElementById('editEventId').value = eventId;
-            document.getElementById('editEventDate').value = event.date || '';
+            setMinEventDate();
+            document.getElementById('editEventDate').value = event.date || getTodayDateString();
             document.getElementById('editGuestPhotoLimit').value = event.guestPhotoLimit || 15;
             document.getElementById('editStartTime').value = event.startTime || "00:00";
             document.getElementById('editEndTime').value = event.endTime || "23:59";
@@ -1485,7 +1511,6 @@
                     return;
                 }
 
-                // Saring agar 1 device hanya tampil sekali tanpa duplikasi
                 const seenKeys = new Set();
                 const uniqueGuests = [];
 
@@ -1897,6 +1922,15 @@
             const btn = document.getElementById('btnSubmit');
             btn.innerText = currentLang === 'en' ? "Processing..." : "Memproses..."; btn.disabled = true;
 
+            const chosenDate = document.getElementById('eventDate').value;
+            const todayStr = getTodayDateString();
+            if (chosenDate !== todayStr) {
+                showToast(currentLang === 'en' ? "Event date must be set for today." : "Tanggal acara hanya bisa diatur untuk hari ini.");
+                btn.innerText = currentLang === 'en' ? "Continue \u2192" : "Lanjutkan \u2192";
+                btn.disabled = false;
+                return;
+            }
+
             let wallpaperFinalUrl = selectedWallpaperUrl;
             const fileInput = document.getElementById('wallpaperFile').files[0];
             if (fileInput) {
@@ -1947,7 +1981,7 @@
                     eventType: document.getElementById('eventType').value,
                     eventName: eventName,
                     waitingText: document.getElementById('waitingText').value,
-                    date: document.getElementById('eventDate').value,
+                    date: chosenDate,
                     startTime: document.getElementById('eventStartTime').value,
                     endTime: document.getElementById('eventEndTime').value,
                     privacy: document.querySelector('input[name="privacy"]:checked').value,
@@ -1981,9 +2015,18 @@
             const btn = document.getElementById('btnUpdateEvent');
             btn.innerText = currentLang === 'en' ? "Saving..." : "Menyimpan..."; btn.disabled = true;
 
+            const chosenEditDate = document.getElementById('editEventDate').value;
+            const todayStr = getTodayDateString();
+            if (chosenEditDate !== todayStr) {
+                showToast(currentLang === 'en' ? "Event date must be set for today." : "Tanggal acara hanya bisa diatur untuk hari ini.");
+                btn.innerText = currentLang === 'en' ? "Save Settings" : "Simpan Pengaturan";
+                btn.disabled = false;
+                return;
+            }
+
             const eventId = document.getElementById('editEventId').value;
             let updateData = {
-                date: document.getElementById('editEventDate').value,
+                date: chosenEditDate,
                 startTime: document.getElementById('editStartTime').value,
                 endTime: document.getElementById('editEndTime').value,
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
