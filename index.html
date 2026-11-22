@@ -885,6 +885,10 @@
             return `${year}-${month}-${day}`;
         }
 
+        function getLocalTimezoneOffsetMinutes() {
+            return new Date().getTimezoneOffset();
+        }
+
         function setMinEventDate() {
             const todayStr = getTodayDateString();
             const createDateInput = document.getElementById('eventDate');
@@ -1978,6 +1982,7 @@
                 const unitStr = currentLang === 'en' ? 'People' : 'Orang';
                 const docRef = await db.collection("events").add({
                     ownerId: currentUser.uid,
+                    ownerTimezoneOffset: getLocalTimezoneOffsetMinutes(),
                     eventType: document.getElementById('eventType').value,
                     eventName: eventName,
                     waitingText: document.getElementById('waitingText').value,
@@ -2027,6 +2032,7 @@
             const eventId = document.getElementById('editEventId').value;
             let updateData = {
                 date: chosenEditDate,
+                ownerTimezoneOffset: getLocalTimezoneOffsetMinutes(),
                 startTime: document.getElementById('editStartTime').value,
                 endTime: document.getElementById('editEndTime').value,
                 guestPhotoLimit: parseInt(document.getElementById('editGuestPhotoLimit').value),
